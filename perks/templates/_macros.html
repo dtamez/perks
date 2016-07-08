@@ -1,0 +1,55 @@
+{% macro render_field(field, label=None, label_visible=true, icon=None) -%}
+    <div class="field {% if field.errors %}error{% endif %} {{ kwargs.pop('class_', '') }}">
+        {% if field.type != 'HiddenField' and label_visible %}
+            {% if not label %}{% set label=field.label.text %}{% endif %}
+            <label for="{{ field.id }}">{{ label|safe }}</label>
+        {% endif %}
+        {% if icon %}
+          <div class="ui left icon input">
+            <i class="{{icon}} icon"></i>
+          {{ field(class_='field', **kwargs) }}
+          </div>
+        {% else %}
+          {{ field(class_='field', **kwargs) }}
+        {% endif %}
+        {% if field.errors %}
+            {% for e in field.errors %}
+                <p class="field error">{{ e }}</p>
+            {% endfor %}
+        {% endif %}
+    </div>
+{%- endmacro %}
+
+{% macro render_checkbox_field(field, label=None) -%}
+    {% if not label %}{% set label=field.label.text %}{% endif %}
+    <div class="inline field">
+      <div class="ui checkbox">
+        {{ field(type='checkbox', **kwargs) }}
+        <label> {{ label }} </label>
+    </div>
+{%- endmacro %}
+
+{% macro render_radio_field(field) -%}
+    {% for value, label, checked in field.iter_choices() %}
+        <div class="radio">
+            <label>
+                <input type="radio" name="{{ field.id }}" id="{{ field.id }}" value="{{ value }}"{% if checked %} checked{% endif %}>
+                {{ label }}
+            </label>
+        </div>
+    {% endfor %}
+{%- endmacro %}
+
+{% macro render_submit_field(field, label=None, tabindex=None) -%}
+    {% if not label %}{% set label=field.label.text %}{% endif %}
+    <input type="submit" class="ui fluid large violet button" value="{{label}}"
+           {% if tabindex %}tabindex="{{ tabindex }}"{% endif %} >
+{%- endmacro %}
+
+{% macro render_secondary_button(field, href=None, label=None, tabindex=None) -%}
+{# <a class="button grey ui fluid large" href="{{ url_for('user.register') }}">A label</a> #}
+    {% if not label %}{% set label=field.label.text %}{% endif %}
+    <a class="button grey ui fluid large" href="{{ href }}"
+           {% if tabindex %}tabindex="{{ tabindex }}"{% endif %}
+           >{{label}}</a>
+{%- endmacro %}

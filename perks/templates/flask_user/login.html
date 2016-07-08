@@ -1,65 +1,54 @@
-{% extends 'flask_user/public_base.html' %}
+{% extends 'dialog_base.html' %}
 
-{% block content %}
-{% from "flask_user/_macros.html" import render_field, render_checkbox_field, render_submit_field %}
-<h1>{%trans%}Sign in{%endtrans%}</h1>
+{% block dialog_content %}
+{% from "_macros.html" import render_field, render_checkbox_field, render_submit_field, render_secondary_button %}
 
-<form action="" method="POST" class="form" role="form">
-    {{ form.hidden_tag() }}
-
-    {# Username or Email field #}
-    {% set field = form.username if user_manager.enable_username else form.email %}
-    <div class="form-group {% if field.errors %}has-error{% endif %}">
-        {# Label on left, "New here? Register." on right #}
-        <div class="row">
-            <div class="col-xs-6">
-                <label for="{{ field.id }}" class="control-label">{{ field.label.text }}</label>
-            </div>
-            <div class="col-xs-6 text-right">
-                {% if user_manager.enable_register and not user_manager.require_invitation %}
-                    <a href="{{ url_for('user.register') }}" tabindex='190'>
-                        {%trans%}New here? Register.{%endtrans%}</a>
-                {% endif %}
-            </div>
-        </div>
-        {{ field(class_='form-control', tabindex=110) }}
+    <h2 class="ui violet image header">
+      <img src="/static/images/daffy.png" class="image">
+      <div class="content">
+        Log-in to your account
+      </div>
+    </h2>
+    <form action="" method="POST" class="ui large form"> {{ form.hidden_tag() }}
+      <div class="ui stacked segment">
+        {# Username or Email field #}
+        {% set field = form.username if user_manager.enable_username else form.email %}
+        <div class="field {% if field.errors %}error{% endif %}">
+          <label for="{{ field.id }}">{{ field.label.text }}</label>
+          <div class="ui left icon input">
+            <i class="user icon"></i>
+            {{ field(class_='field', tabindex=110) }}
+          </div>
         {% if field.errors %}
             {% for e in field.errors %}
-                <p class="help-block">{{ e }}</p>
+                <p class="field error">{{ e }}</p>
             {% endfor %}
         {% endif %}
-    </div>
-
-    {# Password field #}
-    {% set field = form.password %}
-    <div class="form-group {% if field.errors %}has-error{% endif %}">
-        {# Label on left, "Forgot your Password?" on right #}
-        <div class="row">
-            <div class="col-xs-6">
-                <label for="{{ field.id }}" class="control-label">{{ field.label.text }}</label>
-            </div>
-            <div class="col-xs-6 text-right">
-                {% if user_manager.enable_forgot_password %}
-                    <a href="{{ url_for('user.forgot_password') }}" tabindex='195'>
-                        {%trans%}Forgot your Password?{%endtrans%}</a>
-                {% endif %}
-            </div>
         </div>
-        {{ field(class_='form-control', tabindex=120) }}
+        {# Password field #}
+        {% set field = form.password %}
+        <div class="field {% if field.errors %}error{% endif %}">
+          <label for="{{ field.id }}">{{ field.label.text }}</label>
+          <div class="ui left icon input">
+            <i class="lock icon"></i>
+            {{ field(class_='field', tabindex=110) }}
+          </div>
         {% if field.errors %}
             {% for e in field.errors %}
-                <p class="help-block">{{ e }}</p>
+                <p class="field error">{{ e }}</p>
             {% endfor %}
         {% endif %}
-    </div>
+        {# Submit button #}
+        {{ render_submit_field(form.submit, tabindex=180) }}
+      </div>
 
-    {# Remember me #}
-    {% if user_manager.enable_remember_me %}
-    {{ render_checkbox_field(login_form.remember_me, tabindex=130) }}
+      <div class="ui error message"></div>
+
+    </form>
+    <div class="ui horizontal divider">New to Perks?</div>
+
+    {% if user_manager.enable_register and not user_manager.require_invitation %}
+        <a class="button grey ui fluid large" href="{{ url_for('user.register') }}">Create your Perks account</a>
     {% endif %}
 
-    {# Submit button #}
-    {{ render_submit_field(form.submit, tabindex=180) }}
-</form>
-
-{% endblock %}
+{%endblock %}

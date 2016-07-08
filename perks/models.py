@@ -8,6 +8,7 @@ class User(db.Model, UserMixin):
     __tablename__ = 'users'
     id = db.Column(db.Integer(), primary_key=True)
 
+    username = db.Column(db.String(50), nullable=False, unique=True)
     email = db.Column(db.Unicode(255), nullable=False, server_default=u'',
                       unique=True)
     confirmed_at = db.Column(db.DateTime())
