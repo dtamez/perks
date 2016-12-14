@@ -1,0 +1,42 @@
+{% from "_macros.html" import render_formatters, render_row, render_3row, render_save_update, render_table, render_ajax_methods %}
+{{ render_formatters([
+    ('phone', 'phone'),
+    ('alternate_phone', 'phone'),
+    ('dob', 'date'),
+    ('hire_date', 'date'),
+    ('effective_date', 'date'),
+    ('termination_date', 'date'),
+    ('group_effective_date', 'date'),
+    ('sub_group_effective_date', 'date'),
+    ('salary_effective_date', 'date'),
+    ('ssn', 'ssn'),
+    ])}}
+{{ render_ajax_methods('admin', 'employee') }}
+
+<div id="employees_wrapper">
+  <h4 class="ui dividing header">Employees</h4>
+
+  <form class="ui form {% if employee is not defined %}hidden{% endif %}" action="" method="post" id="form_employees">
+    {{ employee_form.id }} {{ user_form.id }} {{ address_form.id }}
+    {{ render_3row(employee_form.first_name, employee_form.middle_name, employee_form.last_name) }}
+    {{ render_row(employee_form.dob, employee_form.ssn) }}
+    {{ render_row(user_form.email, user_form.active) }}
+    {{ render_row(user_form.username, user_form.password) }}
+    {{ render_row(address_form.street_1, address_form.street_2) }}
+    {{ render_3row(address_form.city, address_form.state, address_form.zip_code) }}
+    {{ render_row(employee_form.smoker_type, None) }}
+    {{ render_row(employee_form.gender, employee_form.marital_status) }}
+    {{ render_row(employee_form.hire_date, employee_form.effective_date) }}
+    {{ render_row(employee_form.termination_date, employee_form.employee_number) }}
+    {{ render_row(employee_form.group_id, employee_form.sub_group_id) }}
+    {{ render_row(employee_form.sub_group_effective_date, employee_form.location) }}
+    {{ render_row(employee_form.salary, employee_form.salary_mode) }}
+    {{ render_row(employee_form.salary_effective_date, employee_form.phone) }}
+    {{ render_row(employee_form.alternate_phone, employee_form.emergency_contact_name) }}
+    {{ render_save_update(employee_form.id, 'employee') }}
+  </form>
+
+  {% if not employee_form.id.data %}
+    {{ render_table('employee', [employee_form.last_name, employee_form.first_name, employee_form.phone, user_form.email], employees )}}
+  {% endif %}
+</div>

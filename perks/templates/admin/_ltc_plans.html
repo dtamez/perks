@@ -1,0 +1,26 @@
+{% from "_macros.html" import render_formatters, render_row, render_3row, render_save_update, render_table, render_ajax_methods %}
+{{ render_formatters([
+    ('cust_service_phone', 'phone'),
+    ('original_effective_date', 'date'),
+    ('renewal_date', 'date'),
+    ('renewal_date', 'date'),
+
+    ]) }}
+{{ render_ajax_methods('admin', 'ltc_plan') }}
+
+<div id="ltc_plans_wrapper">
+  <h4 class="ui dividing header">Employee Assistance Programs</h4>
+
+  <form class="ui form {% if ltc_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_ltc_plans">
+    {{ ltc_plan_form.id }}
+    {{ render_row(ltc_plan_form.name, ltc_plan_form.public_name) }}
+    {{ render_row(ltc_plan_form.code, ltc_plan_form.website) }}
+    {{ render_row(ltc_plan_form.cust_service_phone, ltc_plan_form.not_available_in) }}
+
+    {{ render_save_update(ltc_plan_form.id, 'ltc_plan') }}
+  </form>
+
+  {% if not ltc_plan_form.id.data %}
+    {{ render_table('ltc_plan', [ltc_plan_form.public_name, ltc_plan_form.code, ltc_plan_form.website ], ltc_plans )}}
+  {% endif %}
+</div>

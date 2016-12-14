@@ -1,0 +1,21 @@
+{% extends 'admin.html' %}
+{% block step_content %}
+    {% include "admin/_fsa_plans.html" %}
+    <br>
+    {% include "admin/_hsa_plans.html" %}
+    <br>
+    {% include "admin/_supp_life_plans.html" %}
+    <br>
+    {% include "admin/_401k_plans.html" %}
+    <br>
+    {% include "admin/_ltc_plans.html" %}
+    <br>
+    {% include "admin/_cancer_plans.html" %}
+    <br>
+    {% include "admin/_critical_illness_plans.html" %}
+    <br>
+    {% include "admin/_parking_transit_plans.html" %}
+    <br>
+    {% include "admin/_other_plans.html" %}
+{% endblock step_content %}
+<!-- vi set ft=jinja -->

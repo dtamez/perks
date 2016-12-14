@@ -1,0 +1,20 @@
+{% from "_macros.html" import render_formatters, render_row, render_save_update, render_table, render_ajax_methods %}
+{{ render_formatters([
+    ('effective_date', 'date'),
+    ])
+}}
+{{ render_ajax_methods('admin', 'location') }}
+<div id="locations_wrapper">
+  <h4 class="ui dividing header">Locations</h4>
+
+  <form class="ui form {% if location is not defined %}hidden{% endif %}" action="" method="post" id="form_locations">
+    {{ location_form.id }}
+    {{ render_row(location_form.code, location_form.description  )}}
+    {{ render_row(location_form.effective_date, None)}}
+    {{ render_save_update(location_form.id, 'location') }}
+  </form>
+
+  {% if not location_form.id.data %}
+    {{ render_table('location', [location_form.code, location_form.description, location_form.effective_date], locations )}}
+  {% endif %}
+</div>

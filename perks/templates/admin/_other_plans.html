@@ -1,0 +1,26 @@
+{% from "_macros.html" import render_formatters, render_row, render_3row, render_save_update, render_table, render_ajax_methods %}
+{{ render_formatters([
+    ('cust_service_phone', 'phone'),
+    ('original_effective_date', 'date'),
+    ('renewal_date', 'date'),
+    ('renewal_date', 'date'),
+
+    ]) }}
+ {{ render_ajax_methods('admin', 'other_plan') }}
+
+<div id="other_plans_wrapper">
+  <h4 class="ui dividing header">Other Plans</h4>
+
+  <form class="ui form {% if other_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_other_plans">
+    {{ other_plan_form.id }}
+    {{ render_row(other_plan_form.name, other_plan_form.public_name) }}
+    {{ render_row(other_plan_form.code, other_plan_form.website) }}
+    {{ render_row(other_plan_form.cust_service_phone, other_plan_form.not_available_in) }}
+
+    {{ render_save_update(other_plan_form.id, 'other_plan') }}
+  </form>
+
+  {% if not other_plan_form.id.data %}
+    {{ render_table('other_plan', [other_plan_form.public_name, other_plan_form.code, other_plan_form.website ], other_plans )}}
+  {% endif %}
+</div>

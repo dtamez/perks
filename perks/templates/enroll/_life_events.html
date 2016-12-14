@@ -1,0 +1,35 @@
+
+  <h4 class="ui dividing header">Qualifying Life Event</h4>
+  <form class="ui form hidden" action="" method="post" id="form_life_event">
+    {{ form.csrf_token }}
+    <div class="grouped fields">
+      <label>Life Events</label>
+      {% for k, v in life_events %}
+
+      <div class="field">
+        <div class="ui radio checkbox">
+            <input name="life_event" value="{{ k }}" {% if v is equalto form.life_event.data.value %}checked="checked"{% endif %} type="radio" required>
+          <label>{{ v }}</label>
+        </div>
+      </div>
+
+      {% endfor %}
+
+    </div>
+    <a class='ui violet button button-primary'
+      tabindex="0" href="#" onclick="javascript: $('#form_life_event').hide();$('#table_life_event').show();"/>Save</a>
+  </form>
+  <table class="ui table" id='table_life_event'>
+    <thead>
+      <tr>
+        <th>Current Event</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+          <td>{{ form.life_event.data.value }}</td>
+        <td> <i class='write icon link blue' onclick="javascript: $('#form_life_event').show();$('#table_life_event').hide();"></i> </td>
+      </tr>
+    </tbody>
+  </table>

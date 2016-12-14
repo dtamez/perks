@@ -1,0 +1,28 @@
+{% from "_macros.html" import render_formatters, render_row, render_3row, render_save_update, render_table, render_ajax_methods %}
+{{ render_formatters([
+    ('disability_date', 'date'),
+    ('dob', 'date'),
+    ('ssn', 'ssn'),
+    ])}}
+{{ render_ajax_methods('enroll', 'dependent') }}
+
+<div id="dependents_wrapper">
+  <h4 class="ui dividing header">Dependents</h4>
+
+  <form class="ui form {% if dependent is not defined %}hidden{% endif %}" action="" method="post" id="form_dependents">
+    {{ dependent_form.id }} {{ dependent_form.employee_id(hidden=True)}} {{ address_form.id }}
+    {{ render_3row(dependent_form.first_name, dependent_form.middle_name, dependent_form.last_name) }}
+    {{ render_row(dependent_form.dependent_type, dependent_form.gender) }}
+    {{ render_3row(dependent_form.full_time_student, dependent_form.disabled, dependent_form.disability_date) }}
+    {{ render_row(dependent_form.dob, dependent_form.ssn) }}
+    {{ render_row(dependent_form.smoker_type, dependent_form.marital_status) }}
+    {{ render_row(address_form.street_1, address_form.street_2) }}
+    {{ render_row(address_form.city, address_form.state) }}
+    {{ render_row(address_form.zip_code, None) }}
+    {{ render_save_update(dependent_form.id, 'dependent') }}
+  </form>
+
+  {% if not dependent_form.id.data %}
+    {{ render_table('dependent', [dependent_form.last_name, dependent_form.first_name], dependents )}}
+  {% endif %}
+</div>

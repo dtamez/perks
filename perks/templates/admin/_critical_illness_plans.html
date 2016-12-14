@@ -1,0 +1,26 @@
+{% from "_macros.html" import render_formatters, render_row, render_3row, render_save_update, render_table, render_ajax_methods %}
+{{ render_formatters([
+    ('cust_service_phone', 'phone'),
+    ('original_effective_date', 'date'),
+    ('renewal_date', 'date'),
+    ('renewal_date', 'date'),
+
+    ]) }}
+{{ render_ajax_methods('admin', 'critical_illness_plan') }}
+
+<div id="critical_illness_plans_wrapper">
+  <h4 class="ui dividing header">Critical Illness Plans</h4>
+
+  <form class="ui form {% if critical_illness_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_critical_illness_plans">
+    {{ critical_illness_plan_form.id }}
+    {{ render_row(critical_illness_plan_form.name, critical_illness_plan_form.public_name) }}
+    {{ render_row(critical_illness_plan_form.code, critical_illness_plan_form.website) }}
+    {{ render_row(critical_illness_plan_form.cust_service_phone, critical_illness_plan_form.not_available_in) }}
+
+    {{ render_save_update(critical_illness_plan_form.id, 'critical_illness_plan') }}
+  </form>
+
+  {% if not critical_illness_plan_form.id.data %}
+    {{ render_table('critical_illness_plan', [critical_illness_plan_form.public_name, critical_illness_plan_form.code, critical_illness_plan_form.website ], critical_illness_plans )}}
+  {% endif %}
+</div>

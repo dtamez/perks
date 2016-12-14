@@ -1,0 +1,91 @@
+{% extends "member_base.html" %}
+{% block content %}
+  <div class="ui sixteen column grid">
+    <div class="five wide column">
+      <div class="ui mini vertical steps">
+
+        <a href="{{ url_for('enroll_life_events')}}" class="{% if g.active_step == 'life' %}active {% endif %}step">
+          <i class="spinner icon"></i>
+          <div class="content">
+            <div class="title">
+              Life Events
+            </div>
+
+            <div class="description">
+              Why you are enrolling.
+            </div>
+          </div>
+        </a>
+
+        <a href="{{ url_for('enroll_dependents')}}" class="{% if g.active_step == 'dependents' %}active {% endif %}step">
+          <i class="child icon"></i>
+          <div class="content">
+            <div class="title">
+              Dependents
+            </div>
+
+            <div class="description">
+              List all family members.
+            </div>
+          </div>
+        </a>
+
+        <a href="{{ url_for('enroll_core') }}"  class="{% if g.active_step == 'core' %}active  {% endif %}step">
+          <i class="first aid icon"></i>
+          <div class="content">
+            <div class="title">
+              Core Benefits
+            </div>
+
+            <div class="description">
+              Medical, Dental & Vision
+            </div>
+          </div>
+        </a>
+
+        <a href="{{ url_for('enroll_group') }}" class="{% if g.active_step == 'group' %}active {% endif %}step">
+          <i class="unhide icon"></i>
+          <div class="content">
+            <div class="title">
+              Group Benefits
+            </div>
+
+            <div class="description">
+              After tax benefits.
+            </div>
+          </div>
+        </a>
+
+        <a href="{{ url_for('enroll_supplemental') }}" class="{% if g.active_step == 'supplemental' %}active {% endif %}step">
+          <i class="plus icon"></i>
+          <div class="content">
+            <div class="title">
+              Supplemental
+            </div>
+
+            <div class="description">
+              Supplemental Insurance.
+            </div>
+          </div>
+        </a>
+
+        <a href="{{ url_for('enroll_finalize') }}" class="{% if g.active_step == 'finalize' %}active {% endif %}disabled step">
+          <i class="save icon"></i>
+          <div class="content">
+            <div class="title">
+              Finalize
+            </div>
+
+            <div class="description">
+              Review all.
+            </div>
+          </div>
+        </a>
+
+      </div> {# end steps #}
+    </div>  {# end four wide column #}
+    <div class="eleven wide column">
+      {% block step_content %}{% endblock step_content %}
+    </div> {# end twelve wide column #}
+  </div> {# end ui sixteen col grid #}
+{% endblock content %}

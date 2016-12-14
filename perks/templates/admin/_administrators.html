@@ -1,0 +1,21 @@
+{% from "_macros.html" import render_formatters, render_row, render_save_update, render_table, render_ajax_methods %}
+{{ render_formatters([
+    ('phone', 'phone'),
+    ]) }}
+{{ render_ajax_methods('admin', 'user') }}
+
+<div id="users_wrapper">
+  <h4 class="ui dividing header">Administrators</h4>
+
+  <form class="ui form {% if user is not defined %}hidden{% endif %}" action="" method="post" id="form_users">
+    {{ user_form.id }}
+    {{ render_row(user_form.first_name, user_form.last_name) }}
+    {{ render_row(user_form.email, user_form.active) }}
+    {{ render_row(user_form.username, user_form.password) }}
+    {{ render_save_update(user_form.id, 'user')}}
+  </form>
+
+  {% if not user_form.id.data %}
+    {{ render_table('user', [user_form.last_name, user_form.first_name,  user_form.email], users )}}
+  {% endif %}
+</div>

@@ -1,12 +1,17 @@
-{% extends 'flask_user/member_base.html' %}
+{% extends 'public_base.html' %}
 
-{% block content %}
-{% from "flask_user/_macros.html" import render_field, render_submit_field %}
-<h1>{%trans%}Invite User{%endtrans%}</h1>
+{% block dialog_content %}
+{% from "_macros.html" import render_field, render_submit_field %}
 
-<form action="" method="POST" class="form" role="form">
-    {{ form.hidden_tag() }}
-    {{ render_field(form.email, tabindex=10) }}
+    <h2 class="ui violet image header">
+      <img src="/static/images/daffy.png" class="image">
+      <div class="content">
+        Create your account
+      </div>
+    </h2>
+    <form action="" method="POST" class="ui large form"> {{ form.hidden_tag() }}
+      <div class="ui stacked segment">
+    {{ render_field(form.email, tabindex=10, icon="mail") }}
     {{ render_submit_field(form.submit, tabindex=90) }}
 </form>
 

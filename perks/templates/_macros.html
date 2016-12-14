@@ -43,13 +43,145 @@
 {% macro render_submit_field(field, label=None, tabindex=None) -%}
     {% if not label %}{% set label=field.label.text %}{% endif %}
     <input type="submit" class="ui fluid large violet button" value="{{label}}"
-           {% if tabindex %}tabindex="{{ tabindex }}"{% endif %} >
+    {% if tabindex %}tabindex="{{ tabindex }}"{% endif %} >
 {%- endmacro %}
 
 {% macro render_secondary_button(field, href=None, label=None, tabindex=None) -%}
-{# <a class="button grey ui fluid large" href="{{ url_for('user.register') }}">A label</a> #}
     {% if not label %}{% set label=field.label.text %}{% endif %}
     <a class="button grey ui fluid large" href="{{ href }}"
            {% if tabindex %}tabindex="{{ tabindex }}"{% endif %}
            >{{label}}</a>
+{%- endmacro %}
+
+{% macro render_row(field1, field2) -%}
+<div class="two fields">
+  <div class="field">
+    {{ field1.label }}
+    {{ field1(**kwargs)|safe }}
+  </div>
+  {% if field2 %}
+  <div class="field">
+    {{ field2.label }}
+    {{ field2(**kwargs)|safe }}
+  </div>
+  {% else %}
+  <div class="field">&nbsp;
+  </div>
+  {% endif %}
+</div>
+{%- endmacro %}
+
+{% macro render_3row(field1, field2, field3) -%}
+<div class="three fields">
+  <div class="field">
+    {{ field1.label }}
+    {{ field1(**kwargs)|safe }}
+  </div>
+  <div class="field">
+    {{ field2.label }}
+    {{ field2(**kwargs)|safe }}
+  </div>
+  <div class="field">
+    {{ field3.label }}
+    {{ field3(**kwargs)|safe }}
+  </div>
+</div>
+{%- endmacro %}
+
+{% macro render_save_update(field, model_name) %}
+<div class="field">
+  {% if field.data %}
+    <a class='ui violet button button-primary' tabindex="0" href="#" onclick="javascript: update_{{ model_name}}({{ field.data }});">Update</a>
+  {% else %}
+    <a class='ui violet button button-primary' tabindex="0" href="#" onclick="javascript: new_{{ model_name }}();">Save</a>
+  {% endif %}
+</div>
+{%- endmacro %}
+
+{% macro render_table(model_name, fields, objects) %}
+  <table class="ui table" id="table_{{ model_name }}s">
+    <thead>
+      <tr>
+        {% for field in fields %}
+          <th>{{ field.label }}</th>
+        {% endfor %}
+        <th> <i class="plus icon link green" onclick="javascript: $('#table_{{ model_name }}s').hide();$('#form_{{ model_name }}s').show();"/></i>
+      </tr>
+    </thead>
+    <tbody>
+      {% for obj in objects %}
+        <tr>
+          {% for field in fields %}
+            <td>{{ obj|attr(field.name) }}</td>
+          {% endfor %}
+          <td>
+            <i class='write icon link blue' onclick="javascript: edit_{{ model_name }}({{ obj.id }})"></i>
+            <i class='minus icon link red' onclick="javascript: delete_{{ model_name }}({{ obj.id }});"></i>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{%- endmacro %}
+
+{% macro render_ajax_methods(section, model_name) -%}
+<script type="text/javascript" charset="utf-8">
+    var delete_{{ model_name }} = function(id) {
+      $.ajax({
+        url: '/{{ section }}/_{{ model_name }}s/' + id,
+        dataType: 'html',
+        method: 'DELETE'
+          }).done(function(html) {
+            $('#{{ model_name }}s_wrapper').replaceWith(html);
+        });
+    };
+    var new_{{ model_name }} = function() {
+      var data = $('#form_{{ model_name }}s').serialize();
+        $.ajax({
+          url: '/{{ section }}/_{{ model_name }}s/',
+          dataType: 'html',
+          data: data,
+          method: 'POST'
+        }).done(function(html) {
+          $('#{{ model_name }}s_wrapper').replaceWith(html);
+       });
+    };
+    var update_{{ model_name }} = function(id) {
+      var data = $('#form_{{ model_name }}s').serialize();
+        $.ajax({
+          url: '/{{ section }}/_{{ model_name }}s/' + id,
+          dataType: 'html',
+          data: data,
+          method: 'PUT'
+        }).done(function(html) {
+          $('#{{ model_name }}s_wrapper').replaceWith(html);
+       });
+    };
+    var edit_{{ model_name }} = function(id) {
+      $.ajax({
+        url: '/{{ section }}/_{{ model_name }}s/' + id,
+        dataType: 'html',
+        method: 'GET'
+        }).done(function(html) {
+          $('#{{ model_name }}s_wrapper').replaceWith(html);
+       });
+    };
+ </script>
+{%- endmacro %}
+
+
+{% macro render_formatters(fields) -%}
+<script type="text/javascript" charset="utf-8">
+    jQuery(function($){
+{% for field in fields %}
+  {% if field[1] == 'phone' %}
+    $("input[name={{ field[0] }}]").mask("(999) 999-9999",{placeholder:"(###) ###-####"});
+  {% elif field[1] == 'date' %}
+    $("input[name={{ field[0]}}]").mask("99/99/9999",{placeholder:"mm/dd/yyyy"});
+  {% elif field[1] == 'ssn' %}
+    $("input[name={{ field[0]}}]").mask("999-99-9999");
+  {% endif %}
+{% endfor %}
+   });
+</script>
 {%- endmacro %}

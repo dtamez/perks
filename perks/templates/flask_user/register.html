@@ -1,16 +1,7 @@
-{% extends 'dialog_base.html' %}
+{% extends 'public_base.html' %}
 
-{% block dialog_content %}
-{% from "_macros.html" import render_field, render_submit_field %}
-
-    <h2 class="ui violet image header">
-      <img src="/static/images/daffy.png" class="image">
-      <div class="content">
-        Create your account
-      </div>
-    </h2>
-    <form action="" method="POST" class="ui large form"> {{ form.hidden_tag() }}
-      <div class="ui stacked segment">
+{% block heading %}Create your account{% endblock heading %}
+{% block content %}
         {{ render_field(form.username, tabindex=210, icon="user") }}
 
         {% if user_manager.enable_email and user_manager.enable_username %}
@@ -24,7 +15,4 @@
         {% endif %}
 
         {{ render_submit_field(form.submit, tabindex=280, label="Create your Perks account") }}
-    </div>
-</form>
-
-{% endblock %}
+{% endblock content %}

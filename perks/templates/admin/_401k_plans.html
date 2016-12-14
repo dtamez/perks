@@ -1,0 +1,26 @@
+{% from "_macros.html" import render_formatters, render_row, render_3row, render_save_update, render_table, render_ajax_methods %}
+{{ render_formatters([
+    ('cust_service_phone', 'phone'),
+    ('original_effective_date', 'date'),
+    ('renewal_date', 'date'),
+    ('renewal_date', 'date'),
+
+    ]) }}
+{{ render_ajax_methods('admin', 'e401k_plan') }}
+
+<div id="e401k_plans_wrapper">
+  <h4 class="ui dividing header">Employee 401K Plans</h4>
+
+  <form class="ui form {% if e401k_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_e401k_plans">
+    {{ e401k_plan_form.id }}
+    {{ render_row(e401k_plan_form.name, e401k_plan_form.public_name) }}
+    {{ render_row(e401k_plan_form.code, e401k_plan_form.website) }}
+    {{ render_row(e401k_plan_form.cust_service_phone, e401k_plan_form.not_available_in) }}
+
+    {{ render_save_update(e401k_plan_form.id, 'e401k_plan') }}
+  </form>
+
+  {% if not e401k_plan_form.id.data %}
+    {{ render_table('e401k_plan', [e401k_plan_form.public_name, e401k_plan_form.code, e401k_plan_form.website ], e401k_plans )}}
+  {% endif %}
+</div>

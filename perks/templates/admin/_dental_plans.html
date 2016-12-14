@@ -1,0 +1,33 @@
+{% from "_macros.html" import render_formatters, render_row, render_3row, render_save_update, render_table, render_ajax_methods %}
+{{ render_formatters([
+    ('cust_service_phone', 'phone'),
+    ('original_effective_date', 'date'),
+    ('renewal_date', 'date'),
+    ('renewal_date', 'date'),
+
+    ]) }}
+ {{ render_ajax_methods('admin', 'dental_plan') }}
+
+<div id="dental_plans_wrapper">
+  <h4 class="ui dividing header">Dental Plans</h4>
+
+  <form class="ui form {% if dental_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_dental_plans">
+    {{ dental_plan_form.id }}
+    {{ render_row(dental_plan_form.name, dental_plan_form.public_name) }}
+    {{ render_row(dental_plan_form.code, dental_plan_form.website) }}
+    {{ render_row(dental_plan_form.cust_service_phone, dental_plan_form.not_available_in) }}
+    {{ render_row(dental_plan_form.pricing_type_id, dental_plan_form.bundled_with_medical) }}
+    {{ render_row(dental_plan_form.group_number, dental_plan_form.original_effective_date) }}
+    {{ render_row(dental_plan_form.renewal_date, dental_plan_form.existing) }}
+    {{ render_row(dental_plan_form.list_billed, dental_plan_form.doctor_selection_required) }}
+    {{ render_row(dental_plan_form.account_rep_name, dental_plan_form.cobra_eligible) }}
+    {{ render_row(dental_plan_form.pre_tax, dental_plan_form.carrier) }}
+    {{ render_row(dental_plan_form.bundled_with_vision, dental_plan_form.bundled_with_plan) }}
+
+    {{ render_save_update(dental_plan_form.id, 'dental_plan') }}
+  </form>
+
+  {% if not dental_plan_form.id.data %}
+    {{ render_table('dental_plan', [dental_plan_form.public_name, dental_plan_form.code, dental_plan_form.website ], dental_plans )}}
+  {% endif %}
+</div>
