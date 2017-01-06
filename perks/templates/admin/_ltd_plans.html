@@ -5,7 +5,7 @@
     ('renewal_date', 'date'),
     ('renewal_date', 'date'),
 
-    ]) }}
+    ], 'ltd_plan-') }}
  {{ render_ajax_methods('admin', 'ltd_plan') }}
 
 <div id="ltd_plans_wrapper">
@@ -13,7 +13,7 @@
 
   <form class="ui form {% if ltd_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_ltd_plans">
     {{ ltd_plan_form.id }}
-    {{ render_row(ltd_plan_form.name, ltd_plan_form.public_name) }}
+    {{ render_row(ltd_plan_form.name, None) }}
     {{ render_row(ltd_plan_form.code, ltd_plan_form.website) }}
     {{ render_row(ltd_plan_form.cust_service_phone, ltd_plan_form.not_available_in) }}
     {{ render_row(ltd_plan_form.minimum_benefit, ltd_plan_form.maximum_benefit) }}
@@ -22,6 +22,6 @@
   </form>
 
   {% if not ltd_plan_form.id.data %}
-    {{ render_table('ltd_plan', [ltd_plan_form.public_name, ltd_plan_form.code, ltd_plan_form.website ], ltd_plans )}}
+    {{ render_table('ltd_plan', [ltd_plan_form.name, ltd_plan_form.code, ltd_plan_form.website ], ltd_plans )}}
   {% endif %}
 </div>

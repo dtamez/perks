@@ -140,7 +140,6 @@ class CarrierFactory(factory.Factory):
 class Plan(factory.Factory):
     code = factory.Faker('word')
     name = factory.Sequence(lambda n: 'plan%s' % n)
-    public_name = factory.LazyAttribute(lambda o: o.name)
     cust_service_phone = fake.phone()
     website = factory.Faker('url')
     not_available_in = []

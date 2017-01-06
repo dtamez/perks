@@ -5,7 +5,7 @@
     ('renewal_date', 'date'),
     ('renewal_date', 'date'),
 
-    ]) }}
+    ], 'parking_transit_plan-') }}
  {{ render_ajax_methods('admin', 'parking_transit_plan') }}
 
 <div id="parking_transit_plans_wrapper">
@@ -13,7 +13,7 @@
 
   <form class="ui form {% if parking_transit_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_parking_transit_plans">
     {{ parking_transit_plan_form.id }}
-    {{ render_row(parking_transit_plan_form.name, parking_transit_plan_form.public_name) }}
+    {{ render_row(parking_transit_plan_form.name, None) }}
     {{ render_row(parking_transit_plan_form.code, parking_transit_plan_form.website) }}
     {{ render_row(parking_transit_plan_form.cust_service_phone, parking_transit_plan_form.not_available_in) }}
 
@@ -21,6 +21,6 @@
   </form>
 
   {% if not parking_transit_plan_form.id.data %}
-    {{ render_table('parking_transit_plan', [parking_transit_plan_form.public_name, parking_transit_plan_form.code, parking_transit_plan_form.website ], parking_transit_plans )}}
+    {{ render_table('parking_transit_plan', [parking_transit_plan_form.name, parking_transit_plan_form.code, parking_transit_plan_form.website ], parking_transit_plans )}}
   {% endif %}
 </div>

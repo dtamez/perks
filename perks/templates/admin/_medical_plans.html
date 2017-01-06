@@ -3,7 +3,7 @@
     ('cust_service_phone', 'phone'),
     ('original_effective_date', 'date'),
     ('renewal_date', 'date'),
-    ])}}
+    ], 'medical_plan-')}}
  {{ render_ajax_methods('admin', 'medical_plan') }}
 
 <div id="medical_plans_wrapper">
@@ -11,21 +11,21 @@
 
   <form class="ui form {% if medical_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_medical_plans">
     {{ medical_plan_form.id }}
-    {{ render_row(medical_plan_form.name, medical_plan_form.public_name) }}
-    {{ render_row(medical_plan_form.code, medical_plan_form.website) }}
-    {{ render_row(medical_plan_form.cust_service_phone, medical_plan_form.not_available_in) }}
-    {{ render_row(medical_plan_form.pricing_type_id, medical_plan_form.self_funded) }}
-    {{ render_row(medical_plan_form.group_number, medical_plan_form.original_effective_date) }}
-    {{ render_row(medical_plan_form.renewal_date, medical_plan_form.existing) }}
+    {{ render_row(medical_plan_form.name, medical_plan_form.code) }}
+    {{ render_row(medical_plan_form.group_number, medical_plan_form.website) }}
+    {{ render_row(medical_plan_form.account_rep_name, medical_plan_form.cust_service_phone) }}
+    {{ render_row(medical_plan_form.pricing_type_id, None) }}
+    {{ render_row(medical_plan_form.original_effective_date, medical_plan_form.renewal_date) }}
+    {{ render_row(medical_plan_form.self_funded, medical_plan_form.existing) }}
     {{ render_row(medical_plan_form.list_billed, medical_plan_form.doctor_selection_required) }}
-    {{ render_row(medical_plan_form.account_rep_name, medical_plan_form.cobra_eligible) }}
-    {{ render_row(medical_plan_form.pre_tax, medical_plan_form.carrier) }}
+    {{ render_row(medical_plan_form.pre_tax, medical_plan_form.cobra_eligible) }}
+    {{ render_row(medical_plan_form.carrier_id, medical_plan_form.not_available_in) }}
 
     {{ render_save_update(medical_plan_form.id, 'medical_plan') }}
   </form>
 
   {% if not medical_plan_form.id.data %}
-    {{ render_table('medical_plan', [medical_plan_form.public_name, medical_plan_form.code, medical_plan_form.website ], medical_plans )}}
+    {{ render_table('medical_plan', [medical_plan_form.name, medical_plan_form.code, medical_plan_form.website ], medical_plans )}}
   {% endif %}
 </div>
 

@@ -1,0 +1,16 @@
+{% extends "enroll/_plan_base.html" %}
+{% block ajax_methods %}
+  {{ render_ajax_methods('enroll', 'vision') }}
+{% endblock %}
+
+{% block plan_wrapper %}vision{% endblock %}
+{% block plan_header %}Vision{% endblock %}
+{% block form_id %}vision{% endblock %}
+{% block save_update %}
+    {{ render_save_update(election_form.plan_id, 'vision', None, election_form.id) }}
+{% endblock %}
+{% block enroll_table %}
+  {% if vision_selections %}
+      {{ render_enroll_table(vision_selections, 'vision') }}
+  {% endif %}
+{% endblock %}

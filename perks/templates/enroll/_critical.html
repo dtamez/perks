@@ -1,0 +1,16 @@
+{% extends "enroll/_plan_base.html" %}
+{% block ajax_methods %}
+  {{ render_ajax_methods('enroll', 'critical') }}
+{% endblock %}
+
+{% block plan_wrapper %}critical{% endblock %}
+{% block plan_header %}Critical{% endblock %}
+{% block form_id %}critical{% endblock %}
+{% block save_update %}
+    {{ render_save_update(election_form.plan_id, 'critical', None, election_form.id) }}
+{% endblock %}
+{% block enroll_table %}
+  {% if critical_selections %}
+      {{ render_enroll_table(critical_selections, 'critical') }}
+  {% endif %}
+{% endblock %}

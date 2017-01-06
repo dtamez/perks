@@ -5,7 +5,7 @@
     ('renewal_date', 'date'),
     ('renewal_date', 'date'),
 
-    ]) }}
+    ], 'add_plan-') }}
 {{ render_ajax_methods('admin', 'add_plan') }}
 
 <div id="add_plans_wrapper">
@@ -13,7 +13,7 @@
 
   <form class="ui form {% if add_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_add_plans">
     {{ add_plan_form.id }}
-    {{ render_row(add_plan_form.name, add_plan_form.public_name) }}
+    {{ render_row(add_plan_form.name, None) }}
     {{ render_row(add_plan_form.code, add_plan_form.website) }}
     {{ render_row(add_plan_form.cust_service_phone, add_plan_form.not_available_in) }}
     {{ render_row(add_plan_form.minimum_benefit, add_plan_form.maximum_benefit) }}
@@ -22,6 +22,6 @@
   </form>
 
   {% if not add_plan_form.id.data %}
-    {{ render_table('add_plan', [add_plan_form.public_name, add_plan_form.code, add_plan_form.website ], add_plans )}}
+    {{ render_table('add_plan', [add_plan_form.name, add_plan_form.code, add_plan_form.website ], add_plans )}}
   {% endif %}
 </div>

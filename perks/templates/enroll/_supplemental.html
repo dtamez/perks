@@ -1,0 +1,16 @@
+{% extends "enroll/_plan_base.html" %}
+{% block ajax_methods %}
+  {{ render_ajax_methods('enroll', 'supplemental') }}
+{% endblock %}
+
+{% block plan_wrapper %}supplemental{% endblock %}
+{% block plan_header %}Supplemental Insurance{% endblock %}
+{% block form_id %}supplemental{% endblock %}
+{% block save_update %}
+    {{ render_save_update(election_form.plan_id, 'supplemental', None, election_form.id) }}
+{% endblock %}
+{% block enroll_table %}
+  {% if supplemental_selections %}
+      {{ render_enroll_table(supplemental_selections, 'supplemental') }}
+  {% endif %}
+{% endblock %}

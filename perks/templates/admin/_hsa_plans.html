@@ -5,7 +5,7 @@
     ('renewal_date', 'date'),
     ('renewal_date', 'date'),
 
-    ]) }}
+    ], 'hsa_plan-') }}
 {{ render_ajax_methods('admin', 'hsa_plan') }}
 
 <div id="hsa_plans_wrapper">
@@ -13,7 +13,7 @@
 
   <form class="ui form {% if hsa_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_hsa_plans">
     {{ hsa_plan_form.id }}
-    {{ render_row(hsa_plan_form.name, hsa_plan_form.public_name) }}
+    {{ render_row(hsa_plan_form.name, None) }}
     {{ render_row(hsa_plan_form.code, hsa_plan_form.website) }}
     {{ render_row(hsa_plan_form.cust_service_phone, hsa_plan_form.not_available_in) }}
 
@@ -21,6 +21,6 @@
   </form>
 
   {% if not hsa_plan_form.id.data %}
-    {{ render_table('hsa_plan', [hsa_plan_form.public_name, hsa_plan_form.code, hsa_plan_form.website ], hsa_plans )}}
+    {{ render_table('hsa_plan', [hsa_plan_form.name, hsa_plan_form.code, hsa_plan_form.website ], hsa_plans )}}
   {% endif %}
 </div>

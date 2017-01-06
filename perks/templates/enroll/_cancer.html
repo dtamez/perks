@@ -1,0 +1,16 @@
+{% extends "enroll/_plan_base.html" %}
+{% block ajax_methods %}
+  {{ render_ajax_methods('enroll', 'cancer') }}
+{% endblock %}
+
+{% block plan_wrapper %}cancer{% endblock %}
+{% block plan_header %}Cancer{% endblock %}
+{% block form_id %}cancer{% endblock %}
+{% block save_update %}
+    {{ render_save_update(election_form.plan_id, 'cancer', None, election_form.id) }}
+{% endblock %}
+{% block enroll_table %}
+  {% if cancer_selections %}
+      {{ render_enroll_table(cancer_selections, 'cancer') }}
+  {% endif %}
+{% endblock %}

@@ -2,6 +2,7 @@
 {{ render_formatters([
     ('phone', 'phone'),
     ('alternate_phone', 'phone'),
+    ('emergency_contact_phone', 'phone'),
     ('dob', 'date'),
     ('hire_date', 'date'),
     ('effective_date', 'date'),
@@ -10,7 +11,7 @@
     ('sub_group_effective_date', 'date'),
     ('salary_effective_date', 'date'),
     ('ssn', 'ssn'),
-    ])}}
+    ], 'employee-')}}
 {{ render_ajax_methods('admin', 'employee') }}
 
 <div id="employees_wrapper">
@@ -33,6 +34,7 @@
     {{ render_row(employee_form.salary, employee_form.salary_mode) }}
     {{ render_row(employee_form.salary_effective_date, employee_form.phone) }}
     {{ render_row(employee_form.alternate_phone, employee_form.emergency_contact_name) }}
+    {{ render_row(employee_form.emergency_contact_phone, employee_form.emergency_contact_relationship) }}
     {{ render_save_update(employee_form.id, 'employee') }}
   </form>
 

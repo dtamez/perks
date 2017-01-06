@@ -1,0 +1,16 @@
+{% extends "enroll/_plan_base.html" %}
+{% block ajax_methods %}
+  {{ render_ajax_methods('enroll', 'ltc') }}
+{% endblock %}
+
+{% block plan_wrapper %}ltc{% endblock %}
+{% block plan_header %}Long Term Care{% endblock %}
+{% block form_id %}ltc{% endblock %}
+{% block save_update %}
+    {{ render_save_update(election_form.plan_id, 'ltc', None, election_form.id) }}
+{% endblock %}
+{% block enroll_table %}
+  {% if ltc_selections %}
+      {{ render_enroll_table(ltc_selections, 'ltc') }}
+  {% endif %}
+{% endblock %}

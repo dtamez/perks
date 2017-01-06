@@ -5,7 +5,7 @@
     ('renewal_date', 'date'),
     ('renewal_date', 'date'),
 
-    ]) }}
+    ], 'fsa_plan-') }}
 {{ render_ajax_methods('admin', 'fsa_plan') }}
 
 <div id="fsa_plans_wrapper">
@@ -13,7 +13,7 @@
 
   <form class="ui form {% if fsa_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_fsa_plans">
     {{ fsa_plan_form.id }}
-    {{ render_row(fsa_plan_form.name, fsa_plan_form.public_name) }}
+    {{ render_row(fsa_plan_form.name, None) }}
     {{ render_row(fsa_plan_form.code, fsa_plan_form.website) }}
     {{ render_row(fsa_plan_form.cust_service_phone, fsa_plan_form.not_available_in) }}
 
@@ -21,6 +21,6 @@
   </form>
 
   {% if not fsa_plan_form.id.data %}
-    {{ render_table('fsa_plan', [fsa_plan_form.public_name, fsa_plan_form.code, fsa_plan_form.website ], fsa_plans )}}
+    {{ render_table('fsa_plan', [fsa_plan_form.name, fsa_plan_form.code, fsa_plan_form.website ], fsa_plans )}}
   {% endif %}
 </div>

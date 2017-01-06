@@ -1,7 +1,7 @@
 {% from "_macros.html" import render_formatters, render_row, render_save_update, render_table, render_ajax_methods %}
 {{ render_formatters([
     ('phone', 'phone'),
-    ])}}
+    ], 'carrier-')}}
 {{ render_ajax_methods('admin', 'carrier') }}
 <div id='carriers_wrapper'>
   <h4 class="ui dividing header">Carriers</h4>

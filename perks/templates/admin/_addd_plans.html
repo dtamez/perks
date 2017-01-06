@@ -1,7 +1,7 @@
 {% from "_macros.html" import render_formatters, render_row, render_3row, render_save_update, render_table, render_ajax_methods %}
 {{ render_formatters([
     ('cust_service_phone', 'phone'),
-    ]) }}
+    ], 'addd_plan-') }}
 {{ render_ajax_methods('admin', 'addd_plan') }}
 
 <div id="addd_plans_wrapper">
@@ -9,7 +9,7 @@
 
   <form class="ui form {% if addd_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_addd_plans">
     {{ addd_plan_form.id }}
-    {{ render_row(addd_plan_form.name, addd_plan_form.public_name) }}
+    {{ render_row(addd_plan_form.name, None) }}
     {{ render_row(addd_plan_form.code, addd_plan_form.website) }}
     {{ render_row(addd_plan_form.cust_service_phone, addd_plan_form.not_available_in) }}
     {{ render_row(addd_plan_form.minimum_benefit, addd_plan_form.maximum_benefit) }}
@@ -18,6 +18,6 @@
   </form>
 
   {% if not addd_plan_form.id.data %}
-    {{ render_table('addd_plan', [addd_plan_form.public_name, addd_plan_form.code, addd_plan_form.website ], addd_plans )}}
+    {{ render_table('addd_plan', [addd_plan_form.name, addd_plan_form.code, addd_plan_form.website ], addd_plans )}}
   {% endif %}
 </div>

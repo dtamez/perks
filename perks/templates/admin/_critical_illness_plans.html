@@ -5,7 +5,7 @@
     ('renewal_date', 'date'),
     ('renewal_date', 'date'),
 
-    ]) }}
+    ], 'critical_illness_plan-') }}
 {{ render_ajax_methods('admin', 'critical_illness_plan') }}
 
 <div id="critical_illness_plans_wrapper">
@@ -13,7 +13,7 @@
 
   <form class="ui form {% if critical_illness_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_critical_illness_plans">
     {{ critical_illness_plan_form.id }}
-    {{ render_row(critical_illness_plan_form.name, critical_illness_plan_form.public_name) }}
+    {{ render_row(critical_illness_plan_form.name, None) }}
     {{ render_row(critical_illness_plan_form.code, critical_illness_plan_form.website) }}
     {{ render_row(critical_illness_plan_form.cust_service_phone, critical_illness_plan_form.not_available_in) }}
 
@@ -21,6 +21,6 @@
   </form>
 
   {% if not critical_illness_plan_form.id.data %}
-    {{ render_table('critical_illness_plan', [critical_illness_plan_form.public_name, critical_illness_plan_form.code, critical_illness_plan_form.website ], critical_illness_plans )}}
+    {{ render_table('critical_illness_plan', [critical_illness_plan_form.name, critical_illness_plan_form.code, critical_illness_plan_form.website ], critical_illness_plans )}}
   {% endif %}
 </div>

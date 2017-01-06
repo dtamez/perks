@@ -1,0 +1,16 @@
+{% extends "enroll/_plan_base.html" %}
+{% block ajax_methods %}
+  {{ render_ajax_methods('enroll', 'parking_transit') }}
+{% endblock %}
+
+{% block plan_wrapper %}parking_transit{% endblock %}
+{% block plan_header %}Parking Transit{% endblock %}
+{% block form_id %}parking_transit{% endblock %}
+{% block save_update %}
+    {{ render_save_update(election_form.plan_id, 'parking_transit', None, election_form.id) }}
+{% endblock %}
+{% block enroll_table %}
+  {% if parking_transit_selections %}
+      {{ render_enroll_table(parking_transit_selections, 'parking_transit') }}
+  {% endif %}
+{% endblock %}

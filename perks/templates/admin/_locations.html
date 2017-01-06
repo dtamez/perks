@@ -1,7 +1,7 @@
 {% from "_macros.html" import render_formatters, render_row, render_save_update, render_table, render_ajax_methods %}
 {{ render_formatters([
     ('effective_date', 'date'),
-    ])
+    ], 'location-')
 }}
 {{ render_ajax_methods('admin', 'location') }}
 <div id="locations_wrapper">

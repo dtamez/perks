@@ -1,0 +1,16 @@
+{% extends "enroll/_plan_base.html" %}
+{% block ajax_methods %}
+  {{ render_ajax_methods('enroll', 'eap') }}
+{% endblock %}
+
+{% block plan_wrapper %}eap{% endblock %}
+{% block plan_header %}Employee Assistance Program{% endblock %}
+{% block form_id %}eap{% endblock %}
+{% block save_update %}
+    {{ render_save_update(election_form.plan_id, 'eap', None, election_form.id) }}
+{% endblock %}
+{% block enroll_table %}
+  {% if eap_selections %}
+      {{ render_enroll_table(eap_selections, 'eap') }}
+  {% endif %}
+{% endblock %}

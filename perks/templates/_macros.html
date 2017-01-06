@@ -88,35 +88,45 @@
 </div>
 {%- endmacro %}
 
-{% macro render_save_update(field, model_name) %}
+{% macro render_save_update(field, model_name, id=None, test_id=None) %}
+{% if id %}
+  {% set suffix='_' ~ id %}
+{% else %}
+  {% set suffix='' %}
+{% endif %}
 <div class="field">
-  {% if field.data %}
-    <a class='ui violet button button-primary' tabindex="0" href="#" onclick="javascript: update_{{ model_name}}({{ field.data }});">Update</a>
+  {% if (test_id and test_id.data) or (not test_id and field.data) %}
+    <a class='ui violet button button-primary' tabindex="0" href="#" onclick="javascript: update_{{ model_name}}{{ suffix }}({{ field.data }});">Update</a>
   {% else %}
-    <a class='ui violet button button-primary' tabindex="0" href="#" onclick="javascript: new_{{ model_name }}();">Save</a>
+    <a class='ui violet button button-primary' tabindex="0" href="#" onclick="javascript: new_{{ model_name }}{{ suffix }}();">Save</a>
   {% endif %}
 </div>
 {%- endmacro %}
 
-{% macro render_table(model_name, fields, objects) %}
-  <table class="ui table" id="table_{{ model_name }}s">
+{% macro render_table(model_name, fields, objects, id=None) %}
+{% if id %}
+  {% set suffix='_' ~ id %}
+{% else %}
+  {% set suffix='' %}
+{% endif %}
+  <table class="ui table" id="table_{{ model_name }}s{{ suffix }}">
     <thead>
       <tr>
         {% for field in fields %}
           <th>{{ field.label }}</th>
         {% endfor %}
-        <th> <i class="plus icon link green" onclick="javascript: $('#table_{{ model_name }}s').hide();$('#form_{{ model_name }}s').show();"/></i>
+        <th> <i class="plus icon link green" onclick="javascript: $('#table_{{ model_name }}s{{ suffix }}').hide();$('#form_{{ model_name }}s{{ suffix }}').show();"/></i>
       </tr>
     </thead>
     <tbody>
       {% for obj in objects %}
         <tr>
           {% for field in fields %}
-            <td>{{ obj|attr(field.name) }}</td>
+            <td>{{ obj|attr(field.short_name) }} </td>
           {% endfor %}
           <td>
-            <i class='write icon link blue' onclick="javascript: edit_{{ model_name }}({{ obj.id }})"></i>
-            <i class='minus icon link red' onclick="javascript: delete_{{ model_name }}({{ obj.id }});"></i>
+            <i class='write icon link blue' onclick="javascript: edit_{{ model_name }}{{ suffix }}({{ obj.id }})"></i>
+            <i class='minus icon link red' onclick="javascript: delete_{{ model_name }}{{ suffix }}({{ obj.id }});"></i>
           </td>
         </tr>
       {% endfor %}
@@ -124,64 +134,92 @@
   </table>
 {%- endmacro %}
 
-{% macro render_ajax_methods(section, model_name) -%}
+{% macro render_ajax_methods(section, model_name, id=None) -%}
+{% if id %}
+  {% set suffix='_' ~ id %}
+{% else %}
+  {% set suffix='' %}
+{% endif %}
 <script type="text/javascript" charset="utf-8">
-    var delete_{{ model_name }} = function(id) {
+  var delete_{{ model_name }}{{ suffix }} = function(id) {
       $.ajax({
         url: '/{{ section }}/_{{ model_name }}s/' + id,
         dataType: 'html',
         method: 'DELETE'
           }).done(function(html) {
-            $('#{{ model_name }}s_wrapper').replaceWith(html);
+            $('#{{ model_name }}s_wrapper{{ suffix}}').replaceWith(html);
         });
     };
-    var new_{{ model_name }} = function() {
-      var data = $('#form_{{ model_name }}s').serialize();
+    var new_{{ model_name }}{{ suffix }} = function() {
+      var data = $('#form_{{ model_name }}s{{ suffix }}').serialize();
         $.ajax({
           url: '/{{ section }}/_{{ model_name }}s/',
           dataType: 'html',
           data: data,
           method: 'POST'
         }).done(function(html) {
-          $('#{{ model_name }}s_wrapper').replaceWith(html);
+          $('#{{ model_name }}s_wrapper{{ suffix }}').replaceWith(html);
        });
     };
-    var update_{{ model_name }} = function(id) {
-      var data = $('#form_{{ model_name }}s').serialize();
+    var update_{{ model_name }}{{ suffix }} = function(id) {
+      var data = $('#form_{{ model_name }}s{{ suffix }}').serialize();
         $.ajax({
           url: '/{{ section }}/_{{ model_name }}s/' + id,
           dataType: 'html',
           data: data,
           method: 'PUT'
         }).done(function(html) {
-          $('#{{ model_name }}s_wrapper').replaceWith(html);
+          $('#{{ model_name }}s_wrapper{{ suffix }}').replaceWith(html);
        });
     };
-    var edit_{{ model_name }} = function(id) {
+    var edit_{{ model_name }}{{ suffix }} = function(id) {
       $.ajax({
         url: '/{{ section }}/_{{ model_name }}s/' + id,
         dataType: 'html',
         method: 'GET'
         }).done(function(html) {
-          $('#{{ model_name }}s_wrapper').replaceWith(html);
+          $('#{{ model_name }}s_wrapper{{ suffix }}').replaceWith(html);
        });
     };
  </script>
 {%- endmacro %}
 
 
-{% macro render_formatters(fields) -%}
+{% macro render_formatters(fields, prefix) -%}
 <script type="text/javascript" charset="utf-8">
     jQuery(function($){
 {% for field in fields %}
   {% if field[1] == 'phone' %}
-    $("input[name={{ field[0] }}]").mask("(999) 999-9999",{placeholder:"(###) ###-####"});
+    $("input[name={{ prefix ~ field[0] }}]").mask("(999) 999-9999",{placeholder:"(###) ###-####"});
   {% elif field[1] == 'date' %}
-    $("input[name={{ field[0]}}]").mask("99/99/9999",{placeholder:"mm/dd/yyyy"});
+    $("input[name={{ prefix ~ field[0] }}]").mask("99/99/9999",{placeholder:"mm/dd/yyyy"});
   {% elif field[1] == 'ssn' %}
-    $("input[name={{ field[0]}}]").mask("999-99-9999");
+    $("input[name={{ prefix ~ field[0] }}]").mask("999-99-9999");
   {% endif %}
 {% endfor %}
    });
 </script>
+{%- endmacro %}
+
+{% macro render_enroll_table(selections, plan_type) %}
+  <table class="ui table" id="table_{{ plan_type }}s{{ suffix }}">
+    <thead>
+      <tr>
+          <th>Plan</th>
+          <th>Election</th>
+          <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for selection in selections %}
+        <tr>
+            <td>{{ selection.plan_name }} </td>
+            <td>{{ selection.election_label }} </td>
+          <td>
+            <i class='write icon link blue' onclick="javascript: edit_{{ plan_type }}({{ selection.plan_id }})"></i>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 {%- endmacro %}

@@ -1,0 +1,48 @@
+{% from "_macros.html" import render_row, render_save_update, render_enroll_table, render_ajax_methods %}
+
+{% block ajax_methods  %}
+{% endblock %}
+
+<div id="{% block plan_wrapper %}{% endblock %}s_wrapper">
+  <h4 class="ui dividing header">{% block plan_header %}{% endblock %} Plan Elections</h4>
+
+  <form class="ui form {% if election is not defined %}hidden{% endif %}" action="" method="post" id="form_{% block form_id %}{% endblock %}s">
+    {{ election_form.id }}
+    {{ election_form.employee_id }}
+    {{ election_form.enrollment_id }}
+    {{ election_form.plan_tier_premium_id }}
+    {{ election_form.plan_id }}
+
+    <table class="ui table">
+      <thead>
+        <tr>
+          <th>Tier</th><th>Total<br>Premium</th><th>Employer<br>Portion</th><th>Employee<br>Portion</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for value, label, checked, total_premium, employer_cost, employee_cost in election_form.selection.choices %}
+          <tr>
+            <td>
+              <div class="field">
+                <div class="ui radio checkbox">
+                  <input type="radio" name="{{ election_form.selection.id }}" id="{{ election_form.selection.id }}" value="{{ value }}"{% if checked %} checked{% endif %} tabindex="0" >
+                  <label>{{ label }} </label>
+                </div>
+              </div>
+            </td>
+            <td>{{ total_premium }}</td>
+            <td>{{ employer_cost }}</td>
+            <td>{{ employee_cost }}</td>
+          </tr>
+        {% endfor %}
+
+      </tbody>
+    </table>
+
+    {% block save_update %}
+    {% endblock save_update %}
+  </form>
+  {% block enroll_table %}
+  {% endblock %}
+
+</div>

@@ -1,7 +1,7 @@
 {% from "_macros.html" import render_formatters, render_row, render_save_update, render_table, render_ajax_methods %}
 {{ render_formatters([
     ('phone', 'phone'),
-    ]) }}
+    ], 'user-') }}
 {{ render_ajax_methods('admin', 'user') }}
 
 <div id="users_wrapper">

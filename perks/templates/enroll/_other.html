@@ -1,0 +1,16 @@
+{% extends "enroll/_plan_base.html" %}
+{% block ajax_methods %}
+  {{ render_ajax_methods('enroll', 'other') }}
+{% endblock %}
+
+{% block plan_wrapper %}other{% endblock %}
+{% block plan_header %}Other{% endblock %}
+{% block form_id %}other{% endblock %}
+{% block save_update %}
+    {{ render_save_update(election_form.plan_id, 'other', None, election_form.id) }}
+{% endblock %}
+{% block enroll_table %}
+  {% if other_selections %}
+      {{ render_enroll_table(other_selections, 'other') }}
+  {% endif %}
+{% endblock %}

@@ -5,7 +5,7 @@
     ('renewal_date', 'date'),
     ('renewal_date', 'date'),
 
-    ]) }}
+    ], 'cancer_plan-') }}
 {{ render_ajax_methods('admin', 'cancer_plan') }}
 
 <div id="cancer_plans_wrapper">
@@ -13,7 +13,7 @@
 
   <form class="ui form {% if cancer_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_cancer_plans">
     {{ cancer_plan_form.id }}
-    {{ render_row(cancer_plan_form.name, cancer_plan_form.public_name) }}
+    {{ render_row(cancer_plan_form.name, None) }}
     {{ render_row(cancer_plan_form.code, cancer_plan_form.website) }}
     {{ render_row(cancer_plan_form.cust_service_phone, cancer_plan_form.not_available_in) }}
 
@@ -21,6 +21,6 @@
   </form>
 
   {% if not cancer_plan_form.id.data %}
-    {{ render_table('cancer_plan', [cancer_plan_form.public_name, cancer_plan_form.code, cancer_plan_form.website ], cancer_plans )}}
+    {{ render_table('cancer_plan', [cancer_plan_form.name, cancer_plan_form.code, cancer_plan_form.website ], cancer_plans )}}
   {% endif %}
 </div>

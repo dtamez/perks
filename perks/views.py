@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+import locale
+
 from flask import g, request, render_template, redirect, url_for
 from flask.views import MethodView
 from flask_login import current_user, login_required
 from jinja2 import Environment, PackageLoader
+from sqlalchemy import desc
 
 from . import app, db_session
 #  from .exporter import Exporter
@@ -14,6 +17,7 @@ from .forms import (
     DentalPlanForm,
     DependentForm,
     EAPPlanForm,
+    ElectionForm,
     Employee401KPlanForm,
     EmployeeForm,
     FSAPlanForm,
@@ -27,11 +31,11 @@ from .forms import (
     MedicalPlanForm,
     OtherPlanForm,
     ParkingTransitPlanForm,
+    PlanTierPremiumForm,
     SupplementalInsurancePlanForm,
     UserForm,
     VisionPlanForm,
 )
-#  from .models import Employee, Enrollment, LifeEventType, User
 from .models import (
     Address,
     CancerPlan,
@@ -40,8 +44,10 @@ from .models import (
     CriticalIllnessPlan,
     DentalPlan,
     EAPPlan,
+    Election,
     Employee,
     Employee401KPlan,
+    Enrollment,
     FSAPlan,
     HSAPlan,
     LIFE_EVENT_TYPES,
@@ -54,7 +60,10 @@ from .models import (
     MedicalPlan,
     OtherPlan,
     ParkingTransitPlan,
+    Plan,
+    PlanTierPremium,
     Role,
+    STDPlan,
     SupplumentalInsurancePlan,
     User,
     VisionPlan,
@@ -63,6 +72,7 @@ from .models import (
 
 
 env = Environment(loader=PackageLoader('perks', 'templates'))
+locale.setlocale(locale.LC_ALL, '')
 
 
 @app.login_manager.user_loader
@@ -86,9 +96,104 @@ def index():
     return render_template('index.html')
 
 
+class AJAXCrudView(MethodView):
+
+    def get(self, id):
+        if id is None:
+            return self.display_all()
+        else:
+            main = self.main['model'].query.get(id)
+            template = env.get_template(self.main['template'])
+            ctx = {self.main['single']: main,
+                   self.main['form_name']: self.main['form'](
+                       None, main)}
+            for sub in self.subs:
+                ctx[sub['form_name']] = sub['form'](
+                    None, getattr(main, sub['single']))
+
+            return template.render(ctx)
+
+    def post(self):
+        main = self.main['model']()
+        form = self.main['form'](request.form)
+        form.populate_obj(main)
+        main.id = None
+        for sub in self.subs:
+            obj = sub['model']()
+            form = sub['form'](request.form)
+            form.populate_obj(obj)
+            if obj.id == '':
+                obj.id = None
+            db_session.add(obj)
+            setattr(main, sub['single'], obj)
+
+        db_session.add(main)
+        try:
+            db_session.commit()
+        except:
+            db_session.rollback()
+
+        objects = self.main['model'].query.all()
+        template = env.get_template(self.main['template'])
+        ctx = {self.main['plural']: objects,
+               self.main['form_name']: self.main['form'](
+                   None)}
+        for sub in self.subs:
+            ctx[sub['form_name']] = sub['form'](None)
+        return template.render(ctx)
+
+    def put(self, id):
+        form = self.main['form'](request.form)
+        main = self.main['model'].query.get(id)
+        form.populate_obj(main)
+        db_session.add(main)
+        for sub in self.subs:
+            form = sub['form'](request.form)
+            obj = getattr(main, sub['single'])
+            if not obj:
+                obj = sub['model']()
+                setattr(main, sub['single'], obj)
+            form.populate_obj(obj)
+            db_session.add(obj)
+        try:
+            db_session.commit()
+        except:
+            db_session.rollback()
+        return self.display_all()
+
+    def delete(self, id):
+        obj = self.main['model'].query.get(id)
+        db_session.delete(obj)
+        try:
+            db_session.commit()
+        except:
+            db_session.rollback()
+        return self.display_all()
+
+    def display_all(self):
+        objects = self.main['model'].query.all()
+        template = env.get_template(self.main['template'])
+        ctx = {self.main['plural']: objects,
+               self.main['form_name']: self.main['form'](None)}
+        for sub in self.subs:
+            ctx[sub['form_name']] = sub['form'](None)
+        return template.render(ctx)
+
+
+# ENROLL
 @app.route('/enroll')
 @login_required
 def enroll():
+    employee = Employee.query.join(User).filter(
+        User.id == g.user.id).first()
+    enrollment = Enrollment.query.filter(
+        Enrollment.employee_id == employee.id).first()
+    if not enrollment:
+        enrollment = Enrollment()
+        enrollment.employee_id = employee.id
+        db_session.add(enrollment)
+        db_session.commit()
+
     return redirect(url_for('enroll_life_events'))
 
 
@@ -112,7 +217,8 @@ def enroll_life_events():
 def enroll_dependents():
     g.active_tab = 'enroll'
     g.active_step = 'dependents'
-    employee = Employee.query.first()
+    employee = Employee.query.join(User).filter(
+        User.id == g.user.id).first()
     dependents = employee.dependents
     dependent_form = DependentForm(data={'employee_id': employee.id})
     address_form = AddressForm()
@@ -123,22 +229,252 @@ def enroll_dependents():
                            )
 
 
-@app.route('/enroll/core', methods=['GET', 'POST'])
+def premium_choices(plan_id, current_ptp):
+    premiums = (PlanTierPremium.query.filter(
+        PlanTierPremium.plan_id == plan_id)
+                .order_by(desc(PlanTierPremium.premium)))
+    choices = []
+    for ptp in premiums:
+        choices.append((
+            ptp.tier_type.code,
+            ptp.tier_type.value,
+            ptp.id == current_ptp,
+            locale.currency(ptp.premium, grouping=True),
+            locale.currency(ptp.employer_portion, grouping=True),
+            locale.currency(ptp.employee_portion, grouping=True),
+        ))
+    choices.append(('DE', 'Decline', current_ptp is None, '', '', ''))
+    return choices
+
+
+def get_selections(plans, enrollment_id):
+    selections = []
+    for plan in plans:
+        selection = {'plan_name': plan.name,
+                     'plan_id': plan.id,
+                     'election_label': 'Declined'}
+        selections.append(selection)
+        election = Election.query.filter(
+            Election.enrollment_id == enrollment_id,
+            Election.plan_id == plan.id).first()
+        if election and election.plan_tier_premium:
+            selection['election_label'] = (election.plan_tier_premium.tier_type
+                                           .value)
+    return selections
+
+
+@app.route('/enroll/core', methods=['GET'])
 @login_required
 def enroll_core():
-    pass
+    g.active_tab = 'enroll'
+    g.active_step = 'core'
+    employee = Employee.query.join(User).filter(
+        User.id == g.user.id).first()
+    # TODO: 2017-01-03 Eventually want to have an 'active' enrollment
+    # or enrollment periods
+    enrollment = Enrollment.query.filter(
+        Enrollment.employee_id == employee.id).one()
+    # get all medical plans that are available
+    medical_plans = MedicalPlan.query.all()
+    medical_selections = get_selections(medical_plans, enrollment.id)
+    dental_plans = DentalPlan.query.all()
+    dental_selections = get_selections(dental_plans, enrollment.id)
+    vision_plans = VisionPlan.query.all()
+    vision_selections = get_selections(vision_plans, enrollment.id)
+    # Information for current selections across all available plans
+    election_form = ElectionForm()
+    election_form.selection.choices = []
+    ctx = {'election_form': election_form,
+           'medical_selections': medical_selections,
+           'dental_selections': dental_selections,
+           'vision_selections': vision_selections,
+           }
+    return render_template('enroll/core.html', **ctx)
 
 
-@app.route('/enroll/group', methods=['GET', 'POST'])
+@app.route('/enroll/group', methods=['GET'])
 @login_required
 def enroll_group():
-    pass
+    g.active_tab = 'enroll'
+    g.active_step = 'group'
+    employee = Employee.query.join(User).filter(
+        User.id == g.user.id).first()
+    # TODO: 2017-01-03 Eventually want to have an 'active' enrollment
+    # or enrollment periods
+    enrollment = Enrollment.query.filter(
+        Enrollment.employee_id == employee.id).one()
+    # get all group plans that are available
+    # TODO: 2017-01-05 Figure out way to generate these dynamically
+    eap_plans = EAPPlan.query.all()
+    eap_selections = get_selections(eap_plans, enrollment.id)
+    ltd_plans = LTDPlan.query.all()
+    ltd_selections = get_selections(ltd_plans, enrollment.id)
+    std_plans = STDPlan.query.all()
+    std_selections = get_selections(std_plans, enrollment.id)
+    life_add_plans = LifeADDPlan.query.all()
+    life_add_selections = get_selections(life_add_plans, enrollment.id)
+    life_add_dependent_plans = LifeADDDependentPlan.query.all()
+    life_add_dependent_selections = get_selections(life_add_dependent_plans,
+                                                   enrollment.id)
+    # Information for current selections across all available plans
+    election_form = ElectionForm()
+    election_form.selection.choices = []
+    ctx = {'election_form': election_form,
+           'eap_selections': eap_selections,
+           'ltd_selections': ltd_selections,
+           'std_selections': std_selections,
+           'life_add_selections': life_add_selections,
+           'life_add_depndent_selections': life_add_dependent_selections,
+           }
+    return render_template('enroll/group.html', **ctx)
 
 
-@app.route('/enroll/supplemental', methods=['GET', 'POST'])
+@app.route('/enroll/supplemental', methods=['GET'])
 @login_required
 def enroll_supplemental():
-    pass
+    g.active_tab = 'enroll'
+    g.active_step = 'supplemental'
+    employee = Employee.query.join(User).filter(
+        User.id == g.user.id).first()
+    # TODO: 2017-01-03 Eventually want to have an 'active' enrollment
+    # or enrollment periods
+    enrollment = Enrollment.query.filter(
+        Enrollment.employee_id == employee.id).one()
+    # get all group plans that are available
+    # TODO: 2017-01-05 Figure out way to generate these dynamically
+    fsa_plans = FSAPlan.query.all()
+    fsa_selections = get_selections(fsa_plans, enrollment.id)
+    parking_transit_plans = ParkingTransitPlan.query.all()
+    parking_transit_selections = get_selections(parking_transit_plans,
+                                                enrollment.id)
+    hsa_plans = HSAPlan.query.all()
+    hsa_selections = get_selections(hsa_plans, enrollment.id)
+    e401k_plans = Employee401KPlan.query.all()
+    e401k_selections = get_selections(e401k_plans, enrollment.id)
+    supplemental_plans = SupplumentalInsurancePlan.query.all()
+    supplemental_selections = get_selections(supplemental_plans, enrollment.id)
+    ltc_plans = LongTermCarePlan.query.all()
+    ltc_selections = get_selections(ltc_plans, enrollment.id)
+    cancer_plans = CancerPlan.query.all()
+    cancer_selections = get_selections(cancer_plans, enrollment.id)
+    critical_plans = CriticalIllnessPlan.query.all()
+    critical_selections = get_selections(critical_plans, enrollment.id)
+    other_plans = OtherPlan.query.all()
+    other_selections = get_selections(other_plans, enrollment.id)
+    # Information for current selections across all available plans
+    election_form = ElectionForm()
+    election_form.selection.choices = []
+    ctx = {'election_form': election_form,
+           'fsa_selections': fsa_selections,
+           'parking_transit_selections': parking_transit_selections,
+           'hsa_selections': hsa_selections,
+           'e401k_selections': e401k_selections,
+           'supplemental_selections': supplemental_selections,  # NOQA
+           'ltc_selections': ltc_selections,
+           'other_selections': other_selections,
+           'cancer_selections': cancer_selections,
+           'critical_selections': critical_selections,   # NOQA
+           }
+    return render_template('enroll/supplemental.html', **ctx)
+
+
+class EnrollPlanAJAXView(MethodView):
+
+    def get(self, id):
+        employee = Employee.query.join(User).filter(
+            User.id == g.user.id).first()
+        if id is None:
+            return self.display_all()
+        else:
+            # displaying a form to edit the election
+            plan = Plan.query.get(id)
+            enrollment = Enrollment.query.filter(
+                Enrollment.employee_id == employee.id).first()
+            election = Election.query.filter(
+                Election.enrollment_id == enrollment.id,
+                Election.plan_id == plan.id).first()
+            if not election:
+                election = Election()
+                election.plan_id = plan.id
+                election.enrollment_id = enrollment.id
+            election_form = ElectionForm(None, election)
+            election_form.selection.choices = premium_choices(
+                plan.id, election.plan_tier_premium_id)
+            template = env.get_template(self.template_name)
+            ctx = {'election': election,
+                   'election_form': election_form}
+
+            return template.render(ctx)
+
+    def post(self):
+        employee = Employee.query.join(User).filter(
+            User.id == g.user.id).first()
+        election = Election()
+        form = ElectionForm(request.form)
+        form.populate_obj(election)
+        election.id = None
+        election.employee = employee
+        choice = form.selection.data
+        ptp = PlanTierPremium.query.filter(
+            PlanTierPremium.tier_type == choice,
+            PlanTierPremium.plan_id == form.plan_id.data).first()
+        election.plan_tier_premium = ptp
+
+        db_session.add(election)
+        try:
+            db_session.commit()
+        except:
+            db_session.rollback()
+
+        return self.display_all()
+
+    def put(self, id):
+        form = ElectionForm(request.form)
+        assert(form.enrollment_id.data)
+        enrollment = Enrollment.query.get(form.enrollment_id.data)
+        election = Election.query.filter(
+            Election.enrollment_id == enrollment.id,
+            Election.plan_id == id).one()
+        choice = form.selection.data
+        ptp = PlanTierPremium.query.filter(
+            PlanTierPremium.plan_id == id,
+            PlanTierPremium.tier_type == choice).first()
+        election.plan_tier_premium = ptp
+
+        db_session.add(election)
+        try:
+            db_session.commit()
+        except:
+            db_session.rollback()
+        return self.display_all()
+
+    def display_all(self):
+        employee = Employee.query.join(User).filter(
+            User.id == g.user.id).first()
+        plans = self.plan_class.query.all()
+        enrollment = Enrollment.query.filter(
+            Enrollment.employee_id == employee.id).one()
+        selections = []
+        for plan in plans:
+            selection = {'plan_name': plan.name, 'plan_id': plan.id,
+                         'election_label': 'Declined'}
+            selections.append(selection)
+            election = Election.query.filter(
+                Election.enrollment_id == enrollment.id,
+                Election.plan_id == plan.id).first()
+            if election and election.plan_tier_premium:
+                selection['election_label'] = (election.plan_tier_premium
+                                               .tier_type.value)
+            else:
+                election = Election()
+                election.plan = plan
+                election.enrollment_id = enrollment.id
+            election_form = ElectionForm()
+            election_form.selection.choices = []
+        ctx = {'election_form': election_form,
+               '{}_selections'.format(self.prefix): selections}
+        return render_template(
+            self.template_name, **ctx)
 
 
 @app.route('/enroll/finalize', methods=['GET', 'POST'])
@@ -159,84 +495,6 @@ def messages():
 def benefits():
     g.active_tab = 'benefits'
     return render_template('benefits/benefits.html')
-
-
-class AJAXCrudView(MethodView):
-
-    def get(self, id):
-        if id is None:
-            return self.display_all()
-        else:
-            main = self.main['model'].query.get(id)
-            template = env.get_template(self.main['template'])
-            ctx = {self.main['single']: main,
-                   self.main['form_name']: self.main['form'](None, main)}
-            for sub in self.subs:
-                ctx[sub['form_name']] = sub['form'](
-                    None, getattr(main, sub['single']))
-
-            return template.render(ctx)
-
-    def post(self):
-        main = self.main['model']()
-        form = self.main['form'](request.form)
-        form.populate_obj(main)
-        main.id = None
-        for sub in self.subs:
-            obj = sub['model']()
-            form = sub['form'](request.form)
-            form.populate_obj(obj)
-            if obj.id == '':
-                obj.id = None
-            db_session.add(obj)
-            setattr(main, sub['single'], obj)
-
-        db_session.add(main)
-        db_session.commit()
-
-        objects = self.main['model'].query.all()
-        template = env.get_template(self.main['template'])
-        ctx = {self.main['plural']: objects,
-               self.main['form_name']: self.main['form'](None)}
-        for sub in self.subs:
-            ctx[sub['form_name']] = sub['form'](None)
-        return template.render(ctx)
-
-    def put(self, id):
-        import ipdb
-        ipdb.set_trace()
-        form = self.main['form'](request.form)
-        main = self.main['model'].query.get(id)
-        form.populate_obj(main)
-        db_session.add(main)
-        for sub in self.subs:
-            form = sub['form'](request.form)
-            obj = getattr(main, sub['single'])
-            if not obj:
-                obj = sub['model']()
-                setattr(main, sub['single'], obj)
-            form.populate_obj(obj)
-            db_session.add(obj)
-        try:
-            db_session.commit()
-        except:
-            db_session.rollback()
-        return self.display_all()
-
-    def delete(self, id):
-        obj = self.main['model'].query.get(id)
-        db_session.delete(obj)
-        db_session.commit()
-        return self.display_all()
-
-    def display_all(self):
-        objects = self.main['model'].query.all()
-        template = env.get_template(self.main['template'])
-        ctx = {self.main['plural']: objects,
-               self.main['form_name']: self.main['form'](None)}
-        for sub in self.subs:
-            ctx[sub['form_name']] = sub['form'](None)
-        return template.render(ctx)
 
 
 @app.route('/admin')
@@ -377,9 +635,17 @@ def admin_supplemental():
 def admin_premiums():
     g.active_tab = 'admin'
     g.active_step = 'premiums'
-    return render_template('admin/premiums.html')
+    plan_forms = []
+    plans = Plan.query.all()
+    for plan in plans:
+        plan_forms.append(
+            (plan, PlanTierPremiumForm(data={'plan_id': plan.id})))
+
+    return render_template('admin/premiums.html',
+                           plan_forms=plan_forms)
 
 
+# ADMIN Ajax views
 class CarrierView(AJAXCrudView):
     main = {'model': Carrier, 'form': CarrierForm, 'class': 'Carrier',
             'form_class': 'CarrierForm', 'single': 'carrier',
@@ -483,9 +749,9 @@ class SuppLifePlanView(AJAXCrudView):
             'form': SupplementalInsurancePlanForm,
             'class': 'SupplumentalInsurancePlan',
             'form_class': 'SupplementalInsurancePlanForm',
-            'single': 'hsa_plan', 'plural': 'hsa_plans',
-            'form_name': 'hsa_plan_form',
-            'template': '/admin/_hsa_plans.html'}
+            'single': 'sull_life_plan', 'plural': 'supp_life_plans',
+            'form_name': 'supp_life_plan_form',
+            'template': '/admin/_supp_life_plans.html'}
     subs = []
 
 
@@ -563,7 +829,77 @@ class LocationView(AJAXCrudView):
     subs = []
 
 
-# Enrollment
+class PlanTierPremiumView(AJAXCrudView):
+    main = {'model': PlanTierPremium, 'form': PlanTierPremiumForm,
+            'class': 'PlanTierPremium', 'form_class': 'PlanTierPremiumForm',
+            'single': 'plan_tier_premium', 'plural': 'plan_tier_premiums',
+            'form_name': 'plan_tier_premium_form',
+            'template': '/admin/_plan_tier_premiums.html'}
+    subs = []
+
+    def get(self, id):
+        assert(id)
+        # show form
+        main = self.main['model'].query.get(id)
+        self.plan = main.plan
+        template = env.get_template(self.main['template'])
+        ctx = {self.main['single']: main, 'plan': self.plan,
+               self.main['form_name']: self.main['form'](None, main)}
+
+        return template.render(ctx)
+
+    def post(self):
+        main = self.main['model']()
+        form = self.main['form'](request.form)
+        form.populate_obj(main)
+        main.id = None
+
+        db_session.add(main)
+        try:
+            db_session.commit()
+        except:
+            db_session.rollback()
+
+        template = env.get_template(self.main['template'])
+        plan = main.plan
+        ctx = {self.main['plural']: plan.plan_tier_premiums,
+               self.main['form_name']: self.main['form'](
+                   None), 'plan': plan}
+        return template.render(ctx)
+
+    def put(self, id):
+        template = env.get_template(self.main['template'])
+        form = self.main['form'](request.form)
+        main = self.main['model'].query.get(id)
+        self.plan = main.plan
+        form.populate_obj(main)
+        db_session.add(main)
+        try:
+            db_session.commit()
+        except:
+            db_session.rollback()
+        ctx = {self.main['plural']: self.plan.plan_tier_premiums,
+               self.main['form_name']: self.main['form'](
+                   None), 'plan': self.plan}
+        return template.render(ctx)
+
+    def delete(self, id):
+        template = env.get_template(self.main['template'])
+        obj = self.main['model'].query.get(id)
+        plan = obj.plan
+        db_session.delete(obj)
+        try:
+            db_session.commit()
+        except:
+            db_session.rollback()
+
+        ctx = {'plan_tier_premiums': plan.plan_tier_premiums,
+               'plan_tier_premium_form': PlanTierPremiumForm(),
+               'plan': plan}
+        return template.render(ctx)
+
+
+# Enrollment Ajax Views
 class DependentView(AJAXCrudView):
     main = {'model': Dependent, 'form': DependentForm, 'class': 'Dependent',
             'form_class': 'DepndentForm', 'single': 'dependent',
@@ -574,6 +910,125 @@ class DependentView(AJAXCrudView):
          'form_class': 'AddressForm', 'single': 'address',
          'plural': 'addresss', 'form_name': 'address_form'},
     ]
+
+
+class EnrollMedicalView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_medical.html'
+    plan_class = MedicalPlan
+    prefix = 'medical'
+
+
+class EnrollDentalView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_dental.html'
+    plan_class = DentalPlan
+    prefix = 'dental'
+
+
+class EnrollVisionView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_vision.html'
+    plan_class = VisionPlan
+    prefix = 'vision'
+
+
+class EnrollEAPView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_eap.html'
+    plan_class = EAPPlan
+    prefix = 'eap'
+
+
+class EnrollLTDView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_ltd.html'
+    plan_class = LTDPlan
+    prefix = 'ltd'
+
+
+class EnrollSTDView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_std.html'
+    plan_class = STDPlan
+    prefix = 'std'
+
+
+class EnrollLifeADDView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_life_add.html'
+    plan_class = LifeADDPlan
+    prefix = 'life_add'
+
+
+class EnrollLifeADDDependentView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_life_add_dependent.html'
+    plan_class = LifeADDDependentPlan
+    prefix = 'life_add_dependent'
+
+
+class EnrollFSAPlanView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_fsa.html'
+    plan_class = FSAPlan
+    prefix = 'fsa'
+
+
+class EnrollParkingTransitPlanView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_parking_transit.html'
+    plan_class = ParkingTransitPlan
+    prefix = 'parking_transit'
+
+
+class EnrollHSAPlanView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_hsa.html'
+    plan_class = HSAPlan
+    prefix = 'hsa'
+
+
+class EnrollEmployee401KPlanView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_e401k.html'
+    plan_class = HSAPlan
+    prefix = 'e401k'
+
+
+class EnrollSupplementalInsurancePlanView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_supplemental.html'
+    plan_class = SupplumentalInsurancePlan
+    prefix = 'supplemental'
+
+
+class EnrollLongTermCarePlanView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_ltc.html'
+    plan_class = LongTermCarePlan
+    prefix = 'ltc'
+
+
+class EnrollOtherPlanView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_other.html'
+    plan_class = OtherPlan
+    prefix = 'other'
+
+
+class EnrollCancerPlanView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_cancer.html'
+    plan_class = CancerPlan
+    prefix = 'cancer'
+
+
+class EnrollCriticalIllnessPlanView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_critical.html'
+    plan_class = CriticalIllnessPlan
+    prefix = 'critical'
 
 
 def register_ajax_view(view, endpoint, url, pk='id', pk_type='int'):
@@ -604,6 +1059,24 @@ register_ajax_view(OtherPlanView, 'other_plan_ajax', '/admin/_other_plans/')  # 
 register_ajax_view(ParkingTransitPlanView, 'parking_transit_plan_ajax', '/admin/_parking_transit_plans/')  # NOQA
 register_ajax_view(SuppLifePlanView, 'supp_plan_ajax', '/admin/_supp_life_plans/')  # NOQA
 register_ajax_view(VisionPlanView, 'vision_plan_ajax', '/admin/_vision_plans/')  # NOQA
+register_ajax_view(PlanTierPremiumView, 'plan_tier_premium_ajax', '/admin/_plan_tier_premiums/')  # NOQA
 
 # enroll
 register_ajax_view(DependentView, 'dependent_ajax', '/enroll/_dependents/')  # NOQA
+register_ajax_view(EnrollMedicalView, 'enroll_medical_ajax', '/enroll/_medicals/')  # NOQA
+register_ajax_view(EnrollDentalView, 'enroll_dental_ajax', '/enroll/_dentals/')  # NOQA
+register_ajax_view(EnrollVisionView, 'enroll_vision_ajax', '/enroll/_visions/')  # NOQA
+register_ajax_view(EnrollEAPView, 'enroll_eap_ajax', '/enroll/_eaps/')  # NOQA
+register_ajax_view(EnrollLTDView, 'enroll_ltd_ajax', '/enroll/_ltds/')  # NOQA
+register_ajax_view(EnrollSTDView, 'enroll_std_ajax', '/enroll/_stds/')  # NOQA
+register_ajax_view(EnrollLifeADDView, 'enroll_life_add_ajax', '/enroll/_life_adds/')  # NOQA
+register_ajax_view(EnrollLifeADDDependentView, 'enroll_life_add_dependent_ajax', '/enroll/_life_add_dependents/')  # NOQA
+register_ajax_view(EnrollFSAPlanView, 'enroll_fsa_ajax', '/enroll/_fsas/')  # NOQA
+register_ajax_view(EnrollParkingTransitPlanView, 'enroll_parking_transit_ajax', '/enroll/_parking_transits/')  # NOQA
+register_ajax_view(EnrollHSAPlanView, 'enroll_hsa_ajax', '/enroll/_hsas/')  # NOQA
+register_ajax_view(EnrollEmployee401KPlanView, 'enroll_e401k_ajax', '/enroll/_e401ks/')  # NOQA
+register_ajax_view(EnrollSupplementalInsurancePlanView, 'enroll_supplemental_ajax', '/enroll/_supplementals/')  # NOQA
+register_ajax_view(EnrollLongTermCarePlanView, 'enroll_ltc_ajax', '/enroll/_ltcs/')  # NOQA
+register_ajax_view(EnrollOtherPlanView, 'enroll_other_ajax', '/enroll/_others/')  # NOQA
+register_ajax_view(EnrollCancerPlanView, 'enroll_cancer_ajax', '/enroll/_cancers/')  # NOQA
+register_ajax_view(EnrollCriticalIllnessPlanView, 'enroll_critical_ajax', '/enroll/_criticals/')  # NOQA

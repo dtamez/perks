@@ -5,7 +5,7 @@
     ('renewal_date', 'date'),
     ('renewal_date', 'date'),
 
-    ]) }}
+    ], 'dental_plan-') }}
  {{ render_ajax_methods('admin', 'dental_plan') }}
 
 <div id="dental_plans_wrapper">
@@ -13,7 +13,7 @@
 
   <form class="ui form {% if dental_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_dental_plans">
     {{ dental_plan_form.id }}
-    {{ render_row(dental_plan_form.name, dental_plan_form.public_name) }}
+    {{ render_row(dental_plan_form.name, None) }}
     {{ render_row(dental_plan_form.code, dental_plan_form.website) }}
     {{ render_row(dental_plan_form.cust_service_phone, dental_plan_form.not_available_in) }}
     {{ render_row(dental_plan_form.pricing_type_id, dental_plan_form.bundled_with_medical) }}
@@ -28,6 +28,6 @@
   </form>
 
   {% if not dental_plan_form.id.data %}
-    {{ render_table('dental_plan', [dental_plan_form.public_name, dental_plan_form.code, dental_plan_form.website ], dental_plans )}}
+    {{ render_table('dental_plan', [dental_plan_form.name, dental_plan_form.code, dental_plan_form.website ], dental_plans )}}
   {% endif %}
 </div>

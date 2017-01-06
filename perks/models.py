@@ -13,6 +13,7 @@ from sqlalchemy.ext.declarative import (
     as_declarative,
     declared_attr,
 )
+from wtforms import widgets
 
 from . import app, db, db_session
 
@@ -27,7 +28,8 @@ class Base(object):
     def __tablename__(cls):
         return inflection.underscore(cls.__name__)
 
-    id = db.Column(db.Integer(), primary_key=True)
+    id = db.Column(db.Integer(), primary_key=True,
+                   info={'widget': widgets.HiddenInput()})
 
 Base.query = db_session.query_property()
 
@@ -98,8 +100,8 @@ PRICING_TYPES = [
 
 TIER_TYPES = [
     ('EO', 'Employee Only'),
-    ('EC', 'Employee and Children'),
     ('ES', 'Employee and Spouse'),
+    ('EC', 'Employee and Children'),
     ('EF', 'Employee and Family'),
     ('E1', 'Employee Plus 1'),
     ('E2', 'Employee Plus 2'),
@@ -207,24 +209,36 @@ STATES = [
 
 
 class Address(Base):
-    street_1 = db.Column(db.Unicode(100), nullable=False)
-    street_2 = db.Column(db.Unicode(100))
-    city = db.Column(db.Unicode(100), nullable=False)
-    state = db.Column(ChoiceType(STATES))
-    zip_code = db.Column(db.Unicode(10), nullable=False)
+    street_1 = db.Column(db.Unicode(100), nullable=False,
+                         info={'label': 'Street'})
+    street_2 = db.Column(db.Unicode(100),
+                         info={'label': 'Suite or Apt. Number'})
+    city = db.Column(db.Unicode(100), nullable=False,
+                     info={'label': 'City'})
+    state = db.Column(ChoiceType(STATES), nullable=False,
+                      info={'label': 'State'})
+    zip_code = db.Column(db.Unicode(10), nullable=False,
+                         info={'label': 'Zip Code'})
 
 
 # Models
 # PEOPLE
 class PersonMixin(object):
-    first_name = db.Column(db.Unicode(50), nullable=False, server_default=u'')
-    middle_name = db.Column(db.Unicode(50), nullable=False, server_default=u'')
-    last_name = db.Column(db.Unicode(50), nullable=False, server_default=u'')
-    ssn = db.Column(db.Unicode(11), nullable=False)
-    dob = db.Column(db.Date(), nullable=False)
-    gender = db.Column(ChoiceType(GENDER_TYPES))
-    marital_status = db.Column(ChoiceType(MARITAL_STATUSES))
-    smoker_type = db.Column(ChoiceType(SMOKER_TYPES))
+    first_name = db.Column(db.Unicode(50), nullable=False, server_default=u'',
+                           info={'label': 'First Name'})
+    middle_name = db.Column(db.Unicode(50), nullable=False, server_default=u'',
+                            info={'label': 'Middle Name'})
+    last_name = db.Column(db.Unicode(50), nullable=False, server_default=u'',
+                          info={'label': 'Last Name'})
+    ssn = db.Column(db.Unicode(11), nullable=False,
+                    info={'label': 'Social Security Number'})
+    dob = db.Column(db.Date(), nullable=False,
+                    info={'label': 'Date of Birth'})
+    gender = db.Column(ChoiceType(GENDER_TYPES), info={'label': 'Gender'})
+    marital_status = db.Column(ChoiceType(MARITAL_STATUSES),
+                               info={'label': 'Marital Status'})
+    smoker_type = db.Column(ChoiceType(SMOKER_TYPES),
+                            info={'label': 'Smoker Type'})
 
     @declared_attr
     def address_id(cls):
@@ -233,16 +247,16 @@ class PersonMixin(object):
 
 
 class User(UserMixin, Base):
-    username = db.Column(db.String(50), nullable=False, unique=True)
-    password = db.Column(db.String(255), nullable=False, unique=True)
-
-    email = db.Column(EmailType())
+    username = db.Column(db.String(50), nullable=False, unique=True,
+                         info={'label': 'Username'})
+    password = db.Column(db.String(255), nullable=False, unique=True,
+                         info={'label': 'Password'})
+    email = db.Column(EmailType(), info={'label': 'Email'})
     confirmed_at = db.Column(db.DateTime())
     reset_password_token = db.Column(db.String(100), nullable=False,
                                      server_default='')
     active = db.Column('is_active', db.Boolean(), nullable=False,
-                       server_default='0')
-
+                       server_default='0', info={'label': 'May Log In?'})
     roles = db.relationship('Role', secondary='user_roles',
                             backref=db.backref('users', lazy='dynamic'))
 
@@ -265,10 +279,13 @@ user_manager = UserManager(db_adapter, app)
 
 
 class Dependent(PersonMixin, Base):
-    dependent_type = db.Column(ChoiceType(DEPENDENT_TYPES))
-    full_time_student = db.Column(db.Boolean(), server_default='0')
-    disabled = db.Column(db.Boolean(), server_default='0')
-    disability_date = db.Column(db.Date())
+    dependent_type = db.Column(ChoiceType(DEPENDENT_TYPES),
+                               info={'label': 'Dependent Type'})
+    full_time_student = db.Column(db.Boolean(), server_default='0',
+                                  info={'label': 'Full Time Student?'})
+    disabled = db.Column(db.Boolean(), server_default='0',
+                         info={'label': 'Disabled?'})
+    disability_date = db.Column(db.Date(), info={'label': 'Disability Date'})
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'))
     address_id = db.Column(db.ForeignKey('address.id'))
     address = db.relationship('Address', uselist=False)
@@ -280,32 +297,46 @@ class Beneficiary(PersonMixin, Base):
 
 
 class Location(Base):
-    code = db.Column(db.String(12))
-    description = db.Column(db.String(60))
-    effective_date = db.Column(db.Date(), nullable=False)
+    code = db.Column(db.String(12), info={'label': 'Code'})
+    description = db.Column(db.String(60), info={'label': 'Description'})
+    effective_date = db.Column(db.Date(), nullable=False,
+                               info={'label': 'Effective Date'})
 
 
 class Employee(PersonMixin, Base):
     user = db.relationship('User', uselist=False)
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
-    hire_date = db.Column(db.Date(), nullable=False)
-    effective_date = db.Column(db.Date(), nullable=False)
-    termination_date = db.Column(db.Date())
-    employee_number = db.Column(db.Unicode(25))
+    hire_date = db.Column(db.Date(), nullable=False,
+                          info={'label': 'Hire Date'})
+    effective_date = db.Column(db.Date(), nullable=False,
+                               info={'label': 'Effective Date'})
+    termination_date = db.Column(db.Date(), info={'label': 'Termination Date'})
+    employee_number = db.Column(db.Unicode(25),
+                                info={'label': 'Employee Number'})
     beneficiaries = db.relationship('Beneficiary', uselist=True,
                                     backref='employee')
     dependents = db.relationship('Dependent', uselist=True, backref='employee')
-    group_id = db.Column(db.String(50), nullable=False)
-    sub_group_id = db.Column(db.String(50), nullable=False)
-    sub_group_effective_date = db.Column(db.Date(), nullable=False)
-    salary_mode = db.Column(ChoiceType(SALARY_MODE_TYPES))
-    salary_effective_date = db.Column(db.Date(), nullable=False)
-    salary = db.Column(db.Numeric(9, 2), nullable=False)
-    phone = db.Column(PhoneNumberType())
-    alternate_phone = db.Column(PhoneNumberType())
-    emergency_contact_phone = db.Column(PhoneNumberType())
-    emergency_contact_name = db.Column(db.String())
-    emergency_contact_relationship = db.Column(db.String())
+    group_id = db.Column(db.String(50), nullable=False,
+                         info={'label': 'Group Id'})
+    sub_group_id = db.Column(db.String(50), nullable=False,
+                             info={'label': 'Sub Group Id'})
+    sub_group_effective_date = db.Column(
+        db.Date(), nullable=False, info={'label': 'Sub Group Effective Date'})
+    salary_mode = db.Column(ChoiceType(SALARY_MODE_TYPES),
+                            info={'label': 'Salary Mode'})
+    salary_effective_date = db.Column(db.Date(), nullable=False,
+                                      info={'label': 'Salary Effective Date'})
+    salary = db.Column(db.Numeric(9, 2), nullable=False,
+                       info={'label': 'Salary'})
+    phone = db.Column(PhoneNumberType(), info={'label': 'Phone'})
+    alternate_phone = db.Column(PhoneNumberType(),
+                                info={'label': 'Alternate Phone'})
+    emergency_contact_phone = db.Column(
+        PhoneNumberType(), info={'label': 'Emergency Contact Phone'})
+    emergency_contact_name = db.Column(
+        db.String(), info={'label': 'Emergency Contact Name'})
+    emergency_contact_relationship = db.Column(
+        db.String(), info={'label': 'Emergency Contact Relationship'})
     location_id = db.Column(db.ForeignKey('location.id'))
     location = db.relationship('Location', uselist=False)
     address_id = db.Column(db.ForeignKey('address.id'))
@@ -313,9 +344,10 @@ class Employee(PersonMixin, Base):
 
 
 class Carrier(Base):
-    name = db.Column(db.Unicode(50), nullable=False)
-    phone = db.Column(PhoneNumberType())
-    api_endpoint = db.Column(db.Unicode(200), nullable=False)
+    name = db.Column(db.Unicode(50), nullable=False, info={'label': 'Name'})
+    phone = db.Column(PhoneNumberType(), info={'label': 'Phone'})
+    api_endpoint = db.Column(db.Unicode(200), nullable=False,
+                             info={'label': 'API Endpoint'})
 
     __mapper_args__ = {
         "order_by": name
@@ -327,22 +359,32 @@ class CoreMixin(object):
 
     @declared_attr
     def plan_termination_timing_type_id(cls):
-        return db.Column(ChoiceType(PLAN_TERMINATION_TIMING_TYPES))
+        return db.Column(ChoiceType(PLAN_TERMINATION_TIMING_TYPES),
+                         info={'label': 'Plan Termination Type'})
 
-    group_number = db.Column(db.Unicode(24), nullable=False)
-    original_effective_date = db.Column(db.Date())
-    renewal_date = db.Column(db.Date())
-    existing = db.Column(db.Boolean(), nullable=False)
-    list_billed = db.Column(db.Boolean())
-    doctor_selection_required = db.Column(db.Boolean())
-    account_rep_name = db.Column(db.Unicode(40))
-    cobra_eligible = db.Column(db.Boolean(), nullable=False)
-    pre_tax = db.Column(db.Boolean(), nullable=False)
+    group_number = db.Column(db.Unicode(24), nullable=False,
+                             info={'label': 'Group Number'})
+    original_effective_date = db.Column(
+        db.Date(), info={'label': 'Original Effective Date'})
+    renewal_date = db.Column(db.Date(), info={'label': 'Renewal Date'})
+    existing = db.Column(db.Boolean(), nullable=False,
+                         info={'label': 'Existing?'})
+    list_billed = db.Column(db.Boolean(), info={'label': 'List Billed?'})
+    doctor_selection_required = db.Column(
+        db.Boolean(), info={'label': 'Doctor Selection Required?'})
+    account_rep_name = db.Column(db.Unicode(40),
+                                 info={'label': 'Account Rep. Name'})
+    cobra_eligible = db.Column(db.Boolean(), nullable=False,
+                               info={'label': 'Cobra Eligible?'})
+    pre_tax = db.Column(db.Boolean(), nullable=False,
+                        info={'label': 'Pre tax?'})
 
 
 class GroupMixin(object):
-    minimum_benefit = db.Column(db.Numeric(6, 2), nullable=False)
-    maximum_benefit = db.Column(db.Numeric(6, 2), nullable=False)
+    minimum_benefit = db.Column(db.Numeric(10, 2), nullable=False,
+                                info={'label': 'Minimum Benefit'})
+    maximum_benefit = db.Column(db.Numeric(10, 2), nullable=False,
+                                info={'label': 'Maximum Benefit'})
 
 
 class SupplementalMixin(object):
@@ -350,17 +392,20 @@ class SupplementalMixin(object):
 
 
 class Plan(Base):
-    plantype = db.Column(db.String(50))
-    code = db.Column(db.String(10))
-    name = db.Column(db.Unicode(20))
-    public_name = db.Column(db.Unicode(30))
-    cust_service_phone = db.Column(PhoneNumberType())
-    website = db.Column(URLType)
-    not_available_in = db.Column(ScalarListType())
+    not_available_choices = [(v, n, False) for v, n in STATES]
+    plantype = db.Column(db.String(50), info={'label': 'Plan Type'})
+    code = db.Column(db.String(10), info={'label': 'Code'})
+    name = db.Column(db.Unicode(20), info={'label': 'Name'})
+    cust_service_phone = db.Column(PhoneNumberType(),
+                                   info={'label': 'Customer Service Phone'})
+    website = db.Column(URLType, info={'label': 'Website'})
+    not_available_in = db.Column(ScalarListType(),
+                                 info={'label': 'Not Available In'})
 
     @declared_attr
     def pricing_type_id(cls):
-        return db.Column(ChoiceType(PRICING_TYPES))
+        return db.Column(ChoiceType(PRICING_TYPES),
+                         info={'label': 'Pricing Type'})
 
     __mapper_args__ = {
         'polymorphic_on': plantype
@@ -370,11 +415,14 @@ class Plan(Base):
 class MedicalPlan(Plan, CoreMixin):
     __tablename__ = 'medical_plan'
     __table_args__ = {'extend_existing': True}
-    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True,
+                   info={'widget': widgets.HiddenInput()})
 
-    self_funded = db.Column(db.Boolean(), nullable=False)
+    self_funded = db.Column(db.Boolean(), nullable=False,
+                            info={'label': 'Self Funded?'})
     carrier_id = db.Column(db.ForeignKey('carrier.id'))
-    carrier = db.relationship('Carrier', uselist=False)
+    carrier = db.relationship('Carrier', uselist=False,
+                              info={'label': 'Caarrier'})
 
     __mapper_args__ = {
         'polymorphic_identity': 'medical',
@@ -388,10 +436,12 @@ class DentalPlan(Plan, CoreMixin):
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
     carrier_id = db.Column(db.ForeignKey('carrier.id'))
     carrier = db.relationship('Carrier', uselist=False)
-    bundled_with_medical = db.Column(db.Boolean(), nullable=False,
-                                     default=False)
-    bundled_with_vision = db.Column(db.Boolean(), nullable=False,
-                                    default=False)
+    bundled_with_medical = db.Column(
+        db.Boolean(), nullable=False, default=False,
+        info={'label': 'Bundled With Medical?'})
+    bundled_with_vision = db.Column(
+        db.Boolean(), nullable=False, default=False,
+        info={'label': 'Bundled With Vision?'})
     bundled_with_id = db.Column(db.ForeignKey('plan.id'))
     bundled_with_plan = db.relationship('Plan',
                                         foreign_keys=[bundled_with_id])
@@ -407,10 +457,12 @@ class VisionPlan(Plan, CoreMixin):
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
     carrier_id = db.Column(db.ForeignKey('carrier.id'))
     carrier = db.relationship('Carrier', uselist=False)
-    bundled_with_medical = db.Column(db.Boolean(), nullable=False,
-                                     default=False)
-    bundled_with_dental = db.Column(db.Boolean(), nullable=False,
-                                    default=False)
+    bundled_with_medical = db.Column(
+        db.Boolean(), nullable=False, default=False,
+        info={'label': 'Bundled With Medical?'})
+    bundled_with_dental = db.Column(
+        db.Boolean(), nullable=False, default=False,
+        info={'label': 'Bundled With Dental?'})
     bundled_with_id = db.Column(db.ForeignKey('plan.id'))
     bundled_with_plan = db.relationship('Plan',
                                         foreign_keys=[bundled_with_id])
@@ -448,11 +500,16 @@ class STDPlan(Plan, GroupMixin):
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
 
-    payout_interval = db.Column(ChoiceType(PAYOUT_TYPES))
-    max_weekly_benefit = db.Column(db.Numeric(6, 2), nullable=False)
-    max_monthly_benefit = db.Column(db.Numeric(6, 2), nullable=False)
-    benefit_percentage = db.Column(db.Numeric(6, 2), nullable=False)
-    mandatory_in_states = db.Column(ScalarListType())
+    payout_interval = db.Column(ChoiceType(PAYOUT_TYPES),
+                                info={'label': 'Payout Interval'})
+    max_weekly_benefit = db.Column(db.Numeric(6, 2), nullable=False,
+                                   info={'label': 'Maximum Weekly Benefit'})
+    max_monthly_benefit = db.Column(db.Numeric(6, 2), nullable=False,
+                                    info={'label': 'Maximum Monthly Benefit'})
+    benefit_percentage = db.Column(db.Numeric(6, 2), nullable=False,
+                                   info={'label': 'Benefit Percentage'})
+    mandatory_in_states = db.Column(ScalarListType(),
+                                    info={'label': 'Mandatory In'})
 
     __mapper_args__ = {
         'polymorphic_identity': 'std',
@@ -595,13 +652,23 @@ class AgeBandedPremium(Base):
 class PlanTierPremium(Base):
     """Prices for all plans."""
     plan_id = db.Column(None, db.ForeignKey('plan.id'))
-    plan = db.relationship('Plan', foreign_keys=[plan_id])
-    tier_type = db.Column(ChoiceType(TIER_TYPES))
-    premium = db.Column(db.Numeric(6, 2), nullable=False)
-    employer_portion = db.Column(db.Numeric(6, 2), nullable=False)
-    employee_portion = db.Column(db.Numeric(6, 2), nullable=False)
-    flat_amount = db.Column(db.Numeric(6, 2))
-    multiplier = db.Column(db.Numeric(3, 2))
+    plan = db.relationship('Plan', foreign_keys=[plan_id],
+                           back_populates='plan_tier_premiums')
+    tier_type = db.Column(ChoiceType(TIER_TYPES),
+                          info={'label': 'Tier'})
+    premium = db.Column(db.Numeric(6, 2), nullable=False,
+                        info={'label': 'Premium'})
+    employer_portion = db.Column(db.Numeric(6, 2), nullable=False,
+                                 info={'label': 'Employer Portion'})
+    employee_portion = db.Column(db.Numeric(6, 2), nullable=False,
+                                 info={'label': 'Employee Portion'})
+    flat_amount = db.Column(db.Numeric(6, 2),
+                            info={'label': 'Flat Amount'})
+    multiplier = db.Column(db.Numeric(3, 2),
+                           info={'label': 'Multiplier'})
+
+Plan.plan_tier_premiums = db.relationship(
+    'PlanTierPremium', back_populates="plan")
 
 
 # Eligibility
@@ -618,51 +685,17 @@ class DomesticPartnerEligibility(Base):
     eligible = db.Column(db.Boolean(), default=False)
 
 
-# Payroll
-#  class WeeklyPayroll(Base):
-    #  weekday = db.Column(ChoiceType(Weekday, impl=db.Integer()))
-    #  payroll_id = db.Column(db.ForeignKey('payroll.id'))
-
-
-#  class BiWeeklyPayroll(Base):
-    #  weekday = db.Column(ChoiceType(Weekday, impl=db.Integer()))
-
-
-#  class SemiMonthlyPayroll(Base):
-    #  day_of_month_1 = db.Column(db.Integer, nullable=False)
-    #  day_of_month_2 = db.Column(db.Integer, nullable=False)
-
-
-#  class MonthlyPayroll(Base):
-    #  day_of_month = db.Column(db.Integer, nullable=False)
-
-
-#  class CustomPayrollDate(Base):
-    #  pay_day = db.Column(db.Date(), nullable=False)
-    #  custom_payroll_id = db.Column(db.ForeignKey('custom_payroll.id'))
-
-
-#  class CustomPayroll(Base):
-    #  name = db.Column(db.Unicode(40), nullable=False)
-    #  dates = db.relationship('CustomPayrollDate', uselist=True)
-
-
-#  class Payroll(Base):
-    #  cycle_type = db.Column(ChoiceType(PayrollCycleType, impl=db.Integer()))
-    #  employee_class_id = db.Column(db.Integer,
-    #  db.ForeignKey('employee_class.id'))
-    #  employee_class = db.relationship('EmployeeClass',
-    #  foreign_keys=employee_class_id)
-
-
 class Enrollment(Base):
     """A collection of choices an employee makes during enrollment"""
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'))
     life_event = db.Column(ChoiceType(LIFE_EVENT_TYPES))
-    choices = db.relationship('EnrollmentChoice')
+    elections = db.relationship('Election', backref='enrollment')
 
 
-class EnrollmentChoice(Base):
+class Election(Base):
     enrollment_id = db.Column(db.Integer, db.ForeignKey('enrollment.id'))
+    plan_id = db.Column(db.Integer, db.ForeignKey('plan.id'))
+    plan = db.relationship('Plan')
     plan_tier_premium_id = db.Column(db.Integer,
                                      db.ForeignKey('plan_tier_premium.id'))
+    plan_tier_premium = db.relationship('PlanTierPremium')

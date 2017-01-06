@@ -1,0 +1,16 @@
+{% extends "enroll/_plan_base.html" %}
+{% block ajax_methods %}
+  {{ render_ajax_methods('enroll', 'medical') }}
+{% endblock %}
+
+{% block plan_wrapper %}medical{% endblock %}
+{% block plan_header %}Medical{% endblock %}
+{% block form_id %}medical{% endblock %}
+{% block save_update %}
+    {{ render_save_update(election_form.plan_id, 'medical', None, election_form.id) }}
+{% endblock %}
+{% block enroll_table %}
+  {% if medical_selections %}
+      {{ render_enroll_table(medical_selections, 'medical') }}
+  {% endif %}
+{% endblock %}

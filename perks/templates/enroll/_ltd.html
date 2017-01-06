@@ -1,0 +1,16 @@
+{% extends "enroll/_plan_base.html" %}
+{% block ajax_methods %}
+  {{ render_ajax_methods('enroll', 'ltd') }}
+{% endblock %}
+
+{% block plan_wrapper %}ltd{% endblock %}
+{% block plan_header %}Long Term Disability{% endblock %}
+{% block form_id %}ltd{% endblock %}
+{% block save_update %}
+    {{ render_save_update(election_form.plan_id, 'ltd', None, election_form.id) }}
+{% endblock %}
+{% block enroll_table %}
+  {% if ltd_selections %}
+      {{ render_enroll_table(ltd_selections, 'ltd') }}
+  {% endif %}
+{% endblock %}

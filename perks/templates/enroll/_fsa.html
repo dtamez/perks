@@ -1,0 +1,16 @@
+{% extends "enroll/_plan_base.html" %}
+{% block ajax_methods %}
+  {{ render_ajax_methods('enroll', 'fsa') }}
+{% endblock %}
+
+{% block plan_wrapper %}fsa{% endblock %}
+{% block plan_header %}Flexible Spending Account{% endblock %}
+{% block form_id %}fsa{% endblock %}
+{% block save_update %}
+    {{ render_save_update(election_form.plan_id, 'fsa', None, election_form.id) }}
+{% endblock %}
+{% block enroll_table %}
+  {% if fsa_selections %}
+      {{ render_enroll_table(fsa_selections, 'fsa') }}
+  {% endif %}
+{% endblock %}
