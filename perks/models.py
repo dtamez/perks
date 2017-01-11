@@ -688,7 +688,8 @@ class DomesticPartnerEligibility(Base):
 class Enrollment(Base):
     """A collection of choices an employee makes during enrollment"""
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'))
-    life_event = db.Column(ChoiceType(LIFE_EVENT_TYPES))
+    life_event = db.Column(ChoiceType(LIFE_EVENT_TYPES),
+                           info={'label': 'Life Event'})
     elections = db.relationship('Election', backref='enrollment')
 
 

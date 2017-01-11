@@ -1,4 +1,4 @@
-{% from "_macros.html" import render_table, render_save_update, render_ajax_methods %}
+{% from "_macros.html" import render_table, render_radio_field, render_save_update, render_ajax_methods %}
 
 {{ render_ajax_methods('enroll', 'life_event') }}
 
@@ -11,18 +11,7 @@
     {{ life_event_form.employee_id }}
     {{ life_event_form.id }}
     <div class="grouped fields">
-      <label>Life Events</label>
-      {% for k, v in life_events %}
-
-        <div class="field">
-          <div class="ui radio checkbox">
-            <input name="life_event" value="{{ k }}" {% if k is equalto life_event_form.life_event.data %}checked="checked"{% endif %} type="radio" required>
-            <label>{{ v }}</label>
-          </div>
-        </div>
-
-      {% endfor %}
-
+      {{ render_radio_field(life_event_form.life_event ) }}
     </div>
     <div>
       {{ render_save_update(life_event_form.id, 'life_event') }}
