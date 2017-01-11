@@ -30,14 +30,16 @@
 {%- endmacro %}
 
 {% macro render_radio_field(field) -%}
-    {% for value, label, checked in field.iter_choices() %}
-        <div class="radio">
-            <label>
-                <input type="radio" name="{{ field.id }}" id="{{ field.id }}" value="{{ value }}"{% if checked %} checked{% endif %}>
-                {{ label }}
-            </label>
+      <label>{{ field.label }}</label>
+      {% for k, v in field.choices %}
+        <div class="field">
+          <div class="ui radio checkbox">
+            <input name="{{ field.id }}" value="{{ k }}" {% if k is equalto field.data %}checked="checked"{% endif %} type="radio" required>
+            <label>{{ v }}</label>
+          </div>
         </div>
-    {% endfor %}
+
+      {% endfor %}
 {%- endmacro %}
 
 {% macro render_submit_field(field, label=None, tabindex=None) -%}

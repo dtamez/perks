@@ -1,35 +1,47 @@
+{% from "_macros.html" import render_table, render_save_update, render_ajax_methods %}
 
+{{ render_ajax_methods('enroll', 'life_event') }}
+
+<div id='life_events_wrapper'>
   <h4 class="ui dividing header">Qualifying Life Event</h4>
-  <form class="ui form hidden" action="" method="post" id="form_life_event">
-    {{ form.csrf_token }}
+  {% if life_event_form is defined %}
+
+  <form class="ui form"  action="" method="post" id="form_life_events">
+    {{ life_event_form.csrf_token }}
+    {{ life_event_form.employee_id }}
+    {{ life_event_form.id }}
     <div class="grouped fields">
       <label>Life Events</label>
       {% for k, v in life_events %}
 
-      <div class="field">
-        <div class="ui radio checkbox">
-            <input name="life_event" value="{{ k }}" {% if v is equalto form.life_event.data.value %}checked="checked"{% endif %} type="radio" required>
-          <label>{{ v }}</label>
+        <div class="field">
+          <div class="ui radio checkbox">
+            <input name="life_event" value="{{ k }}" {% if k is equalto life_event_form.life_event.data %}checked="checked"{% endif %} type="radio" required>
+            <label>{{ v }}</label>
+          </div>
         </div>
-      </div>
 
       {% endfor %}
 
     </div>
-    <a class='ui violet button button-primary'
-      tabindex="0" href="#" onclick="javascript: $('#form_life_event').hide();$('#table_life_event').show();"/>Save</a>
+    <div>
+      {{ render_save_update(life_event_form.id, 'life_event') }}
+    </div>
   </form>
-  <table class="ui table" id='table_life_event'>
-    <thead>
-      <tr>
-        <th>Current Event</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-          <td>{{ form.life_event.data.value }}</td>
-        <td> <i class='write icon link blue' onclick="javascript: $('#form_life_event').show();$('#table_life_event').hide();"></i> </td>
-      </tr>
-    </tbody>
-  </table>
+  {% else %}
+    <table class="ui table" id="table_life_events">
+      <thead>
+        <tr>
+          <th><label for="life_event">Life Event</label></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{ life_event.life_event }}</td>
+          <td><i class='write icon link blue' onclick="javascript: edit_life_event({{ life_event.id }})"></i></td>
+        </tr>
+      </tbody>
+    </table>
+  {% endif %}
+</div>

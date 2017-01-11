@@ -35,16 +35,15 @@ class UserProfileForm(Form):
 
 
 # Enrollment steps
-class LifeEventsForm(Form):
-    life_event = StringField(
-        'Choose a qualifying life event.',
-        validators=[validators.Required('Life event is required')])
+class LifeEventsForm(ModelForm):
+    class Meta:
+        model = models.Enrollment
+        include = ['id']
+    id = HiddenField()
+    employee_id = HiddenField()
 
 
 class ElectionForm(Form):
-    #  class Meta:
-        #  model = models.Election
-        #  include = ['id']
     id = HiddenField()
     employee_id = HiddenField()
     enrollment_id = HiddenField()

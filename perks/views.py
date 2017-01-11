@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from datetime import date
 import locale
 
 from flask import g, request, render_template, redirect, url_for
@@ -98,11 +99,24 @@ def index():
 
 class AJAXCrudView(MethodView):
 
+    def on_load(self, main):
+        pass
+
+    def on_save(self, main):
+        pass
+
+    def on_edit(self, main):
+        pass
+
+    def on_delete(self, main):
+        pass
+
     def get(self, id):
         if id is None:
             return self.display_all()
         else:
             main = self.main['model'].query.get(id)
+            self.on_load(main)
             template = env.get_template(self.main['template'])
             ctx = {self.main['single']: main,
                    self.main['form_name']: self.main['form'](
@@ -126,6 +140,8 @@ class AJAXCrudView(MethodView):
                 obj.id = None
             db_session.add(obj)
             setattr(main, sub['single'], obj)
+
+        self.on_save(main)
 
         db_session.add(main)
         try:
@@ -155,6 +171,7 @@ class AJAXCrudView(MethodView):
                 setattr(main, sub['single'], obj)
             form.populate_obj(obj)
             db_session.add(obj)
+        self.on_edit(main)
         try:
             db_session.commit()
         except:
@@ -163,6 +180,7 @@ class AJAXCrudView(MethodView):
 
     def delete(self, id):
         obj = self.main['model'].query.get(id)
+        self.on_delete(obj)
         db_session.delete(obj)
         try:
             db_session.commit()
@@ -203,13 +221,12 @@ def enroll_life_events():
     g.active_tab = 'enroll'
     g.active_step = 'life'
 
-    enrollment = None
-    form = LifeEventsForm(request.form, enrollment)
-    if form.validate_on_submit():
-        return redirect(url_for('enroll_dependents'))
-    else:
-        return render_template('enroll/life_events.html', form=form,
-                               life_events=LIFE_EVENT_TYPES)
+    employee = Employee.query.join(User).filter(
+        User.id == g.user.id).first()
+    enrollment = Enrollment.query.filter(
+        Enrollment.employee_id == employee.id).first()
+
+    return render_template('enroll/life_events.html', life_event=enrollment)
 
 
 @app.route('/enroll/dependents', methods=['GET', 'POST'])
@@ -820,6 +837,19 @@ class EmployeeView(AJAXCrudView):
          'plural': 'addresss', 'form_name': 'address_form'},
     ]
 
+    def on_save(self, employee):
+        employee.user.password = user_manager.hash_password(
+            employee.user.password)
+        employee.user.confirmed_at = date.today()
+
+    def on_edit(self, employee):
+        original = Employee.query.get(employee.id)
+        hashed = user_manager.hash_password(Employee.password)
+        if original == Employee.password or hashed == Employee.password:
+            return
+        else:
+            employee.password = hashed
+
 
 class LocationView(AJAXCrudView):
     main = {'model': Location, 'form': LocationForm, 'class': 'Location',
@@ -900,6 +930,37 @@ class PlanTierPremiumView(AJAXCrudView):
 
 
 # Enrollment Ajax Views
+class EnrollLifeEventAJAXView(MethodView):
+
+    def get(self, id):
+        # displaying a form to choose a life event
+        enrollment = Enrollment.query.get(id)
+        life_event_form = LifeEventsForm(None, enrollment)
+        ctx = {'life_event_form': life_event_form,
+               'life_events': LIFE_EVENT_TYPES}
+        template = env.get_template('/enroll/_life_events.html')
+
+        return template.render(ctx)
+
+    def put(self, id):
+        # update the enrollment
+        form = LifeEventsForm(request.form)
+        enrollment = Enrollment.query.get(id)
+        form.populate_obj(enrollment)
+        enrollment.id = id
+
+        db_session.add(enrollment)
+        try:
+            db_session.commit()
+        except:
+            db_session.rollback()
+
+        # display the table view with one entry
+        template = env.get_template('/enroll/_life_events.html')
+        ctx = {'life_event': enrollment}
+        return template.render(ctx)
+
+
 class DependentView(AJAXCrudView):
     main = {'model': Dependent, 'form': DependentForm, 'class': 'Dependent',
             'form_class': 'DepndentForm', 'single': 'dependent',
@@ -1080,3 +1141,4 @@ register_ajax_view(EnrollLongTermCarePlanView, 'enroll_ltc_ajax', '/enroll/_ltcs
 register_ajax_view(EnrollOtherPlanView, 'enroll_other_ajax', '/enroll/_others/')  # NOQA
 register_ajax_view(EnrollCancerPlanView, 'enroll_cancer_ajax', '/enroll/_cancers/')  # NOQA
 register_ajax_view(EnrollCriticalIllnessPlanView, 'enroll_critical_ajax', '/enroll/_criticals/')  # NOQA
+register_ajax_view(EnrollLifeEventAJAXView, 'enroll_life_events_ajax', '/enroll/_life_events/')  # NOQA
