@@ -1,6 +1,7 @@
 # -*- cgneding: utf-8 -*-
 from flask_user import SQLAlchemyAdapter, UserManager, UserMixin
 import inflection
+from sqlalchemy.orm import backref
 from sqlalchemy_utils import (
     ChoiceType,
     EmailType,
@@ -226,7 +227,7 @@ class Address(Base):
 class PersonMixin(object):
     first_name = db.Column(db.Unicode(50), nullable=False, server_default=u'',
                            info={'label': 'First Name'})
-    middle_name = db.Column(db.Unicode(50), nullable=False, server_default=u'',
+    middle_name = db.Column(db.Unicode(50), server_default=u'',
                             info={'label': 'Middle Name'})
     last_name = db.Column(db.Unicode(50), nullable=False, server_default=u'',
                           info={'label': 'Last Name'})
@@ -297,14 +298,16 @@ class Beneficiary(PersonMixin, Base):
 
 
 class Location(Base):
-    code = db.Column(db.String(12), info={'label': 'Code'})
-    description = db.Column(db.String(60), info={'label': 'Description'})
+    code = db.Column(db.String(12), info={'label': 'Code'}, nullable=False)
+    description = db.Column(db.String(60), info={'label': 'Description'},
+                            nullable=False)
     effective_date = db.Column(db.Date(), nullable=False,
                                info={'label': 'Effective Date'})
 
 
 class Employee(PersonMixin, Base):
-    user = db.relationship('User', uselist=False)
+    user = db.relationship('User', uselist=False, single_parent=True,
+                           cascade="all, delete-orphan")
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
     hire_date = db.Column(db.Date(), nullable=False,
                           info={'label': 'Hire Date'})
@@ -313,9 +316,12 @@ class Employee(PersonMixin, Base):
     termination_date = db.Column(db.Date(), info={'label': 'Termination Date'})
     employee_number = db.Column(db.Unicode(25),
                                 info={'label': 'Employee Number'})
-    beneficiaries = db.relationship('Beneficiary', uselist=True,
-                                    backref='employee')
-    dependents = db.relationship('Dependent', uselist=True, backref='employee')
+    beneficiaries = db.relationship(
+        'Beneficiary', uselist=True, single_parent=True,
+        backref='employee', cascade="all, delete-orphan")
+    dependents = db.relationship(
+        'Dependent', uselist=True, single_parent=True,
+        backref='employee', cascade="all, delete-orphan")
     group_id = db.Column(db.String(50), nullable=False,
                          info={'label': 'Group Id'})
     sub_group_id = db.Column(db.String(50), nullable=False,
@@ -688,9 +694,11 @@ class DomesticPartnerEligibility(Base):
 class Enrollment(Base):
     """A collection of choices an employee makes during enrollment"""
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'))
+    employee = db.relationship('Employee', uselist=False)
     life_event = db.Column(ChoiceType(LIFE_EVENT_TYPES),
                            info={'label': 'Life Event'})
-    elections = db.relationship('Election', backref='enrollment')
+    elections = db.relationship('Election', backref=backref(
+        'enrollment', single_parent=True, cascade="all, delete-orphan"))
 
 
 class Election(Base):

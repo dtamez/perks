@@ -1,83 +1,62 @@
+{% from "_macros.html" import render_formatters, render_table, render_select_field, render_input, render_row, render_3row, render_save_update, render_ajax_methods %}
 
+{{ render_formatters([
+    ('phone', 'phone'),
+    ('alternate_phone', 'phone'),
+    ('emergency_contact_phone', 'phone'),
+    ('dob', 'date'),
+    ('hire_date', 'date'),
+    ('effective_date', 'date'),
+    ('termination_date', 'date'),
+    ('group_effective_date', 'date'),
+    ('sub_group_effective_date', 'date'),
+    ('salary_effective_date', 'date'),
+    ('ssn', 'ssn'),
+    ], 'employee-')}}
+{{ render_ajax_methods('enroll', 'info') }}
+
+<div id="infos_wrapper">
   <h4 class="ui dividing header">Personal Information</h4>
-  <form class="ui form hidden" action="" method="POST" id='form_personal'>
-    <div class='field'>
-      <label>Name</label>
-        <div class="two fields">
-          <div class="field">
-            <input name='first_name' placeholder='first name' type='text'>
-          </div>
-          <div class="field">
-            <input name='last_name' placeholder='last name' type='text'>
-          </div>
-        </div>
-      </div>
+  {% if info_form is defined %}
+  <form class="ui form" action="" method="POST" id='form_infos'>
+    {{ info_form.id }}
+    {{ info_form.address_id }}
+    {{ address_form.id }}
 
-      <div class='field'>
-        <label>Address</label>
-        <div class="fields">
-          <div class="twelve wide field">
-            <input name='street_1' placeholder='street address' type='text'>
-          </div>
-          <div class="four wide field">
-            <input name="street_2" placeholder='Apt #' type="text">
-          </div>
-        </div>
-      </div>
-      <div class="two fields">
-        <div class="field">
-          <label>State</label>
-          <select class="ui fluid dropdown">
-            <option value=''>State</option>
-            {% for state_name, state_id in states  %}
-              <option value="{{ state_id }}">{{ state_name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="field">
-          <label>Zip code</label>
-            <input name="zip_code" type="text">
-         </div>
-      </div>
-      <div class="two fields">
-        <div class="field">
-          <label>Main Phone</label>
-          <input name="phone" type="text">
-        </div>
-        <div class="field">
-          <label>Alternate Phone</label>
-           <input name="alternate_phone" type="text">
-         </div>
-      </div>
-      <div class="two fields">
-        <div class="field">
-          <label>Emergency Contact Phone</label>
-           <input name="emergency_contact_phone" type="text">
-        </div>
-        <div class="field">
-          <label>Emergency Contact Name</label>
-            <input name="emergency_contact_name" type="text">
-         </div>
-      </div>
-    <a class='ui violet button button-primary'
-      tabindex="0" href="#" onclick="javascript: $('#form_personal').hide();$('#table_personal').show();"/>Save</a>
+    {{ render_3row(info_form.first_name, info_form.middle_name, info_form.last_name) }}
+    {{ render_row(info_form.dob, info_form.ssn) }}
+    {{ render_row(address_form.street_1, address_form.street_2) }}
+    {{ render_3row(address_form.city, address_form.state, address_form.zip_code) }}
+    {{ render_row(info_form.gender, info_form.marital_status) }}
+    {{ render_row(info_form.smoker_type, info_form.phone) }}
+    {{ render_row(info_form.alternate_phone, info_form.emergency_contact_name) }}
+    {{ render_row(info_form.emergency_contact_phone, info_form.emergency_contact_relationship) }}
+
+    <div>
+      {{ render_save_update(info_form.id, 'info') }}
+    </div>
   </form>
 
-  <table class="ui table" id='table_personal'>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Address</th>
-        <th>Phone</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>John Doe</td>
-        <td>5308 Flamingo Drive<br>Rowlett, TX 75089</td>
-        <td>(214) 542 6153<br>(214) 542 6133</td>
-        <td> <i class='write icon link blue' onclick="javascript: $('#form_personal').show();$('#table_personal').hide();"></i> </td>
-      </tr>
-    </tbody>
-  </table>
+  {% else %}
+    <table class="ui table" id='table_personal'>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Address</th>
+          <th>Phone</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{ employee.first_name  }}{{ employee.middle_name  }} {{ employee.last_name  }}  </td>
+          <td>{{ employee.address.street_1 }}<br>{{ employee.address.city  }}, {{ employee.address.state }} {{ employee.address.zip_code }}</td>
+          <td>{{ employee.phone }}</td>
+          <td> <i class='write icon link blue' onclick="javascript: edit_info({{ employee.id }})"></i> </td>
+        </tr>
+      </tbody>
+    </table>
+  {% endif %}
+</div>
+
+

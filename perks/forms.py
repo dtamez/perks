@@ -43,6 +43,18 @@ class LifeEventsForm(ModelForm):
     employee_id = HiddenField()
 
 
+class EmployeeInfoForm(ModelForm):
+    class Meta:
+        model = models.Employee
+        include = ['id']
+        exclude = [
+            'hire_date', 'effective_date', 'termination_date',
+            'employee_number', 'group_id', 'sub_group_id',
+            'sub_group_effective_date', 'salary', 'salary_mode',
+            'salary_effective_date', ]
+    id = HiddenField()
+
+
 class ElectionForm(Form):
     id = HiddenField()
     employee_id = HiddenField()

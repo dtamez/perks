@@ -2,6 +2,7 @@
 import logging
 
 from flask import Flask
+from flask_debugtoolbar import DebugToolbarExtension
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_migrate import Migrate
@@ -23,6 +24,13 @@ db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False,
 login_manager = LoginManager()
 login_manager.init_app(app)
 
+#  toolbar = DebugToolbarExtension(app)
+
 from perks import models, views  # NOQA
 from perks.util import assets  # NOQA
 models.Base.metadata.bind = engine
+
+
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+        db_session.remove()

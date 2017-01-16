@@ -22,7 +22,7 @@
 
 {% macro render_checkbox_field(field, label=None) -%}
     {% if not label %}{% set label=field.label.text %}{% endif %}
-    <div class="inline field">
+    <div class="inline field {% if field.errors %}error{% endif %}">
       <div class="ui checkbox">
         {{ field(type='checkbox', **kwargs) }}
         <label> {{ label }} </label>
@@ -32,7 +32,7 @@
 {% macro render_radio_field(field) -%}
       <label>{{ field.label }}</label>
       {% for k, v in field.choices %}
-        <div class="field">
+        <div class="field {% if field.errors %}error{% endif %}">
           <div class="ui radio checkbox">
             <input name="{{ field.id }}" value="{{ k }}" {% if k is equalto field.data %}checked="checked"{% endif %} type="radio" required>
             <label>{{ v }}</label>
@@ -40,6 +40,26 @@
         </div>
 
       {% endfor %}
+{%- endmacro %}
+
+{% macro render_select_field(field) -%}
+      {{ field.label }}
+      <select class="ui fluid dropdown {% if field.errors %}error{% endif %}" name="{{ field.id }}">
+      {% for k, v in field.choices %}
+
+        <div class="field">
+          <option value="{{k}}" {% if k is equalto field.data %} selected{% endif %}>{{v}}</option>
+        </div>
+
+      {% endfor %}
+      </select>
+{%- endmacro %}
+
+{% macro render_input(field) -%}
+  <div class="field {% if field.errors %}error{% endif %}">
+    {{ field.label }}
+    {{ field(**kwargs)|safe }}
+  </div>
 {%- endmacro %}
 
 {% macro render_submit_field(field, label=None, tabindex=None) -%}
@@ -57,12 +77,12 @@
 
 {% macro render_row(field1, field2) -%}
 <div class="two fields">
-  <div class="field">
+  <div class="field {% if field1.errors %}error{% endif %}">
     {{ field1.label }}
     {{ field1(**kwargs)|safe }}
   </div>
   {% if field2 %}
-  <div class="field">
+  <div class="field {% if field2.errors %}error{% endif %}">
     {{ field2.label }}
     {{ field2(**kwargs)|safe }}
   </div>
@@ -75,15 +95,15 @@
 
 {% macro render_3row(field1, field2, field3) -%}
 <div class="three fields">
-  <div class="field">
+  <div class="field {% if field1.errors %}error{% endif %}">
     {{ field1.label }}
     {{ field1(**kwargs)|safe }}
   </div>
-  <div class="field">
+  <div class="field {% if field2.errors %}error{% endif %}">
     {{ field2.label }}
     {{ field2(**kwargs)|safe }}
   </div>
-  <div class="field">
+  <div class="field {% if field3.errors %}error{% endif %}">
     {{ field3.label }}
     {{ field3(**kwargs)|safe }}
   </div>

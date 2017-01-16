@@ -21,6 +21,7 @@ from .forms import (
     ElectionForm,
     Employee401KPlanForm,
     EmployeeForm,
+    EmployeeInfoForm,
     FSAPlanForm,
     HSAPlanForm,
     LongTermCarePlanForm,
@@ -128,29 +129,37 @@ class AJAXCrudView(MethodView):
             return template.render(ctx)
 
     def post(self):
+        forms = {}
+        valid = True
         main = self.main['model']()
         form = self.main['form'](request.form)
+        if not form.validate():
+            valid = False
+        forms[self.main['form_name']] = form
         form.populate_obj(main)
         main.id = None
         for sub in self.subs:
             obj = sub['model']()
             form = sub['form'](request.form)
+            if not form.validate():
+                valid = False
+            forms[sub['form_name']] = form
             form.populate_obj(obj)
             if obj.id == '':
                 obj.id = None
             db_session.add(obj)
             setattr(main, sub['single'], obj)
 
+        template = env.get_template(self.main['template'])
+        if not valid:
+            return self.display_errors(main, forms)
+
         self.on_save(main)
 
         db_session.add(main)
-        try:
-            db_session.commit()
-        except:
-            db_session.rollback()
+        db_session.commit()
 
         objects = self.main['model'].query.all()
-        template = env.get_template(self.main['template'])
         ctx = {self.main['plural']: objects,
                self.main['form_name']: self.main['form'](
                    None)}
@@ -159,34 +168,45 @@ class AJAXCrudView(MethodView):
         return template.render(ctx)
 
     def put(self, id):
+        forms = {}
+        valid = True
         form = self.main['form'](request.form)
+        if not form.validate:
+            valid = False
+        forms[self.main['form_name']] = form
         main = self.main['model'].query.get(id)
         form.populate_obj(main)
         db_session.add(main)
         for sub in self.subs:
             form = sub['form'](request.form)
+            if not form.validate():
+                valid = False
+            forms[sub['form_name']] = form
             obj = getattr(main, sub['single'])
             if not obj:
                 obj = sub['model']()
                 setattr(main, sub['single'], obj)
             form.populate_obj(obj)
             db_session.add(obj)
+        if not valid:
+            return self.display_errors(main, forms)
+
         self.on_edit(main)
-        try:
-            db_session.commit()
-        except:
-            db_session.rollback()
+        db_session.commit()
         return self.display_all()
 
     def delete(self, id):
         obj = self.main['model'].query.get(id)
         self.on_delete(obj)
         db_session.delete(obj)
-        try:
-            db_session.commit()
-        except:
-            db_session.rollback()
+        db_session.commit()
         return self.display_all()
+
+    def display_errors(self, main, forms):
+        ctx = {self.main['single']: main}
+        ctx.update(forms)
+        template = env.get_template(self.main['template'])
+        return template.render(ctx)
 
     def display_all(self):
         objects = self.main['model'].query.all()
@@ -237,12 +257,11 @@ def enroll_dependents():
     employee = Employee.query.join(User).filter(
         User.id == g.user.id).first()
     dependents = employee.dependents
-    dependent_form = DependentForm(data={'employee_id': employee.id})
-    address_form = AddressForm()
     return render_template('enroll/dependents.html',
                            dependents=dependents,
-                           dependent_form=dependent_form,
-                           address_form=address_form,
+                           dependent_form=DependentForm(),
+                           address_form=AddressForm(),
+                           employee=employee,
                            )
 
 
@@ -428,6 +447,12 @@ class EnrollPlanAJAXView(MethodView):
             User.id == g.user.id).first()
         election = Election()
         form = ElectionForm(request.form)
+        if not form.validate():
+            template = env.get_template(self.template_name)
+            ctx = {'election': election,
+                   'election_form': form}
+            return template.render(ctx)
+
         form.populate_obj(election)
         election.id = None
         election.employee = employee
@@ -438,10 +463,7 @@ class EnrollPlanAJAXView(MethodView):
         election.plan_tier_premium = ptp
 
         db_session.add(election)
-        try:
-            db_session.commit()
-        except:
-            db_session.rollback()
+        db_session.commit()
 
         return self.display_all()
 
@@ -452,6 +474,11 @@ class EnrollPlanAJAXView(MethodView):
         election = Election.query.filter(
             Election.enrollment_id == enrollment.id,
             Election.plan_id == id).one()
+        if not form.validate():
+            template = env.get_template(self.template_name)
+            ctx = {'election': election,
+                   'election_form': form}
+            return template.render(ctx)
         choice = form.selection.data
         ptp = PlanTierPremium.query.filter(
             PlanTierPremium.plan_id == id,
@@ -459,10 +486,7 @@ class EnrollPlanAJAXView(MethodView):
         election.plan_tier_premium = ptp
 
         db_session.add(election)
-        try:
-            db_session.commit()
-        except:
-            db_session.rollback()
+        db_session.commit()
         return self.display_all()
 
     def display_all(self):
@@ -885,10 +909,7 @@ class PlanTierPremiumView(AJAXCrudView):
         main.id = None
 
         db_session.add(main)
-        try:
-            db_session.commit()
-        except:
-            db_session.rollback()
+        db_session.commit()
 
         template = env.get_template(self.main['template'])
         plan = main.plan
@@ -904,10 +925,7 @@ class PlanTierPremiumView(AJAXCrudView):
         self.plan = main.plan
         form.populate_obj(main)
         db_session.add(main)
-        try:
-            db_session.commit()
-        except:
-            db_session.rollback()
+        db_session.commit()
         ctx = {self.main['plural']: self.plan.plan_tier_premiums,
                self.main['form_name']: self.main['form'](
                    None), 'plan': self.plan}
@@ -918,10 +936,7 @@ class PlanTierPremiumView(AJAXCrudView):
         obj = self.main['model'].query.get(id)
         plan = obj.plan
         db_session.delete(obj)
-        try:
-            db_session.commit()
-        except:
-            db_session.rollback()
+        db_session.commit()
 
         ctx = {'plan_tier_premiums': plan.plan_tier_premiums,
                'plan_tier_premium_form': PlanTierPremiumForm(),
@@ -950,10 +965,7 @@ class EnrollLifeEventAJAXView(MethodView):
         enrollment.id = id
 
         db_session.add(enrollment)
-        try:
-            db_session.commit()
-        except:
-            db_session.rollback()
+        db_session.commit()
 
         # display the table view with one entry
         template = env.get_template('/enroll/_life_events.html')
@@ -961,16 +973,94 @@ class EnrollLifeEventAJAXView(MethodView):
         return template.render(ctx)
 
 
-class DependentView(AJAXCrudView):
-    main = {'model': Dependent, 'form': DependentForm, 'class': 'Dependent',
-            'form_class': 'DepndentForm', 'single': 'dependent',
-            'plural': 'dependents', 'form_name': 'dependent_form',
-            'template': '/enroll/_dependents.html'}
-    subs = [
-        {'model': Address, 'form': AddressForm, 'class': 'Address',
-         'form_class': 'AddressForm', 'single': 'address',
-         'plural': 'addresss', 'form_name': 'address_form'},
-    ]
+class EnrollInfoAJAXView(MethodView):
+
+    def get(self, id):
+        # displaying a form to choose a life event
+        employee = Employee.query.get(id)
+        info_form = EmployeeInfoForm(None, employee)
+        address_form = AddressForm(None, employee.address)
+        ctx = {'info_form': info_form, 'address_form': address_form}
+        template = env.get_template('/enroll/_personal.html')
+
+        return template.render(ctx)
+
+    def put(self, id):
+        # update the employee info
+        employee = Employee.query.get(id)
+        form = EmployeeInfoForm(request.form)
+        form.populate_obj(employee)
+        form = AddressForm(request.form)
+        form.populate_obj(employee.address)
+
+        db_session.add(employee)
+        db_session.commit()
+
+        # display the table view with one entry
+        template = env.get_template('/enroll/_personal.html')
+        ctx = {'employee': employee}
+        return template.render(ctx)
+
+
+class EnrollDependentsView(MethodView):
+
+    def get(self, id):
+        # displaying a form to edit an existng dependent
+        dependent = Dependent.query.get(id)
+        dependent_form = DependentForm(None, dependent)
+        address_form = AddressForm(None, dependent.address)
+
+        template = env.get_template('enroll/_dependents.html')
+        ctx = {'dependent_form': dependent_form,
+               'dependent': dependent, 'address_form': address_form}
+
+        return template.render(ctx)
+
+    def post(self):
+        # add the dependent from the form
+        form = DependentForm(request.form)
+        employee = Employee.query.join(User).filter(
+            User.id == g.user.id).first()
+        dependent = Dependent()
+        form.populate_obj(dependent)
+        dependent.id = None
+        dependent.employee_id = employee.id
+        dependent.address.id = None
+
+        db_session.add(dependent.address)
+
+        db_session.add(dependent)
+        db_session.commit()
+        # display all the dependents
+        return self.display_all()
+
+    def put(self, id):
+        # update the dependent from the form
+        form = DependentForm(request.form)
+        dependent = Dependent.query.get(id)
+        form.populate_obj(dependent)
+
+        db_session.add(dependent)
+        db_session.commit()
+        # display all the dependents
+        return self.display_all()
+
+    def delete(self, id):
+        dependent = Dependent.query.get(id)
+
+        db_session.delete(dependent)
+        db_session.commit()
+
+        return self.display_all()
+
+    def display_all(self):
+        employee = Employee.query.join(User).filter(
+            User.id == g.user.id).first()
+        dependents = employee.dependents
+        return render_template('enroll/_dependents.html',
+                               address_form=AddressForm(),
+                               dependents=dependents,
+                               dependent_form=DependentForm())
 
 
 class EnrollMedicalView(EnrollPlanAJAXView):
@@ -1123,7 +1213,7 @@ register_ajax_view(VisionPlanView, 'vision_plan_ajax', '/admin/_vision_plans/') 
 register_ajax_view(PlanTierPremiumView, 'plan_tier_premium_ajax', '/admin/_plan_tier_premiums/')  # NOQA
 
 # enroll
-register_ajax_view(DependentView, 'dependent_ajax', '/enroll/_dependents/')  # NOQA
+register_ajax_view(EnrollDependentsView, 'dependent_ajax', '/enroll/_dependents/')  # NOQA
 register_ajax_view(EnrollMedicalView, 'enroll_medical_ajax', '/enroll/_medicals/')  # NOQA
 register_ajax_view(EnrollDentalView, 'enroll_dental_ajax', '/enroll/_dentals/')  # NOQA
 register_ajax_view(EnrollVisionView, 'enroll_vision_ajax', '/enroll/_visions/')  # NOQA
@@ -1142,3 +1232,4 @@ register_ajax_view(EnrollOtherPlanView, 'enroll_other_ajax', '/enroll/_others/')
 register_ajax_view(EnrollCancerPlanView, 'enroll_cancer_ajax', '/enroll/_cancers/')  # NOQA
 register_ajax_view(EnrollCriticalIllnessPlanView, 'enroll_critical_ajax', '/enroll/_criticals/')  # NOQA
 register_ajax_view(EnrollLifeEventAJAXView, 'enroll_life_events_ajax', '/enroll/_life_events/')  # NOQA
+register_ajax_view(EnrollInfoAJAXView, 'enroll_info_ajax', '/enroll/_infos/')  # NOQA
