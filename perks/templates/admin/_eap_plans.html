@@ -3,7 +3,9 @@
     ('cust_service_phone', 'phone'),
     ('original_effective_date', 'date'),
     ('renewal_date', 'date'),
-    ('renewal_date', 'date'),
+    ('minimum_benefit', 'currency'),
+    ('maximum_benefit', 'currency'),
+    ('website', 'url'),
 
     ], 'eap_plan-') }}
 {{ render_ajax_methods('admin', 'eap_plan') }}

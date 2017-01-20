@@ -170,24 +170,22 @@ class AJAXCrudView(MethodView):
     def put(self, id):
         forms = {}
         valid = True
-        form = self.main['form'](request.form)
+        main = self.main['model'].query.get(id)
+        form = self.main['form'](request.form, obj=main)
         if not form.validate:
             valid = False
         forms[self.main['form_name']] = form
-        main = self.main['model'].query.get(id)
         form.populate_obj(main)
-        db_session.add(main)
         for sub in self.subs:
-            form = sub['form'](request.form)
+            obj = getattr(main, sub['single'])
+            form = sub['form'](request.form, obj=obj)
             if not form.validate():
                 valid = False
             forms[sub['form_name']] = form
-            obj = getattr(main, sub['single'])
             if not obj:
                 obj = sub['model']()
                 setattr(main, sub['single'], obj)
             form.populate_obj(obj)
-            db_session.add(obj)
         if not valid:
             return self.display_errors(main, forms)
 
@@ -868,11 +866,12 @@ class EmployeeView(AJAXCrudView):
 
     def on_edit(self, employee):
         original = Employee.query.get(employee.id)
-        hashed = user_manager.hash_password(Employee.password)
-        if original == Employee.password or hashed == Employee.password:
+        hashed = user_manager.hash_password(employee.user.password)
+        if (original.user.password == employee.user.password or
+                hashed == employee.user.password):
             return
         else:
-            employee.password = hashed
+            employee.user.password = hashed
 
 
 class LocationView(AJAXCrudView):

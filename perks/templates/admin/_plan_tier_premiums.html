@@ -1,5 +1,13 @@
 {% from "_macros.html" import render_formatters, render_row, render_save_update, render_table, render_ajax_methods %}
 {{ render_ajax_methods('admin', 'plan_tier_premium', plan.id) }}
+{{ render_formatters([
+    ('premium', 'currency'),
+    ('employee_portion', 'currency'),
+    ('employer_portion', 'currency'),
+    ('flat_amount', 'currency'),
+    ('multiplier', 'decimal'),
+
+    ], 'plan_tier_premium-') }}
 
 <div id='plan_tier_premiums_wrapper_{{ plan.id }}'>
   <h4 class="ui dividing header">{{ plan.name }} Premiums</h4>

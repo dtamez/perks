@@ -250,11 +250,11 @@ class PersonMixin(object):
 class User(UserMixin, Base):
     username = db.Column(db.String(50), nullable=False, unique=True,
                          info={'label': 'Username'})
-    password = db.Column(db.String(255), nullable=False, unique=True,
+    password = db.Column(db.String(255), nullable=False, unique=False,
                          info={'label': 'Password'})
     email = db.Column(EmailType(), info={'label': 'Email'})
     confirmed_at = db.Column(db.DateTime())
-    reset_password_token = db.Column(db.String(100), nullable=False,
+    reset_password_token = db.Column(db.String(100), nullable=True,
                                      server_default='')
     active = db.Column('is_active', db.Boolean(), nullable=False,
                        server_default='0', info={'label': 'May Log In?'})
@@ -307,7 +307,7 @@ class Location(Base):
 
 class Employee(PersonMixin, Base):
     user = db.relationship('User', uselist=False, single_parent=True,
-                           cascade="all, delete-orphan")
+                           cascade="all, delete-orphan", lazy='joined')
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
     hire_date = db.Column(db.Date(), nullable=False,
                           info={'label': 'Hire Date'})
@@ -373,16 +373,16 @@ class CoreMixin(object):
     original_effective_date = db.Column(
         db.Date(), info={'label': 'Original Effective Date'})
     renewal_date = db.Column(db.Date(), info={'label': 'Renewal Date'})
-    existing = db.Column(db.Boolean(), nullable=False,
+    existing = db.Column(db.Boolean(), nullable=False, default=False,
                          info={'label': 'Existing?'})
     list_billed = db.Column(db.Boolean(), info={'label': 'List Billed?'})
     doctor_selection_required = db.Column(
         db.Boolean(), info={'label': 'Doctor Selection Required?'})
     account_rep_name = db.Column(db.Unicode(40),
                                  info={'label': 'Account Rep. Name'})
-    cobra_eligible = db.Column(db.Boolean(), nullable=False,
+    cobra_eligible = db.Column(db.Boolean(), nullable=False, default=False,
                                info={'label': 'Cobra Eligible?'})
-    pre_tax = db.Column(db.Boolean(), nullable=False,
+    pre_tax = db.Column(db.Boolean(), nullable=False, default=False,
                         info={'label': 'Pre tax?'})
 
 

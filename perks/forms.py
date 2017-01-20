@@ -117,6 +117,7 @@ class EmployeeForm(ModelForm):
     address = ModelFormField(AddressForm)
     location = QuerySelectField('Location', query_factory=locations,
                                 get_label='code')
+    salary = StringField()
 
 
 class CarrierForm(ModelForm):
@@ -156,10 +157,12 @@ class MedicalPlanForm(ModelForm):
     class Meta:
         model = models.MedicalPlan
         date_format = '%m/%d/%Y'
-        include = ['id', 'carrier_id']
+        include = ['id']
     id = HiddenField()
     not_available_in = SelectMultipleField('Not available in',
                                            choices=models.STATES)
+    carrier = QuerySelectField('Carrier', query_factory=carriers,
+                               get_label='name')
 
 
 def bundle_plans():
@@ -180,9 +183,11 @@ class DentalPlanForm(ModelForm):
                                            choices=models.STATES)
     bundled_with_medical = BooleanField('Bundled With Medical?')
     bundled_with_vision = BooleanField('Bundled With Vision?')
-    bundled_with = QuerySelectField('Bundled With Plan',
-                                    query_factory=bundle_plans,
-                                    get_label='name')
+    bundled_with_plan = QuerySelectField(
+        'Bundled With Plan', query_factory=bundle_plans, allow_blank=True,
+        get_label='name')
+    carrier = QuerySelectField('Carrier', query_factory=carriers,
+                               get_label='name')
 
 
 class VisionPlanForm(ModelForm):
@@ -199,9 +204,11 @@ class VisionPlanForm(ModelForm):
                                            choices=models.STATES)
     bundled_with_medical = BooleanField('Bundled With Medical?')
     bundled_with_dental = BooleanField('Bundled Wth Dental?')
-    bundled_with = QuerySelectField('Bundled With Plan',
-                                    query_factory=bundle_plans,
-                                    get_label='name')
+    bundled_with_plan = QuerySelectField(
+        'Bundled With Plan', query_factory=bundle_plans, allow_blank=True,
+        get_label='name')
+    carrier = QuerySelectField('Carrier', query_factory=carriers,
+                               get_label='name')
 
 
 class EAPPlanForm(ModelForm):
@@ -216,6 +223,8 @@ class EAPPlanForm(ModelForm):
     id = HiddenField()
     not_available_in = SelectMultipleField('Not available in',
                                            choices=models.STATES)
+    minimum_benefit = StringField()
+    maximum_benefit = StringField()
 
 
 class LTDPlanForm(ModelForm):
@@ -230,6 +239,8 @@ class LTDPlanForm(ModelForm):
     id = HiddenField()
     not_available_in = SelectMultipleField('Not available in',
                                            choices=models.STATES)
+    minimum_benefit = StringField()
+    maximum_benefit = StringField()
 
 
 class STDPlanForm(ModelForm):
@@ -245,9 +256,9 @@ class STDPlanForm(ModelForm):
     not_available_in = SelectMultipleField('Not available in',
                                            choices=models.STATES)
     payout_interval = IntegerField('Payout Interval')
-    max_weekly_benefit = DecimalField('Maximum Weekly Benefit')
-    max_monthly_benefit = DecimalField('Maximum Monthly Benefit')
-    benefit_percentage = DecimalField('Benefit Percentage')
+    max_weekly_benefit = StringField('Maximum Weekly Benefit')
+    max_monthly_benefit = StringField('Maximum Monthly Benefit')
+    benefit_percentage = StringField('Benefit Percentage')
     mandatory_in_states = SelectMultipleField('Mandatory in States',
                                               choices=models.STATES)
 
@@ -264,6 +275,8 @@ class LifeADDPlanForm(ModelForm):
     id = HiddenField()
     not_available_in = SelectMultipleField('Not available in',
                                            choices=models.STATES)
+    minimum_benefit = StringField()
+    maximum_benefit = StringField()
 
 
 class LifeADDDependentPlanForm(ModelForm):
@@ -278,6 +291,8 @@ class LifeADDDependentPlanForm(ModelForm):
     id = HiddenField()
     not_available_in = SelectMultipleField('Not available in',
                                            choices=models.STATES)
+    minimum_benefit = StringField()
+    maximum_benefit = StringField()
 
 
 class FSAPlanForm(ModelForm):

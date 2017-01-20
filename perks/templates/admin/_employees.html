@@ -10,8 +10,13 @@
     ('group_effective_date', 'date'),
     ('sub_group_effective_date', 'date'),
     ('salary_effective_date', 'date'),
+    ('salary', 'currency'),
     ('ssn', 'ssn'),
+    ('email', 'email'),
     ], 'employee-')}}
+{{ render_formatters([
+    ('zip_code', 'zip'),
+    ], 'address-')}}
 {{ render_ajax_methods('admin', 'employee') }}
 
 <div id="employees_wrapper">

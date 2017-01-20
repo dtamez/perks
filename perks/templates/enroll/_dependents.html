@@ -4,6 +4,9 @@
     ('dob', 'date'),
     ('ssn', 'ssn'),
     ], 'dependent-')}}
+{{ render_formatters([
+    ('zip_code', 'zip'),
+    ], 'address-')}}
 {{ render_ajax_methods('enroll', 'dependent') }}
 
 <div id="dependents_wrapper">

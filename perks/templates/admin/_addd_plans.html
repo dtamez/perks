@@ -1,6 +1,9 @@
 {% from "_macros.html" import render_formatters, render_row, render_3row, render_save_update, render_table, render_ajax_methods %}
 {{ render_formatters([
     ('cust_service_phone', 'phone'),
+    ('website', 'url'),
+    ('minimum_benefit', 'currency'),
+    ('maximum_benefit', 'currency'),
     ], 'addd_plan-') }}
 {{ render_ajax_methods('admin', 'addd_plan') }}
 

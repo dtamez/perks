@@ -212,14 +212,28 @@
     jQuery(function($){
 {% for field in fields %}
   {% if field[1] == 'phone' %}
-    $("input[name={{ prefix ~ field[0] }}]").mask("(999) 999-9999",{placeholder:"(###) ###-####"});
+        $('input[name={{ prefix ~ field[0] }}]').inputmask({mask: '(999) 999-9999', autoUnmask: true});
   {% elif field[1] == 'date' %}
-    $("input[name={{ prefix ~ field[0] }}]").mask("99/99/9999",{placeholder:"mm/dd/yyyy"});
+        $('input[name={{ prefix ~ field[0] }}]').inputmask({alias: 'mm/dd/yyyy'});
+  {% elif field[1] == 'integer' %}
+        $('input[name={{ prefix ~ field[0] }}]').inputmask({alias: 'integer'});
+  {% elif field[1] == 'percentage' %}
+        $('input[name={{ prefix ~ field[0] }}]').inputmask({alias: 'percentage'});
+  {% elif field[1] == 'decimal' %}
+        $('input[name={{ prefix ~ field[0] }}]').inputmask({alias: 'decimal'});
+  {% elif field[1] == 'email' %}
+        $('input[name={{ prefix ~ field[0] }}]').inputmask({alias: 'email'});
+  {% elif field[1] == 'url' %}
+        $('input[name={{ prefix ~ field[0] }}]').inputmask({alias: 'url'});
+  {% elif field[1] == 'zip' %}
+        $('input[name={{ prefix ~ field[0] }}]').inputmask({mask: '99999'});
   {% elif field[1] == 'ssn' %}
-    $("input[name={{ prefix ~ field[0] }}]").mask("999-99-9999");
+        $('input[name={{ prefix ~ field[0] }}]').inputmask({mask: '999-99-9999'});
+  {% elif field[1] == 'currency' %}
+        $('input[name={{ prefix ~ field[0] }}]').inputmask({alias: 'currency', autoUnmask: true});
   {% endif %}
 {% endfor %}
-   });
+});
 </script>
 {%- endmacro %}
 

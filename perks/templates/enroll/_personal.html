@@ -12,7 +12,10 @@
     ('sub_group_effective_date', 'date'),
     ('salary_effective_date', 'date'),
     ('ssn', 'ssn'),
-    ], 'employee-')}}
+    ], 'info-')}}
+{{ render_formatters([
+    ('zip_code', 'zip'),
+    ], 'address-')}}
 {{ render_ajax_methods('enroll', 'info') }}
 
 <div id="infos_wrapper">

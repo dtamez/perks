@@ -3,6 +3,7 @@
     ('cust_service_phone', 'phone'),
     ('original_effective_date', 'date'),
     ('renewal_date', 'date'),
+    ('website', 'url'),
     ], 'medical_plan-')}}
  {{ render_ajax_methods('admin', 'medical_plan') }}
 
@@ -19,7 +20,7 @@
     {{ render_row(medical_plan_form.self_funded, medical_plan_form.existing) }}
     {{ render_row(medical_plan_form.list_billed, medical_plan_form.doctor_selection_required) }}
     {{ render_row(medical_plan_form.pre_tax, medical_plan_form.cobra_eligible) }}
-    {{ render_row(medical_plan_form.carrier_id, medical_plan_form.not_available_in) }}
+    {{ render_row(medical_plan_form.carrier, medical_plan_form.not_available_in) }}
 
     {{ render_save_update(medical_plan_form.id, 'medical_plan') }}
   </form>
