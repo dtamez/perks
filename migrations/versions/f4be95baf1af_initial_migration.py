@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: 6ba8df84bf54
+Revision ID: f4be95baf1af
 Revises:
-Create Date: 2016-12-20 16:54:11.050605
+Create Date: 2017-01-20 20:55:50.239322
 
 """
 from alembic import op
@@ -11,9 +11,8 @@ import sqlalchemy_utils
 
 from perks import models
 
-
 # revision identifiers, used by Alembic.
-revision = '6ba8df84bf54'
+revision = 'f4be95baf1af'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -55,8 +54,8 @@ def upgrade():
     )
     op.create_table('location',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('code', sa.String(length=12), nullable=True),
-    sa.Column('description', sa.String(length=60), nullable=True),
+    sa.Column('code', sa.String(length=12), nullable=False),
+    sa.Column('description', sa.String(length=60), nullable=False),
     sa.Column('effective_date', sa.Date(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
@@ -68,7 +67,6 @@ def upgrade():
     sa.Column('cust_service_phone', sqlalchemy_utils.types.phone_number.PhoneNumberType(length=20), nullable=True),
     sa.Column('website', sqlalchemy_utils.types.url.URLType(), nullable=True),
     sa.Column('not_available_in', sqlalchemy_utils.types.scalar_list.ScalarListType(), nullable=True),
-    sa.Column('pricing_type_id', sqlalchemy_utils.types.choice.ChoiceType(models.PRICING_TYPES), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('role',
@@ -84,10 +82,9 @@ def upgrade():
     sa.Column('password', sa.String(length=255), nullable=False),
     sa.Column('email', sqlalchemy_utils.types.email.EmailType(length=255), nullable=True),
     sa.Column('confirmed_at', sa.DateTime(), nullable=True),
-    sa.Column('reset_password_token', sa.String(length=100), server_default='', nullable=False),
+    sa.Column('reset_password_token', sa.String(length=100), server_default='', nullable=True),
     sa.Column('is_active', sa.Boolean(), server_default='0', nullable=False),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('password'),
     sa.UniqueConstraint('username')
     )
     op.create_table('age_banded_premium',
@@ -132,8 +129,8 @@ def upgrade():
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('eap_plan',
-    sa.Column('minimum_benefit', sa.Numeric(precision=6, scale=2), nullable=False),
-    sa.Column('maximum_benefit', sa.Numeric(precision=6, scale=2), nullable=False),
+    sa.Column('minimum_benefit', sa.Numeric(precision=10, scale=2), nullable=False),
+    sa.Column('maximum_benefit', sa.Numeric(precision=10, scale=2), nullable=False),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -141,7 +138,7 @@ def upgrade():
     op.create_table('employee',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('first_name', sa.Unicode(length=50), server_default=u'', nullable=False),
-    sa.Column('middle_name', sa.Unicode(length=50), server_default=u'', nullable=False),
+    sa.Column('middle_name', sa.Unicode(length=50), server_default=u'', nullable=True),
     sa.Column('last_name', sa.Unicode(length=50), server_default=u'', nullable=False),
     sa.Column('ssn', sa.Unicode(length=11), nullable=False),
     sa.Column('dob', sa.Date(), nullable=False),
@@ -187,15 +184,15 @@ def upgrade():
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('life_add_dependent_plan',
-    sa.Column('minimum_benefit', sa.Numeric(precision=6, scale=2), nullable=False),
-    sa.Column('maximum_benefit', sa.Numeric(precision=6, scale=2), nullable=False),
+    sa.Column('minimum_benefit', sa.Numeric(precision=10, scale=2), nullable=False),
+    sa.Column('maximum_benefit', sa.Numeric(precision=10, scale=2), nullable=False),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('life_add_plan',
-    sa.Column('minimum_benefit', sa.Numeric(precision=6, scale=2), nullable=False),
-    sa.Column('maximum_benefit', sa.Numeric(precision=6, scale=2), nullable=False),
+    sa.Column('minimum_benefit', sa.Numeric(precision=10, scale=2), nullable=False),
+    sa.Column('maximum_benefit', sa.Numeric(precision=10, scale=2), nullable=False),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -206,8 +203,8 @@ def upgrade():
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('ltd_plan',
-    sa.Column('minimum_benefit', sa.Numeric(precision=6, scale=2), nullable=False),
-    sa.Column('maximum_benefit', sa.Numeric(precision=6, scale=2), nullable=False),
+    sa.Column('minimum_benefit', sa.Numeric(precision=10, scale=2), nullable=False),
+    sa.Column('maximum_benefit', sa.Numeric(precision=10, scale=2), nullable=False),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -253,8 +250,8 @@ def upgrade():
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('std_plan',
-    sa.Column('minimum_benefit', sa.Numeric(precision=6, scale=2), nullable=False),
-    sa.Column('maximum_benefit', sa.Numeric(precision=6, scale=2), nullable=False),
+    sa.Column('minimum_benefit', sa.Numeric(precision=10, scale=2), nullable=False),
+    sa.Column('maximum_benefit', sa.Numeric(precision=10, scale=2), nullable=False),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('payout_interval', sqlalchemy_utils.types.choice.ChoiceType(models.PAYOUT_INTERVAL_TYPES), nullable=True),
     sa.Column('max_weekly_benefit', sa.Numeric(precision=6, scale=2), nullable=False),
@@ -296,7 +293,7 @@ def upgrade():
     op.create_table('beneficiary',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('first_name', sa.Unicode(length=50), server_default=u'', nullable=False),
-    sa.Column('middle_name', sa.Unicode(length=50), server_default=u'', nullable=False),
+    sa.Column('middle_name', sa.Unicode(length=50), server_default=u'', nullable=True),
     sa.Column('last_name', sa.Unicode(length=50), server_default=u'', nullable=False),
     sa.Column('ssn', sa.Unicode(length=11), nullable=False),
     sa.Column('dob', sa.Date(), nullable=False),
@@ -313,7 +310,7 @@ def upgrade():
     op.create_table('dependent',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('first_name', sa.Unicode(length=50), server_default=u'', nullable=False),
-    sa.Column('middle_name', sa.Unicode(length=50), server_default=u'', nullable=False),
+    sa.Column('middle_name', sa.Unicode(length=50), server_default=u'', nullable=True),
     sa.Column('last_name', sa.Unicode(length=50), server_default=u'', nullable=False),
     sa.Column('ssn', sa.Unicode(length=11), nullable=False),
     sa.Column('dob', sa.Date(), nullable=False),
@@ -340,8 +337,10 @@ def upgrade():
     op.create_table('election',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('enrollment_id', sa.Integer(), nullable=True),
+    sa.Column('plan_id', sa.Integer(), nullable=True),
     sa.Column('plan_tier_premium_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['enrollment_id'], ['enrollment.id'], ),
+    sa.ForeignKeyConstraint(['plan_id'], ['plan.id'], ),
     sa.ForeignKeyConstraint(['plan_tier_premium_id'], ['plan_tier_premium.id'], ),
     sa.PrimaryKeyConstraint('id')
     )

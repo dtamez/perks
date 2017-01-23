@@ -143,7 +143,6 @@ class Plan(factory.Factory):
     cust_service_phone = fake.phone()
     website = factory.Faker('url')
     not_available_in = []
-    pricing_type_id = factory.Iterator(models.PRICING_TYPES)
 
 
 class Core(factory.Factory):

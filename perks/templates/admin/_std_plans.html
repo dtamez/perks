@@ -1,0 +1,29 @@
+{% from "_macros.html" import render_formatters, render_row, render_3row, render_save_update, render_table, render_ajax_methods %}
+{{ render_formatters([
+    ('cust_service_phone', 'phone'),
+    ('original_effective_date', 'date'),
+    ('website', 'url'),
+    ('renewal_date', 'date'),
+    ('minimum_benefit', 'currency'),
+    ('maximum_benefit', 'currency'),
+
+    ], 'std_plan-') }}
+ {{ render_ajax_methods('admin', 'std_plan') }}
+
+<div id="std_plans_wrapper">
+  <h4 class="ui dividing header">Short Term Disability</h4>
+
+  <form class="ui form {% if std_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_std_plans">
+    {{ std_plan_form.id }}
+    {{ render_row(std_plan_form.name, None) }}
+    {{ render_row(std_plan_form.code, std_plan_form.website) }}
+    {{ render_row(std_plan_form.cust_service_phone, std_plan_form.not_available_in) }}
+    {{ render_row(std_plan_form.minimum_benefit, std_plan_form.maximum_benefit) }}
+
+    {{ render_save_update(std_plan_form.id, 'std_plan') }}
+  </form>
+
+  {% if not std_plan_form.id.data %}
+    {{ render_table('std_plan', [std_plan_form.name, std_plan_form.code, std_plan_form.website ], std_plans )}}
+  {% endif %}
+</div>

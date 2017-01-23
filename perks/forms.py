@@ -20,17 +20,13 @@ from wtforms_alchemy import ModelForm, ModelFormField
 
 # Adds first and last name to RegisterForm's required fields.
 class RegistrationForm(RegisterForm):
-    first_name = StringField('First name', validators=[
-        validators.DataRequired('First name is required')])
-    last_name = StringField('Last name', validators=[
-        validators.DataRequired('Last name is required')])
+    first_name = StringField('First name', validators=[validators.DataRequired('First name is required')])
+    last_name = StringField('Last name', validators=[validators.DataRequired('Last name is required')])
 
 
 class UserProfileForm(Form):
-    first_name = StringField('First name', validators=[
-        validators.DataRequired('First name is required')])
-    last_name = StringField('Last name', validators=[
-        validators.DataRequired('Last name is required')])
+    first_name = StringField('First name', validators=[validators.DataRequired('First name is required')])
+    last_name = StringField('Last name', validators=[validators.DataRequired('Last name is required')])
     submit = SubmitField('Save')
 
 
@@ -44,6 +40,10 @@ class LifeEventsForm(ModelForm):
 
 
 class EmployeeInfoForm(ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.update({'prefix': 'info'})
+        super(EmployeeInfoForm, self).__init__(*args, **kwargs)
+
     class Meta:
         model = models.Employee
         include = ['id']
@@ -115,8 +115,7 @@ class EmployeeForm(ModelForm):
     id = HiddenField()
     user = ModelFormField(UserForm)
     address = ModelFormField(AddressForm)
-    location = QuerySelectField('Location', query_factory=locations,
-                                get_label='code')
+    location = QuerySelectField('Location', query_factory=locations, get_label='code')
     salary = StringField()
 
 
@@ -159,10 +158,8 @@ class MedicalPlanForm(ModelForm):
         date_format = '%m/%d/%Y'
         include = ['id']
     id = HiddenField()
-    not_available_in = SelectMultipleField('Not available in',
-                                           choices=models.STATES)
-    carrier = QuerySelectField('Carrier', query_factory=carriers,
-                               get_label='name')
+    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
+    carrier = QuerySelectField('Carrier', query_factory=carriers, get_label='name')
 
 
 def bundle_plans():
@@ -179,15 +176,12 @@ class DentalPlanForm(ModelForm):
         date_format = '%m/%d/%Y'
         include = ['id']
     id = HiddenField()
-    not_available_in = SelectMultipleField('Not available in',
-                                           choices=models.STATES)
+    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
     bundled_with_medical = BooleanField('Bundled With Medical?')
     bundled_with_vision = BooleanField('Bundled With Vision?')
-    bundled_with_plan = QuerySelectField(
-        'Bundled With Plan', query_factory=bundle_plans, allow_blank=True,
-        get_label='name')
-    carrier = QuerySelectField('Carrier', query_factory=carriers,
-                               get_label='name')
+    bundled_with_plan = QuerySelectField('Bundled With Plan', query_factory=bundle_plans, allow_blank=True,
+                                         get_label='name')
+    carrier = QuerySelectField('Carrier', query_factory=carriers, get_label='name')
 
 
 class VisionPlanForm(ModelForm):
@@ -200,15 +194,12 @@ class VisionPlanForm(ModelForm):
         date_format = '%m/%d/%Y'
         include = ['id']
     id = HiddenField()
-    not_available_in = SelectMultipleField('Not available in',
-                                           choices=models.STATES)
+    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
     bundled_with_medical = BooleanField('Bundled With Medical?')
     bundled_with_dental = BooleanField('Bundled Wth Dental?')
-    bundled_with_plan = QuerySelectField(
-        'Bundled With Plan', query_factory=bundle_plans, allow_blank=True,
-        get_label='name')
-    carrier = QuerySelectField('Carrier', query_factory=carriers,
-                               get_label='name')
+    bundled_with_plan = QuerySelectField('Bundled With Plan', query_factory=bundle_plans, allow_blank=True,
+                                         get_label='name')
+    carrier = QuerySelectField('Carrier', query_factory=carriers, get_label='name')
 
 
 class EAPPlanForm(ModelForm):
@@ -221,8 +212,7 @@ class EAPPlanForm(ModelForm):
         date_format = '%m/%d/%Y'
         include = ['id']
     id = HiddenField()
-    not_available_in = SelectMultipleField('Not available in',
-                                           choices=models.STATES)
+    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
     minimum_benefit = StringField()
     maximum_benefit = StringField()
 
@@ -237,8 +227,7 @@ class LTDPlanForm(ModelForm):
         date_format = '%m/%d/%Y'
         include = ['id']
     id = HiddenField()
-    not_available_in = SelectMultipleField('Not available in',
-                                           choices=models.STATES)
+    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
     minimum_benefit = StringField()
     maximum_benefit = StringField()
 
@@ -253,14 +242,12 @@ class STDPlanForm(ModelForm):
         date_format = '%m/%d/%Y'
         include = ['id']
     id = HiddenField()
-    not_available_in = SelectMultipleField('Not available in',
-                                           choices=models.STATES)
+    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
     payout_interval = IntegerField('Payout Interval')
     max_weekly_benefit = StringField('Maximum Weekly Benefit')
     max_monthly_benefit = StringField('Maximum Monthly Benefit')
     benefit_percentage = StringField('Benefit Percentage')
-    mandatory_in_states = SelectMultipleField('Mandatory in States',
-                                              choices=models.STATES)
+    mandatory_in_states = SelectMultipleField('Mandatory in States', choices=models.STATES)
 
 
 class LifeADDPlanForm(ModelForm):
@@ -273,8 +260,7 @@ class LifeADDPlanForm(ModelForm):
         date_format = '%m/%d/%Y'
         include = ['id']
     id = HiddenField()
-    not_available_in = SelectMultipleField('Not available in',
-                                           choices=models.STATES)
+    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
     minimum_benefit = StringField()
     maximum_benefit = StringField()
 
@@ -289,8 +275,7 @@ class LifeADDDependentPlanForm(ModelForm):
         date_format = '%m/%d/%Y'
         include = ['id']
     id = HiddenField()
-    not_available_in = SelectMultipleField('Not available in',
-                                           choices=models.STATES)
+    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
     minimum_benefit = StringField()
     maximum_benefit = StringField()
 
@@ -305,8 +290,7 @@ class FSAPlanForm(ModelForm):
         date_format = '%m/%d/%Y'
         include = ['id']
     id = HiddenField()
-    not_available_in = SelectMultipleField('Not available in',
-                                           choices=models.STATES)
+    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 
 # Supplemental
@@ -320,8 +304,7 @@ class ParkingTransitPlanForm(ModelForm):
         date_format = '%m/%d/%Y'
         include = ['id']
     id = HiddenField()
-    not_available_in = SelectMultipleField('Not available in',
-                                           choices=models.STATES)
+    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 
 class HSAPlanForm(ModelForm):
@@ -334,8 +317,7 @@ class HSAPlanForm(ModelForm):
         date_format = '%m/%d/%Y'
         include = ['id']
     id = HiddenField()
-    not_available_in = SelectMultipleField('Not available in',
-                                           choices=models.STATES)
+    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 
 class Employee401KPlanForm(ModelForm):
@@ -348,8 +330,7 @@ class Employee401KPlanForm(ModelForm):
         date_format = '%m/%d/%Y'
         include = ['id']
     id = HiddenField()
-    not_available_in = SelectMultipleField('Not available in',
-                                           choices=models.STATES)
+    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 
 class SupplementalInsurancePlanForm(ModelForm):
@@ -362,8 +343,7 @@ class SupplementalInsurancePlanForm(ModelForm):
         date_format = '%m/%d/%Y'
         include = ['id']
     id = HiddenField()
-    not_available_in = SelectMultipleField('Not available in',
-                                           choices=models.STATES)
+    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 
 class LongTermCarePlanForm(ModelForm):
@@ -376,8 +356,7 @@ class LongTermCarePlanForm(ModelForm):
         date_format = '%m/%d/%Y'
         include = ['id']
     id = HiddenField()
-    not_available_in = SelectMultipleField('Not available in',
-                                           choices=models.STATES)
+    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 
 class OtherPlanForm(ModelForm):
@@ -390,8 +369,7 @@ class OtherPlanForm(ModelForm):
         date_format = '%m/%d/%Y'
         include = ['id']
     id = HiddenField()
-    not_available_in = SelectMultipleField('Not available in',
-                                           choices=models.STATES)
+    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 
 class CancerPlanForm(ModelForm):
@@ -404,8 +382,7 @@ class CancerPlanForm(ModelForm):
         date_format = '%m/%d/%Y'
         include = ['id']
     id = HiddenField()
-    not_available_in = SelectMultipleField('Not available in',
-                                           choices=models.STATES)
+    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 
 class CriticalIllnessPlanForm(ModelForm):
@@ -418,8 +395,7 @@ class CriticalIllnessPlanForm(ModelForm):
         date_format = '%m/%d/%Y'
         include = ['id']
     id = HiddenField()
-    not_available_in = SelectMultipleField('Not available in',
-                                           choices=models.STATES)
+    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 
 class AgeBandedPremiumForm(Form):
@@ -427,11 +403,13 @@ class AgeBandedPremiumForm(Form):
     low = IntegerField('Low')
     high = IntegerField('High')
     premium = DecimalField('Premium')
-    plan_id = SelectField('Plan', [(p.id, p.name)
-                                   for p in models.Plan.query.all()])
+    plan_id = SelectField('Plan', [(p.id, p.name) for p in models.Plan.query.all()])
 
 
 class PlanTierPremiumForm(Form):
+    def __init__(self, *args, **kwargs):
+        kwargs.update({'prefix': 'plan_tier_premium'})
+        super(PlanTierPremiumForm, self).__init__(*args, **kwargs)
     id = HiddenField()
     plan_id = HiddenField()
     tier_type = SelectField('Tier', choices=models.TIER_TYPES)

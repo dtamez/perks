@@ -8,8 +8,7 @@ from flask_login import current_user, login_required
 from jinja2 import Environment, PackageLoader
 from sqlalchemy import desc
 
-from . import app, db_session
-#  from .exporter import Exporter
+from . import app, db
 from .forms import (
     AddressForm,
     CancerPlanForm,
@@ -34,6 +33,7 @@ from .forms import (
     OtherPlanForm,
     ParkingTransitPlanForm,
     PlanTierPremiumForm,
+    STDPlanForm,
     SupplementalInsurancePlanForm,
     UserForm,
     VisionPlanForm,
@@ -67,6 +67,7 @@ from .models import (
     Role,
     STDPlan,
     SupplumentalInsurancePlan,
+    TIER_TYPES,
     User,
     VisionPlan,
     user_manager,
@@ -119,12 +120,9 @@ class AJAXCrudView(MethodView):
             main = self.main['model'].query.get(id)
             self.on_load(main)
             template = env.get_template(self.main['template'])
-            ctx = {self.main['single']: main,
-                   self.main['form_name']: self.main['form'](
-                       None, main)}
+            ctx = {self.main['single']: main, self.main['form_name']: self.main['form'](None, main)}
             for sub in self.subs:
-                ctx[sub['form_name']] = sub['form'](
-                    None, getattr(main, sub['single']))
+                ctx[sub['form_name']] = sub['form'](None, getattr(main, sub['single']))
 
             return template.render(ctx)
 
@@ -147,7 +145,7 @@ class AJAXCrudView(MethodView):
             form.populate_obj(obj)
             if obj.id == '':
                 obj.id = None
-            db_session.add(obj)
+            db.session.add(obj)
             setattr(main, sub['single'], obj)
 
         template = env.get_template(self.main['template'])
@@ -156,13 +154,11 @@ class AJAXCrudView(MethodView):
 
         self.on_save(main)
 
-        db_session.add(main)
-        db_session.commit()
+        db.session.add(main)
+        db.session.commit()
 
         objects = self.main['model'].query.all()
-        ctx = {self.main['plural']: objects,
-               self.main['form_name']: self.main['form'](
-                   None)}
+        ctx = {self.main['plural']: objects, self.main['form_name']: self.main['form'](None)}
         for sub in self.subs:
             ctx[sub['form_name']] = sub['form'](None)
         return template.render(ctx)
@@ -190,14 +186,14 @@ class AJAXCrudView(MethodView):
             return self.display_errors(main, forms)
 
         self.on_edit(main)
-        db_session.commit()
+        db.session.commit()
         return self.display_all()
 
     def delete(self, id):
         obj = self.main['model'].query.get(id)
         self.on_delete(obj)
-        db_session.delete(obj)
-        db_session.commit()
+        db.session.delete(obj)
+        db.session.commit()
         return self.display_all()
 
     def display_errors(self, main, forms):
@@ -209,8 +205,7 @@ class AJAXCrudView(MethodView):
     def display_all(self):
         objects = self.main['model'].query.all()
         template = env.get_template(self.main['template'])
-        ctx = {self.main['plural']: objects,
-               self.main['form_name']: self.main['form'](None)}
+        ctx = {self.main['plural']: objects, self.main['form_name']: self.main['form'](None)}
         for sub in self.subs:
             ctx[sub['form_name']] = sub['form'](None)
         return template.render(ctx)
@@ -227,8 +222,8 @@ def enroll():
     if not enrollment:
         enrollment = Enrollment()
         enrollment.employee_id = employee.id
-        db_session.add(enrollment)
-        db_session.commit()
+        db.session.add(enrollment)
+        db.session.commit()
 
     return redirect(url_for('enroll_life_events'))
 
@@ -239,10 +234,8 @@ def enroll_life_events():
     g.active_tab = 'enroll'
     g.active_step = 'life'
 
-    employee = Employee.query.join(User).filter(
-        User.id == g.user.id).first()
-    enrollment = Enrollment.query.filter(
-        Enrollment.employee_id == employee.id).first()
+    employee = Employee.query.join(User).filter(User.id == g.user.id).first()
+    enrollment = Enrollment.query.filter(Enrollment.employee_id == employee.id).first()
 
     return render_template('enroll/life_events.html', life_event=enrollment)
 
@@ -292,8 +285,7 @@ def get_selections(plans, enrollment_id):
             Election.enrollment_id == enrollment_id,
             Election.plan_id == plan.id).first()
         if election and election.plan_tier_premium:
-            selection['election_label'] = (election.plan_tier_premium.tier_type
-                                           .value)
+            selection['election_label'] = (election.plan_tier_premium.tier_type.value)
     return selections
 
 
@@ -331,12 +323,10 @@ def enroll_core():
 def enroll_group():
     g.active_tab = 'enroll'
     g.active_step = 'group'
-    employee = Employee.query.join(User).filter(
-        User.id == g.user.id).first()
+    employee = Employee.query.join(User).filter(User.id == g.user.id).first()
     # TODO: 2017-01-03 Eventually want to have an 'active' enrollment
     # or enrollment periods
-    enrollment = Enrollment.query.filter(
-        Enrollment.employee_id == employee.id).one()
+    enrollment = Enrollment.query.filter(Enrollment.employee_id == employee.id).one()
     # get all group plans that are available
     # TODO: 2017-01-05 Figure out way to generate these dynamically
     eap_plans = EAPPlan.query.all()
@@ -348,8 +338,7 @@ def enroll_group():
     life_add_plans = LifeADDPlan.query.all()
     life_add_selections = get_selections(life_add_plans, enrollment.id)
     life_add_dependent_plans = LifeADDDependentPlan.query.all()
-    life_add_dependent_selections = get_selections(life_add_dependent_plans,
-                                                   enrollment.id)
+    life_add_dependent_selections = get_selections(life_add_dependent_plans, enrollment.id)
     # Information for current selections across all available plans
     election_form = ElectionForm()
     election_form.selection.choices = []
@@ -368,19 +357,16 @@ def enroll_group():
 def enroll_supplemental():
     g.active_tab = 'enroll'
     g.active_step = 'supplemental'
-    employee = Employee.query.join(User).filter(
-        User.id == g.user.id).first()
+    employee = Employee.query.join(User).filter(User.id == g.user.id).first()
     # TODO: 2017-01-03 Eventually want to have an 'active' enrollment
     # or enrollment periods
-    enrollment = Enrollment.query.filter(
-        Enrollment.employee_id == employee.id).one()
+    enrollment = Enrollment.query.filter(Enrollment.employee_id == employee.id).one()
     # get all group plans that are available
     # TODO: 2017-01-05 Figure out way to generate these dynamically
     fsa_plans = FSAPlan.query.all()
     fsa_selections = get_selections(fsa_plans, enrollment.id)
     parking_transit_plans = ParkingTransitPlan.query.all()
-    parking_transit_selections = get_selections(parking_transit_plans,
-                                                enrollment.id)
+    parking_transit_selections = get_selections(parking_transit_plans, enrollment.id)
     hsa_plans = HSAPlan.query.all()
     hsa_selections = get_selections(hsa_plans, enrollment.id)
     e401k_plans = Employee401KPlan.query.all()
@@ -422,18 +408,15 @@ class EnrollPlanAJAXView(MethodView):
         else:
             # displaying a form to edit the election
             plan = Plan.query.get(id)
-            enrollment = Enrollment.query.filter(
-                Enrollment.employee_id == employee.id).first()
-            election = Election.query.filter(
-                Election.enrollment_id == enrollment.id,
-                Election.plan_id == plan.id).first()
+            enrollment = Enrollment.query.filter(Enrollment.employee_id == employee.id).first()
+            election = Election.query.filter(Election.enrollment_id == enrollment.id,
+                                             Election.plan_id == plan.id).first()
             if not election:
                 election = Election()
                 election.plan_id = plan.id
                 election.enrollment_id = enrollment.id
             election_form = ElectionForm(None, election)
-            election_form.selection.choices = premium_choices(
-                plan.id, election.plan_tier_premium_id)
+            election_form.selection.choices = premium_choices(plan.id, election.plan_tier_premium_id)
             template = env.get_template(self.template_name)
             ctx = {'election': election,
                    'election_form': election_form}
@@ -441,8 +424,7 @@ class EnrollPlanAJAXView(MethodView):
             return template.render(ctx)
 
     def post(self):
-        employee = Employee.query.join(User).filter(
-            User.id == g.user.id).first()
+        employee = Employee.query.join(User).filter(User.id == g.user.id).first()
         election = Election()
         form = ElectionForm(request.form)
         if not form.validate():
@@ -460,8 +442,8 @@ class EnrollPlanAJAXView(MethodView):
             PlanTierPremium.plan_id == form.plan_id.data).first()
         election.plan_tier_premium = ptp
 
-        db_session.add(election)
-        db_session.commit()
+        db.session.add(election)
+        db.session.commit()
 
         return self.display_all()
 
@@ -469,41 +451,32 @@ class EnrollPlanAJAXView(MethodView):
         form = ElectionForm(request.form)
         assert(form.enrollment_id.data)
         enrollment = Enrollment.query.get(form.enrollment_id.data)
-        election = Election.query.filter(
-            Election.enrollment_id == enrollment.id,
-            Election.plan_id == id).one()
+        election = Election.query.filter(Election.enrollment_id == enrollment.id, Election.plan_id == id).one()
         if not form.validate():
             template = env.get_template(self.template_name)
             ctx = {'election': election,
                    'election_form': form}
             return template.render(ctx)
         choice = form.selection.data
-        ptp = PlanTierPremium.query.filter(
-            PlanTierPremium.plan_id == id,
-            PlanTierPremium.tier_type == choice).first()
+        ptp = PlanTierPremium.query.filter(PlanTierPremium.plan_id == id, PlanTierPremium.tier_type == choice).first()
         election.plan_tier_premium = ptp
 
-        db_session.add(election)
-        db_session.commit()
+        db.session.add(election)
+        db.session.commit()
         return self.display_all()
 
     def display_all(self):
-        employee = Employee.query.join(User).filter(
-            User.id == g.user.id).first()
+        employee = Employee.query.join(User).filter(User.id == g.user.id).first()
         plans = self.plan_class.query.all()
-        enrollment = Enrollment.query.filter(
-            Enrollment.employee_id == employee.id).one()
+        enrollment = Enrollment.query.filter(Enrollment.employee_id == employee.id).one()
         selections = []
         for plan in plans:
-            selection = {'plan_name': plan.name, 'plan_id': plan.id,
-                         'election_label': 'Declined'}
+            selection = {'plan_name': plan.name, 'plan_id': plan.id, 'election_label': 'Declined'}
             selections.append(selection)
-            election = Election.query.filter(
-                Election.enrollment_id == enrollment.id,
-                Election.plan_id == plan.id).first()
+            election = Election.query.filter(Election.enrollment_id == enrollment.id,
+                                             Election.plan_id == plan.id).first()
             if election and election.plan_tier_premium:
-                selection['election_label'] = (election.plan_tier_premium
-                                               .tier_type.value)
+                selection['election_label'] = (election.plan_tier_premium.tier_type.value)
             else:
                 election = Election()
                 election.plan = plan
@@ -512,8 +485,7 @@ class EnrollPlanAJAXView(MethodView):
             election_form.selection.choices = []
         ctx = {'election_form': election_form,
                '{}_selections'.format(self.prefix): selections}
-        return render_template(
-            self.template_name, **ctx)
+        return render_template(self.template_name, **ctx)
 
 
 @app.route('/enroll/finalize', methods=['GET', 'POST'])
@@ -607,6 +579,8 @@ def admin_group():
     g.active_step = 'group'
     eap_plans = EAPPlan.query.all()
     eap_plan_form = EAPPlanForm()
+    std_plans = STDPlan.query.all()
+    std_plan_form = STDPlanForm()
     ltd_plans = LTDPlan.query.all()
     ltd_plan_form = LTDPlanForm()
     add_plans = LifeADDPlan.query.all()
@@ -617,6 +591,8 @@ def admin_group():
                            eap_plan_form=eap_plan_form,
                            ltd_plans=ltd_plans,
                            ltd_plan_form=ltd_plan_form,
+                           std_plans=std_plans,
+                           std_plan_form=std_plan_form,
                            add_plans=add_plans,
                            add_plan_form=add_plan_form,
                            addd_plans=addd_plans,
@@ -669,6 +645,15 @@ def admin_supplemental():
         )
 
 
+def get_remaining_tier_choices(plan_id):
+    # remove already chosen tiers from the dropdown list
+    types_dict = {x[0]: x for x in TIER_TYPES}
+    existing = [x.tier_type.code for x in PlanTierPremium.query.filter(
+        PlanTierPremium.plan_id == plan_id).all()]
+    diff = set(types_dict.keys()) - set(existing)
+    return [types_dict[x] for x in diff]
+
+
 @app.route('/admin/premiums', methods=['GET', 'POST'])
 @login_required
 def admin_premiums():
@@ -677,11 +662,11 @@ def admin_premiums():
     plan_forms = []
     plans = Plan.query.all()
     for plan in plans:
-        plan_forms.append(
-            (plan, PlanTierPremiumForm(data={'plan_id': plan.id})))
+        form = PlanTierPremiumForm(data={'plan_id': plan.id})
+        form.tier_type.choices = get_remaining_tier_choices(plan.id)
+        plan_forms.append((plan, form))
 
-    return render_template('admin/premiums.html',
-                           plan_forms=plan_forms)
+    return render_template('admin/premiums.html', plan_forms=plan_forms)
 
 
 # ADMIN Ajax views
@@ -860,15 +845,13 @@ class EmployeeView(AJAXCrudView):
     ]
 
     def on_save(self, employee):
-        employee.user.password = user_manager.hash_password(
-            employee.user.password)
+        employee.user.password = user_manager.hash_password(employee.user.password)
         employee.user.confirmed_at = date.today()
 
     def on_edit(self, employee):
         original = Employee.query.get(employee.id)
         hashed = user_manager.hash_password(employee.user.password)
-        if (original.user.password == employee.user.password or
-                hashed == employee.user.password):
+        if (original.user.password == employee.user.password or hashed == employee.user.password):
             return
         else:
             employee.user.password = hashed
@@ -896,8 +879,11 @@ class PlanTierPremiumView(AJAXCrudView):
         main = self.main['model'].query.get(id)
         self.plan = main.plan
         template = env.get_template(self.main['template'])
+        form = self.main['form'](None, main)
+        form.tier_type.choices = get_remaining_tier_choices(id)
+
         ctx = {self.main['single']: main, 'plan': self.plan,
-               self.main['form_name']: self.main['form'](None, main)}
+               self.main['form_name']: form}
 
         return template.render(ctx)
 
@@ -907,14 +893,16 @@ class PlanTierPremiumView(AJAXCrudView):
         form.populate_obj(main)
         main.id = None
 
-        db_session.add(main)
-        db_session.commit()
+        db.session.add(main)
+        db.session.commit()
 
         template = env.get_template(self.main['template'])
         plan = main.plan
+        form = self.main['form'](None)
+        form.tier_type.choices = get_remaining_tier_choices(plan.id)
+
         ctx = {self.main['plural']: plan.plan_tier_premiums,
-               self.main['form_name']: self.main['form'](
-                   None), 'plan': plan}
+               self.main['form_name']: form, 'plan': plan}
         return template.render(ctx)
 
     def put(self, id):
@@ -923,22 +911,25 @@ class PlanTierPremiumView(AJAXCrudView):
         main = self.main['model'].query.get(id)
         self.plan = main.plan
         form.populate_obj(main)
-        db_session.add(main)
-        db_session.commit()
+        db.session.add(main)
+        db.session.commit()
+        form = self.main['form'](None)
+        form.tier_type.choices = get_remaining_tier_choices(id)
         ctx = {self.main['plural']: self.plan.plan_tier_premiums,
-               self.main['form_name']: self.main['form'](
-                   None), 'plan': self.plan}
+               self.main['form_name']: form, 'plan': self.plan}
         return template.render(ctx)
 
     def delete(self, id):
         template = env.get_template(self.main['template'])
         obj = self.main['model'].query.get(id)
         plan = obj.plan
-        db_session.delete(obj)
-        db_session.commit()
+        db.session.delete(obj)
+        db.session.commit()
+        form = self.main['form'](None)
+        form.tier_type.choices = get_remaining_tier_choices(id)
 
         ctx = {'plan_tier_premiums': plan.plan_tier_premiums,
-               'plan_tier_premium_form': PlanTierPremiumForm(),
+               'plan_tier_premium_form': form,
                'plan': plan}
         return template.render(ctx)
 
@@ -963,8 +954,8 @@ class EnrollLifeEventAJAXView(MethodView):
         form.populate_obj(enrollment)
         enrollment.id = id
 
-        db_session.add(enrollment)
-        db_session.commit()
+        db.session.add(enrollment)
+        db.session.commit()
 
         # display the table view with one entry
         template = env.get_template('/enroll/_life_events.html')
@@ -992,8 +983,8 @@ class EnrollInfoAJAXView(MethodView):
         form = AddressForm(request.form)
         form.populate_obj(employee.address)
 
-        db_session.add(employee)
-        db_session.commit()
+        db.session.add(employee)
+        db.session.commit()
 
         # display the table view with one entry
         template = env.get_template('/enroll/_personal.html')
@@ -1018,18 +1009,17 @@ class EnrollDependentsView(MethodView):
     def post(self):
         # add the dependent from the form
         form = DependentForm(request.form)
-        employee = Employee.query.join(User).filter(
-            User.id == g.user.id).first()
+        employee = Employee.query.join(User).filter(User.id == g.user.id).first()
         dependent = Dependent()
         form.populate_obj(dependent)
         dependent.id = None
         dependent.employee_id = employee.id
         dependent.address.id = None
 
-        db_session.add(dependent.address)
+        db.session.add(dependent.address)
 
-        db_session.add(dependent)
-        db_session.commit()
+        db.session.add(dependent)
+        db.session.commit()
         # display all the dependents
         return self.display_all()
 
@@ -1039,22 +1029,21 @@ class EnrollDependentsView(MethodView):
         dependent = Dependent.query.get(id)
         form.populate_obj(dependent)
 
-        db_session.add(dependent)
-        db_session.commit()
+        db.session.add(dependent)
+        db.session.commit()
         # display all the dependents
         return self.display_all()
 
     def delete(self, id):
         dependent = Dependent.query.get(id)
 
-        db_session.delete(dependent)
-        db_session.commit()
+        db.session.delete(dependent)
+        db.session.commit()
 
         return self.display_all()
 
     def display_all(self):
-        employee = Employee.query.join(User).filter(
-            User.id == g.user.id).first()
+        employee = Employee.query.join(User).filter(User.id == g.user.id).first()
         dependents = employee.dependents
         return render_template('enroll/_dependents.html',
                                address_form=AddressForm(),
@@ -1183,52 +1172,50 @@ class EnrollCriticalIllnessPlanView(EnrollPlanAJAXView):
 
 def register_ajax_view(view, endpoint, url, pk='id', pk_type='int'):
     view_func = view.as_view(endpoint)
-    app.add_url_rule(url, defaults={pk: None},
-                     view_func=view_func, methods=['GET', ])
+    app.add_url_rule(url, defaults={pk: None}, view_func=view_func, methods=['GET', ])
     app.add_url_rule(url, view_func=view_func, methods=['POST', ])
-    app.add_url_rule('%s<%s:%s>' % (url, pk_type, pk), view_func=view_func,
-                     methods=['GET', 'PUT', 'DELETE'])
+    app.add_url_rule('%s<%s:%s>' % (url, pk_type, pk), view_func=view_func, methods=['GET', 'PUT', 'DELETE'])
 
 # admin
-register_ajax_view(ADDDependentPlanView, 'addd_plan_ajax', '/admin/_addd_plans/')  # NOQA
-register_ajax_view(ADDPlanView, 'add_plan_ajax', '/admin/_add_plans/')  # NOQA
-register_ajax_view(CancerPlanView, 'cancer_plan_ajax', '/admin/_cancer_plans/')  # NOQA
+register_ajax_view(ADDDependentPlanView, 'addd_plan_ajax', '/admin/_addd_plans/')
+register_ajax_view(ADDPlanView, 'add_plan_ajax', '/admin/_add_plans/')
+register_ajax_view(CancerPlanView, 'cancer_plan_ajax', '/admin/_cancer_plans/')
 register_ajax_view(CarrierView, 'carrier_ajax', '/admin/_carriers/')
-register_ajax_view(CriticalPlanView, 'critical_plan_ajax', '/admin/_critical_illness_plans/')  # NOQA
-register_ajax_view(DentalPlanView, 'dental_plan_ajax', '/admin/_dental_plans/')  # NOQA
-register_ajax_view(EAPPlanView, 'eap_plan_ajax', '/admin/_eap_plans/')  # NOQA
-register_ajax_view(Employee401kPlanView, 'employee_401k_ajax', '/admin/_401k_plans/')  # NOQA
-register_ajax_view(EmployeeView, 'employee_ajax', '/admin/_employees/')  # NOQA
-register_ajax_view(FSAPlanView, 'fsa_plan_ajax', '/admin/_fsa_plans/')  # NOQA
-register_ajax_view(HSAPlanView, 'hsa_plan_ajax', '/admin/_hsa_plans/')  # NOQA
-register_ajax_view(LTCPlanView, 'ltc_plan_ajax', '/admin/_ltc_plans/')  # NOQA
-register_ajax_view(LTDPlanView, 'ltd_plan_ajax', '/admin/_ltd_plans/')  # NOQA
-register_ajax_view(LocationView, 'location_ajax', '/admin/_locations/')  # NOQA
-register_ajax_view(MedicalPlanView, 'medical_plan_ajax', '/admin/_medical_plans/')  # NOQA
-register_ajax_view(OtherPlanView, 'other_plan_ajax', '/admin/_other_plans/')  # NOQA
-register_ajax_view(ParkingTransitPlanView, 'parking_transit_plan_ajax', '/admin/_parking_transit_plans/')  # NOQA
-register_ajax_view(SuppLifePlanView, 'supp_plan_ajax', '/admin/_supp_life_plans/')  # NOQA
-register_ajax_view(VisionPlanView, 'vision_plan_ajax', '/admin/_vision_plans/')  # NOQA
-register_ajax_view(PlanTierPremiumView, 'plan_tier_premium_ajax', '/admin/_plan_tier_premiums/')  # NOQA
+register_ajax_view(CriticalPlanView, 'critical_plan_ajax', '/admin/_critical_illness_plans/')
+register_ajax_view(DentalPlanView, 'dental_plan_ajax', '/admin/_dental_plans/')
+register_ajax_view(EAPPlanView, 'eap_plan_ajax', '/admin/_eap_plans/')
+register_ajax_view(Employee401kPlanView, 'employee_401k_ajax', '/admin/_401k_plans/')
+register_ajax_view(EmployeeView, 'employee_ajax', '/admin/_employees/')
+register_ajax_view(FSAPlanView, 'fsa_plan_ajax', '/admin/_fsa_plans/')
+register_ajax_view(HSAPlanView, 'hsa_plan_ajax', '/admin/_hsa_plans/')
+register_ajax_view(LTCPlanView, 'ltc_plan_ajax', '/admin/_ltc_plans/')
+register_ajax_view(LTDPlanView, 'ltd_plan_ajax', '/admin/_ltd_plans/')
+register_ajax_view(LocationView, 'location_ajax', '/admin/_locations/')
+register_ajax_view(MedicalPlanView, 'medical_plan_ajax', '/admin/_medical_plans/')
+register_ajax_view(OtherPlanView, 'other_plan_ajax', '/admin/_other_plans/')
+register_ajax_view(ParkingTransitPlanView, 'parking_transit_plan_ajax', '/admin/_parking_transit_plans/')
+register_ajax_view(SuppLifePlanView, 'supp_plan_ajax', '/admin/_supp_life_plans/')
+register_ajax_view(VisionPlanView, 'vision_plan_ajax', '/admin/_vision_plans/')
+register_ajax_view(PlanTierPremiumView, 'plan_tier_premium_ajax', '/admin/_plan_tier_premiums/')
 
 # enroll
-register_ajax_view(EnrollDependentsView, 'dependent_ajax', '/enroll/_dependents/')  # NOQA
-register_ajax_view(EnrollMedicalView, 'enroll_medical_ajax', '/enroll/_medicals/')  # NOQA
-register_ajax_view(EnrollDentalView, 'enroll_dental_ajax', '/enroll/_dentals/')  # NOQA
-register_ajax_view(EnrollVisionView, 'enroll_vision_ajax', '/enroll/_visions/')  # NOQA
-register_ajax_view(EnrollEAPView, 'enroll_eap_ajax', '/enroll/_eaps/')  # NOQA
-register_ajax_view(EnrollLTDView, 'enroll_ltd_ajax', '/enroll/_ltds/')  # NOQA
-register_ajax_view(EnrollSTDView, 'enroll_std_ajax', '/enroll/_stds/')  # NOQA
-register_ajax_view(EnrollLifeADDView, 'enroll_life_add_ajax', '/enroll/_life_adds/')  # NOQA
-register_ajax_view(EnrollLifeADDDependentView, 'enroll_life_add_dependent_ajax', '/enroll/_life_add_dependents/')  # NOQA
-register_ajax_view(EnrollFSAPlanView, 'enroll_fsa_ajax', '/enroll/_fsas/')  # NOQA
-register_ajax_view(EnrollParkingTransitPlanView, 'enroll_parking_transit_ajax', '/enroll/_parking_transits/')  # NOQA
-register_ajax_view(EnrollHSAPlanView, 'enroll_hsa_ajax', '/enroll/_hsas/')  # NOQA
-register_ajax_view(EnrollEmployee401KPlanView, 'enroll_e401k_ajax', '/enroll/_e401ks/')  # NOQA
-register_ajax_view(EnrollSupplementalInsurancePlanView, 'enroll_supplemental_ajax', '/enroll/_supplementals/')  # NOQA
-register_ajax_view(EnrollLongTermCarePlanView, 'enroll_ltc_ajax', '/enroll/_ltcs/')  # NOQA
-register_ajax_view(EnrollOtherPlanView, 'enroll_other_ajax', '/enroll/_others/')  # NOQA
-register_ajax_view(EnrollCancerPlanView, 'enroll_cancer_ajax', '/enroll/_cancers/')  # NOQA
-register_ajax_view(EnrollCriticalIllnessPlanView, 'enroll_critical_ajax', '/enroll/_criticals/')  # NOQA
-register_ajax_view(EnrollLifeEventAJAXView, 'enroll_life_events_ajax', '/enroll/_life_events/')  # NOQA
-register_ajax_view(EnrollInfoAJAXView, 'enroll_info_ajax', '/enroll/_infos/')  # NOQA
+register_ajax_view(EnrollDependentsView, 'dependent_ajax', '/enroll/_dependents/')
+register_ajax_view(EnrollMedicalView, 'enroll_medical_ajax', '/enroll/_medicals/')
+register_ajax_view(EnrollDentalView, 'enroll_dental_ajax', '/enroll/_dentals/')
+register_ajax_view(EnrollVisionView, 'enroll_vision_ajax', '/enroll/_visions/')
+register_ajax_view(EnrollEAPView, 'enroll_eap_ajax', '/enroll/_eaps/')
+register_ajax_view(EnrollLTDView, 'enroll_ltd_ajax', '/enroll/_ltds/')
+register_ajax_view(EnrollSTDView, 'enroll_std_ajax', '/enroll/_stds/')
+register_ajax_view(EnrollLifeADDView, 'enroll_life_add_ajax', '/enroll/_life_adds/')
+register_ajax_view(EnrollLifeADDDependentView, 'enroll_life_add_dependent_ajax', '/enroll/_life_add_dependents/')
+register_ajax_view(EnrollFSAPlanView, 'enroll_fsa_ajax', '/enroll/_fsas/')
+register_ajax_view(EnrollParkingTransitPlanView, 'enroll_parking_transit_ajax', '/enroll/_parking_transits/')
+register_ajax_view(EnrollHSAPlanView, 'enroll_hsa_ajax', '/enroll/_hsas/')
+register_ajax_view(EnrollEmployee401KPlanView, 'enroll_e401k_ajax', '/enroll/_e401ks/')
+register_ajax_view(EnrollSupplementalInsurancePlanView, 'enroll_supplemental_ajax', '/enroll/_supplementals/')
+register_ajax_view(EnrollLongTermCarePlanView, 'enroll_ltc_ajax', '/enroll/_ltcs/')
+register_ajax_view(EnrollOtherPlanView, 'enroll_other_ajax', '/enroll/_others/')
+register_ajax_view(EnrollCancerPlanView, 'enroll_cancer_ajax', '/enroll/_cancers/')
+register_ajax_view(EnrollCriticalIllnessPlanView, 'enroll_critical_ajax', '/enroll/_criticals/')
+register_ajax_view(EnrollLifeEventAJAXView, 'enroll_life_events_ajax', '/enroll/_life_events/')
+register_ajax_view(EnrollInfoAJAXView, 'enroll_info_ajax', '/enroll/_infos/')
