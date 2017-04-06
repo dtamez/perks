@@ -8,7 +8,12 @@ from perks import app
 
 @run_with_reloader
 def run_server():
-    http_server = WSGIServer(('', 5000), DebuggedApplication(app))
+    debug = app.config['DEBUG']
+    if debug:
+        http_server = WSGIServer(('', 5000), DebuggedApplication(app))
+    else:
+        http_server = WSGIServer(('', 5000), app)
+
     http_server.serve_forever()
 
 

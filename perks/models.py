@@ -399,9 +399,12 @@ class VisionPlan(Plan, CoreMixin):
     }
 
 
-class MedicalDentalBundlePlan(MedicalPlan):
+class MedicalDentalBundlePlan(Plan, CoreMixin):
     __tablename__ = 'medical_dental_bundle_plan'
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+    self_funded = db.Column(db.Boolean(), nullable=False, info={'label': 'Self Funded?'})
+    carrier_id = db.Column(db.ForeignKey('carrier.id'))
+    carrier = db.relationship('Carrier', uselist=False, info={'label': 'Caarrier'})
 
     __mapper_args__ = {
         'polymorphic_identity': 'medical_dental',
@@ -409,9 +412,12 @@ class MedicalDentalBundlePlan(MedicalPlan):
     }
 
 
-class MedicalVisionBundlePlan(MedicalPlan):
+class MedicalVisionBundlePlan(Plan, CoreMixin):
     __tablename__ = 'medical_vision_bundle_plan'
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+    self_funded = db.Column(db.Boolean(), nullable=False, info={'label': 'Self Funded?'})
+    carrier_id = db.Column(db.ForeignKey('carrier.id'))
+    carrier = db.relationship('Carrier', uselist=False, info={'label': 'Caarrier'})
 
     __mapper_args__ = {
         'polymorphic_identity': 'medical_vision',
@@ -419,9 +425,12 @@ class MedicalVisionBundlePlan(MedicalPlan):
     }
 
 
-class MedicalDentalVisionBundlePlan(MedicalPlan):
+class MedicalDentalVisionBundlePlan(Plan, CoreMixin):
     __tablename__ = 'medical_dental_vision_bundle_plan'
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+    self_funded = db.Column(db.Boolean(), nullable=False, info={'label': 'Self Funded?'})
+    carrier_id = db.Column(db.ForeignKey('carrier.id'))
+    carrier = db.relationship('Carrier', uselist=False, info={'label': 'Caarrier'})
 
     __mapper_args__ = {
         'polymorphic_identity': 'medical_detnal_vision',
@@ -429,9 +438,11 @@ class MedicalDentalVisionBundlePlan(MedicalPlan):
     }
 
 
-class DentalVisionBundlePlan(DentalPlan):
+class DentalVisionBundlePlan(Plan, CoreMixin):
     __tablename__ = 'dental_vision_bundle_plan'
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+    carrier_id = db.Column(db.ForeignKey('carrier.id'))
+    carrier = db.relationship('Carrier', uselist=False, info={'label': 'Caarrier'})
 
     __mapper_args__ = {
         'polymorphic_identity': 'detnal_vision',
