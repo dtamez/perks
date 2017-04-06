@@ -4,6 +4,7 @@ from flask_wtf import Form
 from wtforms import (
     BooleanField,
     DecimalField,
+    FileField,
     HiddenField,
     IntegerField,
     RadioField,
@@ -177,10 +178,6 @@ class DentalPlanForm(ModelForm):
         include = ['id']
     id = HiddenField()
     not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
-    bundled_with_medical = BooleanField('Bundled With Medical?')
-    bundled_with_vision = BooleanField('Bundled With Vision?')
-    bundled_with_plan = QuerySelectField('Bundled With Plan', query_factory=bundle_plans, allow_blank=True,
-                                         get_label='name')
     carrier = QuerySelectField('Carrier', query_factory=carriers, get_label='name')
 
 
@@ -195,10 +192,6 @@ class VisionPlanForm(ModelForm):
         include = ['id']
     id = HiddenField()
     not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
-    bundled_with_medical = BooleanField('Bundled With Medical?')
-    bundled_with_dental = BooleanField('Bundled Wth Dental?')
-    bundled_with_plan = QuerySelectField('Bundled With Plan', query_factory=bundle_plans, allow_blank=True,
-                                         get_label='name')
     carrier = QuerySelectField('Carrier', query_factory=carriers, get_label='name')
 
 
@@ -398,12 +391,12 @@ class CriticalIllnessPlanForm(ModelForm):
     not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 
-class AgeBandedPremiumForm(Form):
-    id = HiddenField()
-    low = IntegerField('Low')
-    high = IntegerField('High')
-    premium = DecimalField('Premium')
-    plan_id = SelectField('Plan', [(p.id, p.name) for p in models.Plan.query.all()])
+#  class AgeBandedPremiumForm(Form):
+    #  id = HiddenField()
+    #  low = IntegerField('Low')
+    #  high = IntegerField('High')
+    #  premium = DecimalField('Premium')
+    #  plan_id = SelectField('Plan', [(p.id, p.name) for p in models.Plan.query.all()])
 
 
 class PlanTierPremiumForm(Form):
@@ -435,3 +428,8 @@ class DependentEligibility(Form):
 class DomesticPartnerEligibility(Form):
     id = HiddenField()
     eligible = BooleanField('Eligible?')
+
+
+# File import
+class UploadForm(Form):
+    xl = FileField(u'Excel File', [validators.regexp(u'^[^/\\]\.xls[x]?$')])

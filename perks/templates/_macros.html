@@ -125,6 +125,12 @@
 </div>
 {%- endmacro %}
 
+{% macro render_submit(label=None, tabindex=None) %}
+<div class="field">
+  <a class='ui violet button button-primary' tabindex="0" href="#" value="{{ lable }}">Save</a>
+</div>
+{%- endmacro %}
+
 {% macro render_table(model_name, fields, objects, id=None) %}
 {% if id %}
   {% set suffix='_' ~ id %}

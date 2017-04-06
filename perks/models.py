@@ -223,6 +223,10 @@ class PersonMixin(object):
         return db.Column(db.Integer, db.ForeignKey(
             'address.id'))
 
+    __mapper_args__ = {
+        'order_by': ['last_name', 'first_name']
+    }
+
 
 class User(UserMixin, Base):
     username = db.Column(db.String(50), nullable=False, unique=True, info={'label': 'Username'}, index=True)
@@ -268,6 +272,10 @@ class Location(Base):
     description = db.Column(db.String(60), info={'label': 'Description'}, nullable=False)
     effective_date = db.Column(db.Date(), nullable=False, info={'label': 'Effective Date'})
 
+    __mapper_args__ = {
+        'order_by': code
+    }
+
 
 class Employee(PersonMixin, Base):
     user = db.relationship('User', uselist=False, single_parent=True, cascade="all, delete-orphan", lazy='joined')
@@ -303,7 +311,7 @@ class Carrier(Base):
     api_endpoint = db.Column(db.Unicode(200), nullable=False, info={'label': 'API Endpoint'})
 
     __mapper_args__ = {
-        "order_by": name
+        'order_by': name
     }
 
 
@@ -338,7 +346,7 @@ class Plan(Base):
     not_available_choices = [(v, n, False) for v, n in STATES]
     plantype = db.Column(db.String(50), info={'label': 'Plan Type'})
     code = db.Column(db.String(10), info={'label': 'Code'})
-    name = db.Column(db.Unicode(20), info={'label': 'Name'})
+    name = db.Column(db.Unicode(70), info={'label': 'Name'})
     cust_service_phone = db.Column(PhoneNumberType(), info={'label': 'Customer Service Phone'})
     website = db.Column(URLType, info={'label': 'Website'})
     not_available_in = db.Column(ScalarListType(), info={'label': 'Not Available In'})
@@ -346,7 +354,8 @@ class Plan(Base):
                        info={'label': 'Plan is active?'})
 
     __mapper_args__ = {
-        'polymorphic_on': plantype
+        'polymorphic_on': plantype,
+        'order_by': name
     }
 
 
@@ -371,11 +380,6 @@ class DentalPlan(Plan, CoreMixin):
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
     carrier_id = db.Column(db.ForeignKey('carrier.id'))
     carrier = db.relationship('Carrier', uselist=False)
-    bundled_with_medical = db.Column(db.Boolean(), nullable=False, default=False,
-                                     info={'label': 'Bundled With Medical?'})
-    bundled_with_vision = db.Column(db.Boolean(), nullable=False, default=False, info={'label': 'Bundled With Vision?'})
-    bundled_with_id = db.Column(db.ForeignKey('plan.id'))
-    bundled_with_plan = db.relationship('Plan', foreign_keys=[bundled_with_id])
     __mapper_args__ = {
         'polymorphic_identity': 'dental',
         'inherit_condition': (id == Plan.id),
@@ -388,14 +392,49 @@ class VisionPlan(Plan, CoreMixin):
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
     carrier_id = db.Column(db.ForeignKey('carrier.id'))
     carrier = db.relationship('Carrier', uselist=False)
-    bundled_with_medical = db.Column(db.Boolean(), nullable=False, default=False,
-                                     info={'label': 'Bundled With Medical?'})
-    bundled_with_dental = db.Column(db.Boolean(), nullable=False, default=False, info={'label': 'Bundled With Dental?'})
-    bundled_with_id = db.Column(db.ForeignKey('plan.id'))
-    bundled_with_plan = db.relationship('Plan', foreign_keys=[bundled_with_id])
 
     __mapper_args__ = {
         'polymorphic_identity': 'vision',
+        'inherit_condition': (id == Plan.id),
+    }
+
+
+class MedicalDentalBundlePlan(MedicalPlan):
+    __tablename__ = 'medical_dental_bundle_plan'
+    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'medical_dental',
+        'inherit_condition': (id == Plan.id),
+    }
+
+
+class MedicalVisionBundlePlan(MedicalPlan):
+    __tablename__ = 'medical_vision_bundle_plan'
+    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'medical_vision',
+        'inherit_condition': (id == Plan.id),
+    }
+
+
+class MedicalDentalVisionBundlePlan(MedicalPlan):
+    __tablename__ = 'medical_dental_vision_bundle_plan'
+    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'medical_detnal_vision',
+        'inherit_condition': (id == Plan.id),
+    }
+
+
+class DentalVisionBundlePlan(DentalPlan):
+    __tablename__ = 'dental_vision_bundle_plan'
+    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'detnal_vision',
         'inherit_condition': (id == Plan.id),
     }
 
@@ -465,6 +504,8 @@ class FSAPlan(Plan, SupplementalMixin):
     __tablename__ = 'fsa_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+    minimum_contribution = db.Column(db.Numeric(10, 2), nullable=False, info={'label': 'Minimum Contribution'})
+    maximum_contribution = db.Column(db.Numeric(10, 2), nullable=False, info={'label': 'Maximum Contribution'})
 
     __mapper_args__ = {
         'polymorphic_identity': 'fsa',

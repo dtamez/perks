@@ -5,6 +5,19 @@
     <div class="five wide column">
       <div class="ui mini vertical steps">
 
+        <a href="{{ url_for('bulk_load')}}" class="{% if g.active_step == 'import' %}active {% endif %}step">
+          <i class="upload {% if g.active_step == 'import' %}violet{% endif %} icon"></i>
+          <div class="content">
+            <div class="title">
+                Bulk Import
+            </div>
+
+            <div class="description">
+                One time data load
+            </div>
+          </div>
+        </a>
+
         <a href="{{ url_for('admin_people')}}" class="{% if g.active_step == 'people' %}active {% endif %}step">
           <i class="users {% if g.active_step == 'people' %}violet{% endif %} icon"></i>
           <div class="content">

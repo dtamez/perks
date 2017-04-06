@@ -97,10 +97,6 @@ class EmployeeFactory(PersonFactory):
     group_id = 'e'
     sub_group_id = 'se'
     sub_group_effective_date = factory.Faker('date')
-    #  location_id = factory.Sequence(lambda n: 'location%s' % n)
-    #  location_description = factory.Sequence(
-        #  lambda n: 'location description%s' % n)
-    #  location_effective_date = factory.Faker('date')
     salary_mode = factory.Iterator(models.SALARY_MODE_TYPES)
     salary_effective_date = factory.Faker('date')
     salary = 50000
@@ -177,18 +173,10 @@ class DentalPlanFactory(Plan, Core):
     class Meta:
         model = models.DentalPlan
 
-    bundled_with_medical = False
-    bundled_with_vision = False
-    bundled_with_plan = None
-
 
 class VisionPlanFactory(Plan, Core):
     class Meta:
         model = models.VisionPlan
-
-    bundled_with_medical = False
-    bundled_with_dental = False
-    bundled_with_plan = None
 
 
 class EAPPlanFactory(Plan, Group):

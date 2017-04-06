@@ -17,9 +17,9 @@ logger = logging.getLogger('alembic.env')
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from perks import models
+from perks import models  # NOQA
 target_metadata = models.Base.metadata
-from flask import current_app
+from flask import current_app  # NOQA
 config.set_main_option('sqlalchemy.url',
                        current_app.config.get('SQLALCHEMY_DATABASE_URI'))
 config.set_main_option('compare_type', 'True')

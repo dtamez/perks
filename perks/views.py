@@ -2,11 +2,13 @@
 from datetime import date
 import locale
 
-from flask import g, request, render_template, redirect, url_for
+from flask import g, flash, request, render_template, redirect, url_for
 from flask.views import MethodView
 from flask_login import current_user, login_required
 from jinja2 import Environment, PackageLoader
 from sqlalchemy import desc
+#  from werkzeug import secure_filename
+from werkzeug.datastructures import CombinedMultiDict
 
 from . import app, db
 from .forms import (
@@ -35,9 +37,11 @@ from .forms import (
     PlanTierPremiumForm,
     STDPlanForm,
     SupplementalInsurancePlanForm,
+    UploadForm,
     UserForm,
     VisionPlanForm,
 )
+from .importer import do_bulk_load
 from .models import (
     Address,
     CancerPlan,
@@ -723,6 +727,15 @@ class LTDPlanView(AJAXCrudView):
     subs = []
 
 
+class STDPlanView(AJAXCrudView):
+    main = {'model': STDPlan, 'form': STDPlanForm,
+            'class': 'STDPlan', 'form_class': 'STDPlanForm',
+            'single': 'std_plan', 'plural': 'std_plans',
+            'form_name': 'std_plan_form',
+            'template': '/admin/_std_plans.html'}
+    subs = []
+
+
 class ADDPlanView(AJAXCrudView):
     main = {'model': LifeADDPlan, 'form': LifeADDPlanForm,
             'class': 'LifeADDPlan', 'form_class': 'LifeADDPlanForm',
@@ -786,7 +799,7 @@ class Employee401kPlanView(AJAXCrudView):
             'form_class': 'Employee401KPlanForm',
             'single': 'e401k_plan', 'plural': 'e401k_plans',
             'form_name': 'e401k_plan_form',
-            'template': '/admin/_401k_plans.html'}
+            'template': '/admin/_e401k_plans.html'}
     subs = []
 
 
@@ -1170,6 +1183,21 @@ class EnrollCriticalIllnessPlanView(EnrollPlanAJAXView):
     prefix = 'critical'
 
 
+class BulkLoadView(MethodView):
+
+    def get(self):
+        return render_template('admin/upload.html', form=UploadForm())
+
+    def post(self):
+        form = UploadForm(CombinedMultiDict((request.form, request.files)))
+        do_bulk_load(form.xl.data.stream)
+        flash("Bulk load completed.")
+        return render_template('admin/upload.html', form=UploadForm())
+
+
+app.add_url_rule('/admin/upload.html', view_func=BulkLoadView.as_view('bulk_load'))
+
+
 def register_ajax_view(view, endpoint, url, pk='id', pk_type='int'):
     view_func = view.as_view(endpoint)
     app.add_url_rule(url, defaults={pk: None}, view_func=view_func, methods=['GET', ])
@@ -1184,12 +1212,13 @@ register_ajax_view(CarrierView, 'carrier_ajax', '/admin/_carriers/')
 register_ajax_view(CriticalPlanView, 'critical_plan_ajax', '/admin/_critical_illness_plans/')
 register_ajax_view(DentalPlanView, 'dental_plan_ajax', '/admin/_dental_plans/')
 register_ajax_view(EAPPlanView, 'eap_plan_ajax', '/admin/_eap_plans/')
-register_ajax_view(Employee401kPlanView, 'employee_401k_ajax', '/admin/_401k_plans/')
+register_ajax_view(Employee401kPlanView, 'employee_401k_ajax', '/admin/_e401k_plans/')
 register_ajax_view(EmployeeView, 'employee_ajax', '/admin/_employees/')
 register_ajax_view(FSAPlanView, 'fsa_plan_ajax', '/admin/_fsa_plans/')
 register_ajax_view(HSAPlanView, 'hsa_plan_ajax', '/admin/_hsa_plans/')
 register_ajax_view(LTCPlanView, 'ltc_plan_ajax', '/admin/_ltc_plans/')
 register_ajax_view(LTDPlanView, 'ltd_plan_ajax', '/admin/_ltd_plans/')
+register_ajax_view(STDPlanView, 'std_plan_ajax', '/admin/_std_plans/')
 register_ajax_view(LocationView, 'location_ajax', '/admin/_locations/')
 register_ajax_view(MedicalPlanView, 'medical_plan_ajax', '/admin/_medical_plans/')
 register_ajax_view(OtherPlanView, 'other_plan_ajax', '/admin/_other_plans/')

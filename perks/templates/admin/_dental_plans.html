@@ -13,7 +13,7 @@
 
   <form class="ui form {% if dental_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_dental_plans">
     {{ dental_plan_form.id }}
-    {{ render_row(dental_plan_form.name, None) }}
+    {{ render_row(dental_plan_form.name, dental_plan_form.active) }}
     {{ render_row(dental_plan_form.code, dental_plan_form.website) }}
     {{ render_row(dental_plan_form.cust_service_phone, dental_plan_form.not_available_in) }}
     {{ render_row(dental_plan_form.group_number, dental_plan_form.original_effective_date) }}
@@ -21,8 +21,6 @@
     {{ render_row(dental_plan_form.list_billed, dental_plan_form.doctor_selection_required) }}
     {{ render_row(dental_plan_form.account_rep_name, dental_plan_form.cobra_eligible) }}
     {{ render_row(dental_plan_form.pre_tax, dental_plan_form.carrier) }}
-    {{ render_row(dental_plan_form.bundled_with_medical,dental_plan_form.bundled_with_vision)  }}
-    {{ render_row(dental_plan_form.bundled_with_plan, dental_plan_form.active) }}
 
     {{ render_save_update(dental_plan_form.id, 'dental_plan') }}
   </form>
