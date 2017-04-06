@@ -1,4 +1,5 @@
 node_modules
-instance
 semantic
 alembic.ini
+notes.txt
+TODO.txt
