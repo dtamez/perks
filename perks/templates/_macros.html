@@ -34,7 +34,7 @@
       {% for k, v in field.choices %}
         <div class="field {% if field.errors %}error{% endif %}">
           <div class="ui radio checkbox">
-            <input value="{{ k }}" name="{{ field.id }}" type="radio" required>
+            <input value="{{ k }}" name="{{ field.id }}" {% if k == field.data %}checked="checked"{% endif %} type="radio" required>
             <label>{{ v }}</label>
           </div>
         </div>
@@ -48,7 +48,7 @@
       {% for k, v in field.choices %}
 
         <div class="field">
-          <option value="{{k}}" {% if k is equalto field.data %} selected{% endif %}>{{v}}</option>
+          <option value="{{k}}" {% if k == field.data %} selected{% endif %}>{{v}}</option>
         </div>
 
       {% endfor %}
