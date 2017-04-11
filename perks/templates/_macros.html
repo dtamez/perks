@@ -34,7 +34,7 @@
       {% for k, v in field.choices %}
         <div class="field {% if field.errors %}error{% endif %}">
           <div class="ui radio checkbox">
-            <input name="{{ field.id }}" value="{{ k }}" {% if k is equalto field.data %}checked="checked"{% endif %} type="radio" required>
+            <input value="{{ k }}" name="{{ field.id }}" {% if k is equalto field.data %}checked="checked"{% endif %} type="radio" required>
             <label>{{ v }}</label>
           </div>
         </div>
