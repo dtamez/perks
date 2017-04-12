@@ -127,7 +127,7 @@
 
 {% macro render_submit(label=None, tabindex=None) %}
 <div class="field">
-  <a class='ui violet button button-primary' tabindex="0" href="#" value="{{ lable }}">Save</a>
+  <input class='ui violet button button-primary'  type="submit" name="submit" id="submit" value="{{ label }}" />
 </div>
 {%- endmacro %}
 
