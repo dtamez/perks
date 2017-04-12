@@ -13,7 +13,7 @@
 
   <form class="ui form {% if e401k_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_e401k_plans">
     {{ e401k_plan_form.id }}
-    {{ render_row(e401k_plan_form.name, None) }}
+    {{ render_row(e401k_plan_form.name, e401k_plan_form.active) }}
     {{ render_row(e401k_plan_form.code, e401k_plan_form.website) }}
     {{ render_row(e401k_plan_form.cust_service_phone, e401k_plan_form.not_available_in) }}
 

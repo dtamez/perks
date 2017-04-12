@@ -149,7 +149,12 @@ def carriers():
     return models.Carrier.query.all()
 
 
-class MedicalPlanForm(ModelForm):
+class AdminPlanForm(ModelForm):
+    active = BooleanField('Active?')
+    id = HiddenField()
+
+
+class MedicalPlanForm(AdminPlanForm):
     def __init__(self, *args, **kwargs):
         kwargs.update({'prefix': 'medical_plan'})
         super(MedicalPlanForm, self).__init__(*args, **kwargs)
@@ -158,7 +163,6 @@ class MedicalPlanForm(ModelForm):
         model = models.MedicalPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    id = HiddenField()
     not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
     carrier = QuerySelectField('Carrier', query_factory=carriers, get_label='name')
 
@@ -167,7 +171,7 @@ def bundle_plans():
     return models.Plan.query.all()
 
 
-class DentalPlanForm(ModelForm):
+class DentalPlanForm(AdminPlanForm):
     def __init__(self, *args, **kwargs):
         kwargs.update({'prefix': 'dental_plan'})
         super(DentalPlanForm, self).__init__(*args, **kwargs)
@@ -176,12 +180,11 @@ class DentalPlanForm(ModelForm):
         model = models.DentalPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    id = HiddenField()
     not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
     carrier = QuerySelectField('Carrier', query_factory=carriers, get_label='name')
 
 
-class VisionPlanForm(ModelForm):
+class VisionPlanForm(AdminPlanForm):
     def __init__(self, *args, **kwargs):
         kwargs.update({'prefix': 'vision_plan'})
         super(VisionPlanForm, self).__init__(*args, **kwargs)
@@ -190,12 +193,11 @@ class VisionPlanForm(ModelForm):
         model = models.VisionPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    id = HiddenField()
     not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
     carrier = QuerySelectField('Carrier', query_factory=carriers, get_label='name')
 
 
-class EAPPlanForm(ModelForm):
+class EAPPlanForm(AdminPlanForm):
     def __init__(self, *args, **kwargs):
         kwargs.update({'prefix': 'eap_plan'})
         super(EAPPlanForm, self).__init__(*args, **kwargs)
@@ -204,13 +206,12 @@ class EAPPlanForm(ModelForm):
         model = models.EAPPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    id = HiddenField()
     not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
     minimum_benefit = StringField()
     maximum_benefit = StringField()
 
 
-class LTDPlanForm(ModelForm):
+class LTDPlanForm(AdminPlanForm):
     def __init__(self, *args, **kwargs):
         kwargs.update({'prefix': 'ltd_plan'})
         super(LTDPlanForm, self).__init__(*args, **kwargs)
@@ -219,13 +220,12 @@ class LTDPlanForm(ModelForm):
         model = models.LTDPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    id = HiddenField()
     not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
     minimum_benefit = StringField()
     maximum_benefit = StringField()
 
 
-class STDPlanForm(ModelForm):
+class STDPlanForm(AdminPlanForm):
     def __init__(self, *args, **kwargs):
         kwargs.update({'prefix': 'std_plan'})
         super(STDPlanForm, self).__init__(*args, **kwargs)
@@ -234,7 +234,6 @@ class STDPlanForm(ModelForm):
         model = models.STDPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    id = HiddenField()
     not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
     payout_interval = IntegerField('Payout Interval')
     max_weekly_benefit = StringField('Maximum Weekly Benefit')
@@ -243,7 +242,7 @@ class STDPlanForm(ModelForm):
     mandatory_in_states = SelectMultipleField('Mandatory in States', choices=models.STATES)
 
 
-class LifeADDPlanForm(ModelForm):
+class LifeADDPlanForm(AdminPlanForm):
     def __init__(self, *args, **kwargs):
         kwargs.update({'prefix': 'add_plan'})
         super(LifeADDPlanForm, self).__init__(*args, **kwargs)
@@ -252,13 +251,12 @@ class LifeADDPlanForm(ModelForm):
         model = models.LifeADDPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    id = HiddenField()
     not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
     minimum_benefit = StringField()
     maximum_benefit = StringField()
 
 
-class LifeADDDependentPlanForm(ModelForm):
+class LifeADDDependentPlanForm(AdminPlanForm):
     def __init__(self, *args, **kwargs):
         kwargs.update({'prefix': 'addd_plan'})
         super(LifeADDDependentPlanForm, self).__init__(*args, **kwargs)
@@ -267,13 +265,12 @@ class LifeADDDependentPlanForm(ModelForm):
         model = models.LifeADDDependentPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    id = HiddenField()
     not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
     minimum_benefit = StringField()
     maximum_benefit = StringField()
 
 
-class FSAPlanForm(ModelForm):
+class FSAPlanForm(AdminPlanForm):
     def __init__(self, *args, **kwargs):
         kwargs.update({'prefix': 'fsa_plan'})
         super(FSAPlanForm, self).__init__(*args, **kwargs)
@@ -282,12 +279,11 @@ class FSAPlanForm(ModelForm):
         model = models.FSAPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    id = HiddenField()
     not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 
 # Supplemental
-class ParkingTransitPlanForm(ModelForm):
+class ParkingTransitPlanForm(AdminPlanForm):
     def __init__(self, *args, **kwargs):
         kwargs.update({'prefix': 'parking_transit_plan'})
         super(ParkingTransitPlanForm, self).__init__(*args, **kwargs)
@@ -296,11 +292,10 @@ class ParkingTransitPlanForm(ModelForm):
         model = models.ParkingTransitPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    id = HiddenField()
     not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 
-class HSAPlanForm(ModelForm):
+class HSAPlanForm(AdminPlanForm):
     def __init__(self, *args, **kwargs):
         kwargs.update({'prefix': 'hsa_plan'})
         super(HSAPlanForm, self).__init__(*args, **kwargs)
@@ -309,11 +304,10 @@ class HSAPlanForm(ModelForm):
         model = models.HSAPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    id = HiddenField()
     not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 
-class Employee401KPlanForm(ModelForm):
+class Employee401KPlanForm(AdminPlanForm):
     def __init__(self, *args, **kwargs):
         kwargs.update({'prefix': 'e401k_plan'})
         super(Employee401KPlanForm, self).__init__(*args, **kwargs)
@@ -322,11 +316,10 @@ class Employee401KPlanForm(ModelForm):
         model = models.Employee401KPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    id = HiddenField()
     not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 
-class SupplementalInsurancePlanForm(ModelForm):
+class SupplementalInsurancePlanForm(AdminPlanForm):
     def __init__(self, *args, **kwargs):
         kwargs.update({'prefix': 'supp_life_plan'})
         super(SupplementalInsurancePlanForm, self).__init__(*args, **kwargs)
@@ -335,11 +328,10 @@ class SupplementalInsurancePlanForm(ModelForm):
         model = models.SupplumentalInsurancePlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    id = HiddenField()
     not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 
-class LongTermCarePlanForm(ModelForm):
+class LongTermCarePlanForm(AdminPlanForm):
     def __init__(self, *args, **kwargs):
         kwargs.update({'prefix': 'ltc_plan'})
         super(LongTermCarePlanForm, self).__init__(*args, **kwargs)
@@ -348,11 +340,10 @@ class LongTermCarePlanForm(ModelForm):
         model = models.LongTermCarePlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    id = HiddenField()
     not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 
-class OtherPlanForm(ModelForm):
+class OtherPlanForm(AdminPlanForm):
     def __init__(self, *args, **kwargs):
         kwargs.update({'prefix': 'other_plan'})
         super(OtherPlanForm, self).__init__(*args, **kwargs)
@@ -361,11 +352,10 @@ class OtherPlanForm(ModelForm):
         model = models.OtherPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    id = HiddenField()
     not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 
-class CancerPlanForm(ModelForm):
+class CancerPlanForm(AdminPlanForm):
     def __init__(self, *args, **kwargs):
         kwargs.update({'prefix': 'cancer_plan'})
         super(CancerPlanForm, self).__init__(*args, **kwargs)
@@ -374,11 +364,10 @@ class CancerPlanForm(ModelForm):
         model = models.CancerPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    id = HiddenField()
     not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 
-class CriticalIllnessPlanForm(ModelForm):
+class CriticalIllnessPlanForm(AdminPlanForm):
     def __init__(self, *args, **kwargs):
         kwargs.update({'prefix': 'critical_illness_plan'})
         super(CriticalIllnessPlanForm, self).__init__(*args, **kwargs)
@@ -387,7 +376,6 @@ class CriticalIllnessPlanForm(ModelForm):
         model = models.CriticalIllnessPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    id = HiddenField()
     not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 

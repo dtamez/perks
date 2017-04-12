@@ -13,7 +13,7 @@
 
   <form class="ui form {% if other_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_other_plans">
     {{ other_plan_form.id }}
-    {{ render_row(other_plan_form.name, None) }}
+    {{ render_row(other_plan_form.name, other_plan_form.active) }}
     {{ render_row(other_plan_form.code, other_plan_form.website) }}
     {{ render_row(other_plan_form.cust_service_phone, other_plan_form.not_available_in) }}
 

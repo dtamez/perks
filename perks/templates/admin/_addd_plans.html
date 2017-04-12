@@ -12,7 +12,7 @@
 
   <form class="ui form {% if addd_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_addd_plans">
     {{ addd_plan_form.id }}
-    {{ render_row(addd_plan_form.name, None) }}
+    {{ render_row(addd_plan_form.name, addd_plan_form.active) }}
     {{ render_row(addd_plan_form.code, addd_plan_form.website) }}
     {{ render_row(addd_plan_form.cust_service_phone, addd_plan_form.not_available_in) }}
     {{ render_row(addd_plan_form.minimum_benefit, addd_plan_form.maximum_benefit) }}

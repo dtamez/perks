@@ -13,7 +13,7 @@
 
   <form class="ui form {% if supp_life_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_supp_life_plans">
     {{ supp_life_plan_form.id }}
-    {{ render_row(supp_life_plan_form.name, None) }}
+    {{ render_row(supp_life_plan_form.name, supp_life_plan_form.active) }}
     {{ render_row(supp_life_plan_form.code, supp_life_plan_form.website) }}
     {{ render_row(supp_life_plan_form.cust_service_phone, supp_life_plan_form.not_available_in) }}
 

@@ -13,7 +13,7 @@
 
   <form class="ui form {% if ltc_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_ltc_plans">
     {{ ltc_plan_form.id }}
-    {{ render_row(ltc_plan_form.name, None) }}
+    {{ render_row(ltc_plan_form.name, ltc_plan_form.active) }}
     {{ render_row(ltc_plan_form.code, ltc_plan_form.website) }}
     {{ render_row(ltc_plan_form.cust_service_phone, ltc_plan_form.not_available_in) }}
 

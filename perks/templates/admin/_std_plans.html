@@ -15,7 +15,7 @@
 
   <form class="ui form {% if std_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_std_plans">
     {{ std_plan_form.id }}
-    {{ render_row(std_plan_form.name, None) }}
+    {{ render_row(std_plan_form.name, std_plan_form.active) }}
     {{ render_row(std_plan_form.code, std_plan_form.website) }}
     {{ render_row(std_plan_form.cust_service_phone, std_plan_form.not_available_in) }}
     {{ render_row(std_plan_form.minimum_benefit, std_plan_form.maximum_benefit) }}

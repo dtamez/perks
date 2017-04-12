@@ -13,7 +13,7 @@
 
   <form class="ui form {% if fsa_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_fsa_plans">
     {{ fsa_plan_form.id }}
-    {{ render_row(fsa_plan_form.name, None) }}
+    {{ render_row(fsa_plan_form.name, fsa_plan_form.active) }}
     {{ render_row(fsa_plan_form.code, fsa_plan_form.website) }}
     {{ render_row(fsa_plan_form.cust_service_phone, fsa_plan_form.not_available_in) }}
 
