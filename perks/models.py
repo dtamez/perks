@@ -558,7 +558,7 @@ class Employee401KPlan(Plan, SupplementalMixin):
 
 
 class SupplumentalInsurancePlan(Plan, SupplementalMixin):
-    __tablename__ = 'employee_401k_plan'
+    __tablename__ = 'supplemental_insurance_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
 
