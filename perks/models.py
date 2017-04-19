@@ -352,6 +352,8 @@ class Plan(Base):
     not_available_in = db.Column(ScalarListType(), info={'label': 'Not Available In'})
     active = db.Column('is_active', db.Boolean(), nullable=False, index=True, server_default='1',
                        info={'label': 'Plan is active?'})
+    description = db.Column(db.String(250), info={'label': ''})
+    special_instructions = db.Column(db.String(250), info={'label': ''})
 
     __mapper_args__ = {
         'polymorphic_on': plantype,
