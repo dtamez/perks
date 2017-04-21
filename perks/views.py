@@ -221,6 +221,9 @@ class AJAXCrudView(MethodView):
 def enroll():
     employee = Employee.query.join(User).filter(
         User.id == g.user.id).first()
+    if not employee:
+        flash("You must be an employee in order to enroll.", 'error')
+        return redirect(url_for('index'))
     enrollment = Enrollment.query.filter(
         Enrollment.employee_id == employee.id).first()
     if not enrollment:
