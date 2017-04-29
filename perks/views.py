@@ -293,6 +293,8 @@ def get_selections(plans, enrollment_id):
             Election.plan_id == plan.id).first()
         if election and election.plan_tier_premium:
             selection['election_label'] = (election.plan_tier_premium.tier_type.value)
+        elif election and election.amount:
+            selection['election_label'] = election.amount
     return selections
 
 

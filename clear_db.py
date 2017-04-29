@@ -19,6 +19,12 @@ def delete_all(objects):
 
 
 def main():  # NOQA
+    print 'removing elections'
+    delete_all(models.Election.query.all())
+    print 'removing enrollments'
+    delete_all(models.Enrollment.query.all())
+    print 'removing enrollment periods'
+    delete_all(models.EnrollmentPeriod.query.all())
     print 'removing premiums'
     delete_all(models.PlanTierPremium.query.all())
     print 'removing supplemental plans'

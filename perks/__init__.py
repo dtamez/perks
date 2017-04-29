@@ -17,7 +17,7 @@ mail = Mail(app)
 migrate = Migrate(app)
 
 logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
-engine = db.create_engine(app.config['SQLALCHEMY_DATABASE_URI'], echo=True)
+engine = db.create_engine(app.config['SQLALCHEMY_DATABASE_URI'], echo=False)
 login_manager = LoginManager()
 login_manager.init_app(app)
 

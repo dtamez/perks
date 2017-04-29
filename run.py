@@ -13,7 +13,6 @@ def run_server():
         http_server = WSGIServer(('', 5000), DebuggedApplication(app))
     else:
         http_server = WSGIServer(('', 5000), app)
-
     http_server.serve_forever()
 
 

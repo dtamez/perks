@@ -630,11 +630,14 @@ class PlanTierPremium(Base):
     plan_id = db.Column(None, db.ForeignKey('plan.id'), index=True)
     plan = db.relationship('Plan', foreign_keys=[plan_id], back_populates='plan_tier_premiums')
     tier_type = db.Column(ChoiceType(TIER_TYPES), info={'label': 'Tier'})
-    premium = db.Column(db.Numeric(6, 2), nullable=False, info={'label': 'Premium'})
-    employer_portion = db.Column(db.Numeric(6, 2), nullable=False, info={'label': 'Employer Portion'})
-    employee_portion = db.Column(db.Numeric(6, 2), nullable=False, info={'label': 'Employee Portion'})
-    flat_amount = db.Column(db.Numeric(6, 2), info={'label': 'Flat Amount'})
-    multiplier = db.Column(db.Numeric(3, 2), info={'label': 'Multiplier'})
+    premium = db.Column(db.Numeric(6, 2), nullable=False, info={'label': 'Premium'}, server_default='0')
+    employer_portion = db.Column(db.Numeric(6, 2), nullable=False, info={'label': 'Employer Portion'},
+                                 server_default='0')
+
+    employee_portion = db.Column(db.Numeric(6, 2), nullable=False, info={'label': 'Employee Portion'},
+                                 server_default='0')
+    flat_amount = db.Column(db.Numeric(6, 2), info={'label': 'Flat Amount'}, server_default='0')
+    multiplier = db.Column(db.Numeric(3, 2), info={'label': 'Multiplier'}, server_default='0')
 
 Plan.plan_tier_premiums = db.relationship(
     'PlanTierPremium', back_populates="plan")
@@ -654,6 +657,10 @@ class DomesticPartnerEligibility(Base):
     eligible = db.Column(db.Boolean(), default=False)
 
 
+class EnrollmentPeriod(Base):
+    year = db.Column(db.Integer())
+
+
 class Enrollment(Base):
     """A collection of choices an employee makes during enrollment"""
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), index=True)
@@ -661,6 +668,8 @@ class Enrollment(Base):
     life_event = db.Column(ChoiceType(LIFE_EVENT_TYPES), info={'label': 'Life Event'})
     elections = db.relationship('Election', backref=backref('enrollment', single_parent=True,
                                                             cascade="all, delete-orphan"))
+    enrollment_period_id = db.Column(db.Integer, db.ForeignKey('enrollment_period.id'))
+    enrollment_period = db.relationship('EnrollmentPeriod')
 
 
 class Election(Base):
@@ -669,3 +678,4 @@ class Election(Base):
     plan = db.relationship('Plan')
     plan_tier_premium_id = db.Column(db.Integer, db.ForeignKey('plan_tier_premium.id'))
     plan_tier_premium = db.relationship('PlanTierPremium')
+    amount = db.Column(db.Numeric(11, 2))

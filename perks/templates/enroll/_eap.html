@@ -10,7 +10,7 @@
     {{ render_save_update(election_form.plan_id, 'eap', None, election_form.id) }}
 {% endblock %}
 {% block enroll_table %}
-  {% if eap_selections %}
-      {{ render_enroll_table(eap_selections, 'eap') }}
+  {% if elected_amount %}
+      {{ render_enroll_table(None, 'eap', elected_amount) }}
   {% endif %}
 {% endblock %}

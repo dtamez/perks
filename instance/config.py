@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 import os
 basedir = os.path.abspath(os.path.dirname(__file__))
-DEBUG = os.getenv('DEBUG', False)
+DEBUG = False  # os.getenv('DEBUG', False)
 DEBUG_TB_INTERCEPT_REDIRECTS = os.getenv('DEBUG_TB_INTERCEPT_REDIRECTS', False)
 SECRET_KEY = os.getenv('SECRET_KEY', 'Not very secret')  # '78asfoijja*sd0^0qwer098nq535)N&)N)wrjq0w450'
 
 SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
 SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
-SQL_ALCHEMY_ECHO = os.getenv('SQL_ALCHEMY_ECHO', False)
-SQLALCHEMY_RECORD_QUERIES = DEBUG
-SQLALCHEMY_TRACK_MODIFICATIONS = os.getenv('SQLALCHEMY_TRACK_MODIFICATIONS', False)
+SQL_ALCHEMY_ECHO = False   # os.getenv('SQL_ALCHEMY_ECHO', False)
+SQLALCHEMY_RECORD_QUERIES = False  # DEBUG
+SQLALCHEMY_TRACK_MODIFICATIONS = False   # os.getenv('SQLALCHEMY_TRACK_MODIFICATIONS', False)
 
 MAIL_SERVER = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
 MAIL_PORT = 465

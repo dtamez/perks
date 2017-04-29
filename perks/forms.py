@@ -63,6 +63,7 @@ class ElectionForm(Form):
     selection = RadioField('Election')
     plan_tier_premium_id = HiddenField()
     plan_id = HiddenField()
+    amount = DecimalField()
 
 
 # Admin
