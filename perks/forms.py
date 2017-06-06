@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+# vim:fenc=utf-8
+#
+# Copyright © 2017 Danny Tamez <zematynnad@gmail.com>
+#
+# Distributed under terms of the MIT license.
 from flask_user.forms import RegisterForm
 from flask_wtf import Form
 from wtforms import (
@@ -399,7 +404,7 @@ class PlanTierPremiumForm(Form):
     employer_portion = DecimalField('Employer Portion')
     employee_portion = DecimalField('Employee Portion')
     flat_amount = DecimalField('Flat Amount')
-    multiplier = DecimalField('Multiplier')
+    percentage = DecimalField('Percentage')
 
 
 # Eligibility

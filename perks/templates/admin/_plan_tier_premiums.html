@@ -5,7 +5,7 @@
     ('employee_portion', 'currency'),
     ('employer_portion', 'currency'),
     ('flat_amount', 'currency'),
-    ('multiplier', 'decimal'),
+    ('percentage', 'decimal'),
 
     ], 'plan_tier_premium-') }}
 
@@ -15,7 +15,7 @@
     {{ plan_tier_premium_form.id }} {{ plan_tier_premium_form.plan_id(hidden=True)}}
     {{ render_row(plan_tier_premium_form.tier_type, plan_tier_premium_form.premium) }}
     {{ render_row(plan_tier_premium_form.employee_portion, plan_tier_premium_form.employer_portion) }}
-    {{ render_row(plan_tier_premium_form.flat_amount, plan_tier_premium_form.multiplier) }}
+    {{ render_row(plan_tier_premium_form.flat_amount, plan_tier_premium_form.percentage) }}
     {{ render_save_update(plan_tier_premium_form.id, 'plan_tier_premium', plan.id)}}
   </form>
 

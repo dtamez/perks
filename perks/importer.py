@@ -1,11 +1,17 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+# vim:fenc=utf-8
+#
+# Copyright © 2017 Danny Tamez <zematynnad@gmail.com>
+#
+# Distributed under terms of the MIT license.
 """
 Bulk load import of records.
 """
 from datetime import date
 from decimal import Decimal
 
+from flask import flash
 import pandas
 
 from . import db
@@ -73,11 +79,10 @@ def do_bulk_load(stream):
         import_critical_illness_plans(xls)
         import_other_plans(xls)
         import_enrollments(xls)
-    except Exception as e:
-        print e
-        db.session.rollback()
-    else:
         db.session.commit()
+    except Exception as e:
+        flash(e)
+        db.session.rollback()
 
 
 def import_locations(xls):
@@ -172,7 +177,7 @@ def import_employees(xls):
         employee.address = addr
         user = User()
         user.username = row[USERNAME]
-        password = row[PASSWORD] or '{}{}{}'.format(employee.first_name[0], employee.last_name, employee.ssn[:-4])
+        password = row[PASSWORD] or '{}{}{}'.format(employee.first_name[0], employee.last_name, employee.ssn[-4:])
         user_manager.update_password(user, user_manager.hash_password(password))
         user.email = row[EMAIL]
         user.active = bool(row[ACTIVE])
@@ -296,7 +301,7 @@ def import_medical_plans(xls):
     CARRIER = 18
 
     FLAT_AMOUNT = 19
-    MULTIPLIER = 20
+    PERCENTAGE = 20
     EMPLOYEE_ONLY = 21
     EMPLOYEE_SPOUSE = 22
     EMPLOYEE_CHILDREN = 23
@@ -306,7 +311,7 @@ def import_medical_plans(xls):
     EMPLOYEE_PLUS_3 = 27
     converters = {n: strip for n in range(EMPLOYEE_PLUS_3)}
     converters.update({CODE - 1: str, CUST_SERVICE_PHONE - 1: str, GROUP_NUMBER - 1: str,
-                       FLAT_AMOUNT - 1: zero_if_blank, MULTIPLIER - 1: zero_if_blank})
+                       FLAT_AMOUNT - 1: zero_if_blank, PERCENTAGE - 1: zero_if_blank})
     medical_plans_sheet = xls.parse('Medical Plans', skiprows=[0], converters=converters,
                                     keep_default_na=False)
 
@@ -334,7 +339,7 @@ def import_medical_plans(xls):
         db.session.add(plan)
         print plan.name
         flat_amount = row[FLAT_AMOUNT]
-        multiplier = row[MULTIPLIER]
+        percentage = row[PERCENTAGE]
         eo = row[EMPLOYEE_ONLY]
         es = row[EMPLOYEE_SPOUSE]
         ec = row[EMPLOYEE_CHILDREN]
@@ -342,16 +347,16 @@ def import_medical_plans(xls):
         ep1 = row[EMPLOYEE_PLUS_1]
         ep2 = row[EMPLOYEE_PLUS_2]
         ep3 = row[EMPLOYEE_PLUS_3]
-        create_plan_tier_premium(eo, 'EO', plan, flat_amount, multiplier)
-        create_plan_tier_premium(es, 'ES', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ec, 'EC', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ef, 'EF', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ep1, 'E1', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ep2, 'E2', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ep3, 'E3', plan, flat_amount, multiplier)
+        create_plan_tier_premium(eo, 'EO', plan, flat_amount, percentage)
+        create_plan_tier_premium(es, 'ES', plan, flat_amount, percentage)
+        create_plan_tier_premium(ec, 'EC', plan, flat_amount, percentage)
+        create_plan_tier_premium(ef, 'EF', plan, flat_amount, percentage)
+        create_plan_tier_premium(ep1, 'E1', plan, flat_amount, percentage)
+        create_plan_tier_premium(ep2, 'E2', plan, flat_amount, percentage)
+        create_plan_tier_premium(ep3, 'E3', plan, flat_amount, percentage)
 
 
-def create_plan_tier_premium(premium, tier_type, plan, flat_amount, multiplier, no_tiers=False):
+def create_plan_tier_premium(premium, tier_type, plan, flat_amount, percentage, no_tiers=False):
     if premium or no_tiers:
         print 'plan tier premium for plan {} - {}, tier_type {}'.format(plan.name, plan.code, tier_type)
         ptp = PlanTierPremium()
@@ -362,13 +367,13 @@ def create_plan_tier_premium(premium, tier_type, plan, flat_amount, multiplier, 
         if flat_amount is not None:
             ptp.flat_amount = flat_amount
             ptp.employer_portion = flat_amount
-        elif multiplier is not None:
-            if not (0 <= multiplier <= 1):
+        elif percentage is not None:
+            if not (0 <= percentage <= 1):
                 raise ValidationError('Multipler must be between 0.0 and 1.0 inclusive.')
-            ptp.multiplier = multiplier
-            ptp.employer_portion = multiplier * premium
+            ptp.percentage = percentage
+            ptp.employer_portion = percentage * premium
         else:
-            raise ValidationError('Must have either flat_amount or multiplier.')
+            raise ValidationError('Must have either flat_amount or percentage.')
         if premium:
             ptp.employee_portion = premium - ptp.employer_portion
         db.session.add(ptp)
@@ -394,7 +399,7 @@ def import_dental_plans(xls):
     PRE_TAX = 16
     CARRIER = 17
     FLAT_AMOUNT = 18
-    MULTIPLIER = 19
+    PERCENTAGE = 19
     EMPLOYEE_ONLY = 20
     EMPLOYEE_SPOUSE = 21
     EMPLOYEE_CHILDREN = 22
@@ -404,7 +409,7 @@ def import_dental_plans(xls):
     EMPLOYEE_PLUS_3 = 26
     converters = {n: strip for n in range(EMPLOYEE_PLUS_3)}
     converters.update({CODE - 1: str, CUST_SERVICE_PHONE - 1: str, GROUP_NUMBER - 1: str,
-                      FLAT_AMOUNT - 1: zero_if_blank, MULTIPLIER - 1: zero_if_blank})
+                      FLAT_AMOUNT - 1: zero_if_blank, PERCENTAGE - 1: zero_if_blank})
     dental_plans_sheet = xls.parse('Dental Plans', skiprows=[0], converters=converters, keep_default_na=False)
 
     for row in dental_plans_sheet.itertuples():
@@ -430,7 +435,7 @@ def import_dental_plans(xls):
         db.session.add(plan)
         print plan.name
         flat_amount = row[FLAT_AMOUNT]
-        multiplier = row[MULTIPLIER]
+        percentage = row[PERCENTAGE]
         eo = row[EMPLOYEE_ONLY]
         es = row[EMPLOYEE_SPOUSE]
         ec = row[EMPLOYEE_CHILDREN]
@@ -438,13 +443,13 @@ def import_dental_plans(xls):
         ep1 = row[EMPLOYEE_PLUS_1]
         ep2 = row[EMPLOYEE_PLUS_2]
         ep3 = row[EMPLOYEE_PLUS_3]
-        create_plan_tier_premium(eo, 'EO', plan, flat_amount, multiplier)
-        create_plan_tier_premium(es, 'ES', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ec, 'EC', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ef, 'EF', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ep1, 'E1', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ep2, 'E2', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ep3, 'E3', plan, flat_amount, multiplier)
+        create_plan_tier_premium(eo, 'EO', plan, flat_amount, percentage)
+        create_plan_tier_premium(es, 'ES', plan, flat_amount, percentage)
+        create_plan_tier_premium(ec, 'EC', plan, flat_amount, percentage)
+        create_plan_tier_premium(ef, 'EF', plan, flat_amount, percentage)
+        create_plan_tier_premium(ep1, 'E1', plan, flat_amount, percentage)
+        create_plan_tier_premium(ep2, 'E2', plan, flat_amount, percentage)
+        create_plan_tier_premium(ep3, 'E3', plan, flat_amount, percentage)
 
 
 def import_vision_plans(xls):
@@ -467,7 +472,7 @@ def import_vision_plans(xls):
     PRE_TAX = 16
     CARRIER = 17
     FLAT_AMOUNT = 18
-    MULTIPLIER = 19
+    PERCENTAGE = 19
     EMPLOYEE_ONLY = 20
     EMPLOYEE_SPOUSE = 21
     EMPLOYEE_CHILDREN = 22
@@ -478,7 +483,7 @@ def import_vision_plans(xls):
 
     converters = {n: strip for n in range(EMPLOYEE_PLUS_3)}
     converters.update({CODE - 1: str, CUST_SERVICE_PHONE - 1: str, GROUP_NUMBER - 1: str,
-                       FLAT_AMOUNT - 1: zero_if_blank, MULTIPLIER - 1: zero_if_blank})
+                       FLAT_AMOUNT - 1: zero_if_blank, PERCENTAGE - 1: zero_if_blank})
     vision_plans_sheet = xls.parse('Vision Plans', skiprows=[0], converters=converters, keep_default_na=False)
 
     for row in vision_plans_sheet.itertuples():
@@ -504,7 +509,7 @@ def import_vision_plans(xls):
         db.session.add(plan)
         print plan.name
         flat_amount = row[FLAT_AMOUNT]
-        multiplier = row[MULTIPLIER]
+        percentage = row[PERCENTAGE]
         eo = row[EMPLOYEE_ONLY]
         es = row[EMPLOYEE_SPOUSE]
         ec = row[EMPLOYEE_CHILDREN]
@@ -512,13 +517,13 @@ def import_vision_plans(xls):
         ep1 = row[EMPLOYEE_PLUS_1]
         ep2 = row[EMPLOYEE_PLUS_2]
         ep3 = row[EMPLOYEE_PLUS_3]
-        create_plan_tier_premium(eo, 'EO', plan, flat_amount, multiplier)
-        create_plan_tier_premium(es, 'ES', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ec, 'EC', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ef, 'EF', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ep1, 'E1', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ep2, 'E2', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ep3, 'E3', plan, flat_amount, multiplier)
+        create_plan_tier_premium(eo, 'EO', plan, flat_amount, percentage)
+        create_plan_tier_premium(es, 'ES', plan, flat_amount, percentage)
+        create_plan_tier_premium(ec, 'EC', plan, flat_amount, percentage)
+        create_plan_tier_premium(ef, 'EF', plan, flat_amount, percentage)
+        create_plan_tier_premium(ep1, 'E1', plan, flat_amount, percentage)
+        create_plan_tier_premium(ep2, 'E2', plan, flat_amount, percentage)
+        create_plan_tier_premium(ep3, 'E3', plan, flat_amount, percentage)
 
 
 def import_eap_plans(xls):
@@ -532,11 +537,11 @@ def import_eap_plans(xls):
     MINIMUM_BENEFIT = 7
     MAXIMUM_BENEFIT = 8
     FLAT_AMOUNT = 9
-    MULTIPLIER = 10
+    PERCENTAGE = 10
 
-    converters = {n: strip for n in range(MULTIPLIER)}
+    converters = {n: strip for n in range(PERCENTAGE)}
     converters.update({CODE - 1: str, CUST_SERVICE_PHONE - 1: str,
-                       FLAT_AMOUNT - 1: zero_if_blank, MULTIPLIER - 1: zero_if_blank})
+                       FLAT_AMOUNT - 1: zero_if_blank, PERCENTAGE - 1: zero_if_blank})
     eap_plans_sheet = xls.parse('EAP Plans', skiprows=[0], converters=converters, keep_default_na=False)
 
     for row in eap_plans_sheet.itertuples():
@@ -552,8 +557,8 @@ def import_eap_plans(xls):
         db.session.add(plan)
         print plan.name
         flat_amount = row[FLAT_AMOUNT]
-        multiplier = row[MULTIPLIER]
-        create_plan_tier_premium(0, None, plan, flat_amount, multiplier, True)
+        percentage = row[PERCENTAGE]
+        create_plan_tier_premium(0, None, plan, flat_amount, percentage, True)
 
 
 def import_ltd_plans(xls):
@@ -567,10 +572,10 @@ def import_ltd_plans(xls):
     MINIMUM_BENEFIT = 7
     MAXIMUM_BENEFIT = 8
     FLAT_AMOUNT = 9
-    MULTIPLIER = 10
-    converters = {n: strip for n in range(MULTIPLIER)}
+    PERCENTAGE = 10
+    converters = {n: strip for n in range(PERCENTAGE)}
     converters.update({CODE - 1: str, CUST_SERVICE_PHONE - 1: str,
-                       FLAT_AMOUNT - 1: zero_if_blank, MULTIPLIER - 1: zero_if_blank})
+                       FLAT_AMOUNT - 1: zero_if_blank, PERCENTAGE - 1: zero_if_blank})
     plans_sheet = xls.parse('LTD Plans', skiprows=[0], converters=converters, keep_default_na=False)
 
     for row in plans_sheet.itertuples():
@@ -586,8 +591,8 @@ def import_ltd_plans(xls):
         db.session.add(plan)
         print plan.name
         flat_amount = row[FLAT_AMOUNT]
-        multiplier = row[MULTIPLIER]
-        create_plan_tier_premium(0, None, plan, flat_amount, multiplier, True)
+        percentage = row[PERCENTAGE]
+        create_plan_tier_premium(0, None, plan, flat_amount, percentage, True)
 
 
 def import_std_plans(xls):
@@ -606,10 +611,10 @@ def import_std_plans(xls):
     BENEFFIT_PERCENTAGE = 12
     MANDATORY_IN_STATES = 13
     FLAT_AMOUNT = 14
-    MULTIPLIER = 15
-    converters = {n: strip for n in range(MULTIPLIER)}
+    PERCENTAGE = 15
+    converters = {n: strip for n in range(PERCENTAGE)}
     converters.update({CODE - 1: str, CUST_SERVICE_PHONE - 1: str, MAX_WEEKLY_BENEFIT - 1: zero_if_blank,
-                       FLAT_AMOUNT - 1: zero_if_blank, MULTIPLIER - 1: zero_if_blank,
+                       FLAT_AMOUNT - 1: zero_if_blank, PERCENTAGE - 1: zero_if_blank,
                        MAX_MONTHLY_BENEFIT - 1: zero_if_blank, BENEFFIT_PERCENTAGE - 1: zero_if_blank})
     plans_sheet = xls.parse('STD Plans', skiprows=[0], converters=converters, keep_default_na=False)
 
@@ -631,8 +636,8 @@ def import_std_plans(xls):
         db.session.add(plan)
         print plan.name
         flat_amount = row[FLAT_AMOUNT]
-        multiplier = row[MULTIPLIER]
-        create_plan_tier_premium(0, None, plan, flat_amount, multiplier, True)
+        percentage = row[PERCENTAGE]
+        create_plan_tier_premium(0, None, plan, flat_amount, percentage, True)
 
 
 def import_life_add_plans(xls):
@@ -646,10 +651,10 @@ def import_life_add_plans(xls):
     MINIMUM_BENEFIT = 7
     MAXIMUM_BENEFIT = 8
     FLAT_AMOUNT = 9
-    MULTIPLIER = 10
-    converters = {n: strip for n in range(MULTIPLIER)}
+    PERCENTAGE = 10
+    converters = {n: strip for n in range(PERCENTAGE)}
     converters.update({CODE - 1: str, CUST_SERVICE_PHONE - 1: str,
-                       FLAT_AMOUNT - 1: zero_if_blank, MULTIPLIER - 1: zero_if_blank})
+                       FLAT_AMOUNT - 1: zero_if_blank, PERCENTAGE - 1: zero_if_blank})
     plans_sheet = xls.parse('Life ADD Plans', skiprows=[0], converters=converters, keep_default_na=False)
 
     for row in plans_sheet.itertuples():
@@ -665,8 +670,8 @@ def import_life_add_plans(xls):
         db.session.add(plan)
         print plan.name
         flat_amount = row[FLAT_AMOUNT]
-        multiplier = row[MULTIPLIER]
-        create_plan_tier_premium(0, None, plan, flat_amount, multiplier, True)
+        percentage = row[PERCENTAGE]
+        create_plan_tier_premium(0, None, plan, flat_amount, percentage, True)
 
 
 def import_life_add_dependent_plans(xls):
@@ -681,10 +686,10 @@ def import_life_add_dependent_plans(xls):
     MINIMUM_BENEFIT = 7
     MAXIMUM_BENEFIT = 8
     FLAT_AMOUNT = 9
-    MULTIPLIER = 10
-    converters = {n: strip for n in range(MULTIPLIER)}
+    PERCENTAGE = 10
+    converters = {n: strip for n in range(PERCENTAGE)}
     converters.update({CODE - 1: str, CUST_SERVICE_PHONE - 1: str,
-                       FLAT_AMOUNT - 1: zero_if_blank, MULTIPLIER - 1: zero_if_blank})
+                       FLAT_AMOUNT - 1: zero_if_blank, PERCENTAGE - 1: zero_if_blank})
     plans_sheet = xls.parse('Life ADD Dependent Plans', skiprows=[0], converters=converters,
                             keep_default_na=False)
 
@@ -701,8 +706,8 @@ def import_life_add_dependent_plans(xls):
         db.session.add(plan)
         print plan.name
         flat_amount = row[FLAT_AMOUNT]
-        multiplier = row[MULTIPLIER]
-        create_plan_tier_premium(0, None, plan, flat_amount, multiplier, True)
+        percentage = row[PERCENTAGE]
+        create_plan_tier_premium(0, None, plan, flat_amount, percentage, True)
 
 
 def import_fsa_plans(xls):
@@ -716,10 +721,10 @@ def import_fsa_plans(xls):
     MINIMUM_BENEFIT = 7
     MAXIMUM_BENEFIT = 8
     FLAT_AMOUNT = 9
-    MULTIPLIER = 10
-    converters = {n: strip for n in range(MULTIPLIER)}
+    PERCENTAGE = 10
+    converters = {n: strip for n in range(PERCENTAGE)}
     converters.update({CODE - 1: str, CUST_SERVICE_PHONE - 1: str,
-                       FLAT_AMOUNT - 1: zero_if_blank, MULTIPLIER - 1: zero_if_blank})
+                       FLAT_AMOUNT - 1: zero_if_blank, PERCENTAGE - 1: zero_if_blank})
     plans_sheet = xls.parse('FSA Plans', skiprows=[0], converters=converters, keep_default_na=False)
 
     for row in plans_sheet.itertuples():
@@ -735,8 +740,8 @@ def import_fsa_plans(xls):
         db.session.add(plan)
         print plan.name
         flat_amount = row[FLAT_AMOUNT]
-        multiplier = row[MULTIPLIER]
-        create_plan_tier_premium(0, None, plan, flat_amount, multiplier, True)
+        percentage = row[PERCENTAGE]
+        create_plan_tier_premium(0, None, plan, flat_amount, percentage, True)
 
 
 def import_parking_and_transit_plans(xls):
@@ -750,10 +755,10 @@ def import_parking_and_transit_plans(xls):
     MINIMUM_BENEFIT = 7
     MAXIMUM_BENEFIT = 8
     FLAT_AMOUNT = 9
-    MULTIPLIER = 10
-    converters = {n: strip for n in range(MULTIPLIER)}
+    PERCENTAGE = 10
+    converters = {n: strip for n in range(PERCENTAGE)}
     converters.update({CODE - 1: str, CUST_SERVICE_PHONE - 1: str,
-                       FLAT_AMOUNT - 1: zero_if_blank, MULTIPLIER - 1: zero_if_blank})
+                       FLAT_AMOUNT - 1: zero_if_blank, PERCENTAGE - 1: zero_if_blank})
     plans_sheet = xls.parse('Parking and Transit Plans', skiprows=[0], converters=converters,
                             keep_default_na=False)
 
@@ -770,8 +775,8 @@ def import_parking_and_transit_plans(xls):
         db.session.add(plan)
         print plan.name
         flat_amount = row[FLAT_AMOUNT]
-        multiplier = row[MULTIPLIER]
-        create_plan_tier_premium(0, None, plan, flat_amount, multiplier, True)
+        percentage = row[PERCENTAGE]
+        create_plan_tier_premium(0, None, plan, flat_amount, percentage, True)
 
 
 def import_hsa_plans(xls):
@@ -785,10 +790,10 @@ def import_hsa_plans(xls):
     MINIMUM_BENEFIT = 7
     MAXIMUM_BENEFIT = 8
     FLAT_AMOUNT = 9
-    MULTIPLIER = 10
-    converters = {n: strip for n in range(MULTIPLIER)}
+    PERCENTAGE = 10
+    converters = {n: strip for n in range(PERCENTAGE)}
     converters.update({CODE - 1: str, CUST_SERVICE_PHONE - 1: str,
-                       FLAT_AMOUNT - 1: zero_if_blank, MULTIPLIER - 1: zero_if_blank})
+                       FLAT_AMOUNT - 1: zero_if_blank, PERCENTAGE - 1: zero_if_blank})
     plans_sheet = xls.parse('HSA Plans', skiprows=[0], converters=converters, keep_default_na=False)
 
     for row in plans_sheet.itertuples():
@@ -804,8 +809,8 @@ def import_hsa_plans(xls):
         db.session.add(plan)
         print plan.name
         flat_amount = row[FLAT_AMOUNT]
-        multiplier = row[MULTIPLIER]
-        create_plan_tier_premium(0, None, plan, flat_amount, multiplier, True)
+        percentage = row[PERCENTAGE]
+        create_plan_tier_premium(0, None, plan, flat_amount, percentage, True)
 
 
 def import_employee_401k_plans(xls):
@@ -819,10 +824,10 @@ def import_employee_401k_plans(xls):
     MINIMUM_BENEFIT = 7
     MAXIMUM_BENEFIT = 8
     FLAT_AMOUNT = 9
-    MULTIPLIER = 10
-    converters = {n: strip for n in range(MULTIPLIER)}
+    PERCENTAGE = 10
+    converters = {n: strip for n in range(PERCENTAGE)}
     converters.update({CODE - 1: str, CUST_SERVICE_PHONE - 1: str,
-                       FLAT_AMOUNT - 1: zero_if_blank, MULTIPLIER - 1: zero_if_blank})
+                       FLAT_AMOUNT - 1: zero_if_blank, PERCENTAGE - 1: zero_if_blank})
     plans_sheet = xls.parse('401K Plans', skiprows=[0], converters=converters, keep_default_na=False)
 
     for row in plans_sheet.itertuples():
@@ -838,8 +843,8 @@ def import_employee_401k_plans(xls):
         db.session.add(plan)
         print plan.name
         flat_amount = row[FLAT_AMOUNT]
-        multiplier = row[MULTIPLIER]
-        create_plan_tier_premium(0, None, plan, flat_amount, multiplier, True)
+        percentage = row[PERCENTAGE]
+        create_plan_tier_premium(0, None, plan, flat_amount, percentage, True)
 
 
 def import_supplemental_insurance_plans(xls):
@@ -854,10 +859,10 @@ def import_supplemental_insurance_plans(xls):
     MINIMUM_BENEFIT = 7
     MAXIMUM_BENEFIT = 8
     FLAT_AMOUNT = 9
-    MULTIPLIER = 10
-    converters = {n: strip for n in range(MULTIPLIER)}
+    PERCENTAGE = 10
+    converters = {n: strip for n in range(PERCENTAGE)}
     converters.update({CODE - 1: str, CUST_SERVICE_PHONE - 1: str,
-                       FLAT_AMOUNT - 1: zero_if_blank, MULTIPLIER - 1: zero_if_blank})
+                       FLAT_AMOUNT - 1: zero_if_blank, PERCENTAGE - 1: zero_if_blank})
     plans_sheet = xls.parse('Supplemental Insurance Plans', skiprows=[0], converters=converters,
                             keep_default_na=False)
 
@@ -874,8 +879,8 @@ def import_supplemental_insurance_plans(xls):
         db.session.add(plan)
         print plan.name
         flat_amount = row[FLAT_AMOUNT]
-        multiplier = row[MULTIPLIER]
-        create_plan_tier_premium(0, None, plan, flat_amount, multiplier, True)
+        percentage = row[PERCENTAGE]
+        create_plan_tier_premium(0, None, plan, flat_amount, percentage, True)
 
 
 def import_long_term_care_plans(xls):
@@ -889,7 +894,7 @@ def import_long_term_care_plans(xls):
     MINIMUM_BENEFIT = 7
     MAXIMUM_BENEFIT = 8
     FLAT_AMOUNT = 9
-    MULTIPLIER = 10
+    PERCENTAGE = 10
     EMPLOYEE_ONLY = 11
     EMPLOYEE_SPOUSE = 12
     EMPLOYEE_CHILDREN = 13
@@ -899,7 +904,7 @@ def import_long_term_care_plans(xls):
     EMPLOYEE_PLUS_3 = 17
     converters = {n: strip for n in range(EMPLOYEE_ONLY)}
     converters.update({CODE - 1: str, CUST_SERVICE_PHONE - 1: str,
-                       FLAT_AMOUNT - 1: zero_if_blank, MULTIPLIER - 1: zero_if_blank})
+                       FLAT_AMOUNT - 1: zero_if_blank, PERCENTAGE - 1: zero_if_blank})
     plans_sheet = xls.parse('Long Term Care Plans', skiprows=[0], converters=converters,
                             keep_default_na=False)
 
@@ -916,7 +921,7 @@ def import_long_term_care_plans(xls):
         db.session.add(plan)
         print plan.name
         flat_amount = row[FLAT_AMOUNT]
-        multiplier = row[MULTIPLIER]
+        percentage = row[PERCENTAGE]
         eo = row[EMPLOYEE_ONLY]
         es = row[EMPLOYEE_SPOUSE]
         ec = row[EMPLOYEE_CHILDREN]
@@ -924,13 +929,13 @@ def import_long_term_care_plans(xls):
         ep1 = row[EMPLOYEE_PLUS_1]
         ep2 = row[EMPLOYEE_PLUS_2]
         ep3 = row[EMPLOYEE_PLUS_3]
-        create_plan_tier_premium(eo, 'EO', plan, flat_amount, multiplier)
-        create_plan_tier_premium(es, 'ES', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ec, 'EC', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ef, 'EF', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ep1, 'E1', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ep2, 'E2', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ep3, 'E3', plan, flat_amount, multiplier)
+        create_plan_tier_premium(eo, 'EO', plan, flat_amount, percentage)
+        create_plan_tier_premium(es, 'ES', plan, flat_amount, percentage)
+        create_plan_tier_premium(ec, 'EC', plan, flat_amount, percentage)
+        create_plan_tier_premium(ef, 'EF', plan, flat_amount, percentage)
+        create_plan_tier_premium(ep1, 'E1', plan, flat_amount, percentage)
+        create_plan_tier_premium(ep2, 'E2', plan, flat_amount, percentage)
+        create_plan_tier_premium(ep3, 'E3', plan, flat_amount, percentage)
 
 
 def import_cancer_plans(xls):
@@ -944,7 +949,7 @@ def import_cancer_plans(xls):
     MINIMUM_BENEFIT = 7
     MAXIMUM_BENEFIT = 8
     FLAT_AMOUNT = 9
-    MULTIPLIER = 10
+    PERCENTAGE = 10
     EMPLOYEE_ONLY = 11
     EMPLOYEE_SPOUSE = 12
     EMPLOYEE_CHILDREN = 13
@@ -955,7 +960,7 @@ def import_cancer_plans(xls):
 
     converters = {n: strip for n in range(EMPLOYEE_ONLY)}
     converters.update({CODE - 1: str, CUST_SERVICE_PHONE - 1: str,
-                       FLAT_AMOUNT - 1: zero_if_blank, MULTIPLIER - 1: zero_if_blank})
+                       FLAT_AMOUNT - 1: zero_if_blank, PERCENTAGE - 1: zero_if_blank})
     plans_sheet = xls.parse('Cancer Plans', skiprows=[0], converters=converters, keep_default_na=False)
 
     for row in plans_sheet.itertuples():
@@ -971,7 +976,7 @@ def import_cancer_plans(xls):
         db.session.add(plan)
         print plan.name
         flat_amount = row[FLAT_AMOUNT]
-        multiplier = row[MULTIPLIER]
+        percentage = row[PERCENTAGE]
         eo = row[EMPLOYEE_ONLY]
         es = row[EMPLOYEE_SPOUSE]
         ec = row[EMPLOYEE_CHILDREN]
@@ -979,13 +984,13 @@ def import_cancer_plans(xls):
         ep1 = row[EMPLOYEE_PLUS_1]
         ep2 = row[EMPLOYEE_PLUS_2]
         ep3 = row[EMPLOYEE_PLUS_3]
-        create_plan_tier_premium(eo, 'EO', plan, flat_amount, multiplier)
-        create_plan_tier_premium(es, 'ES', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ec, 'EC', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ef, 'EF', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ep1, 'E1', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ep2, 'E2', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ep3, 'E3', plan, flat_amount, multiplier)
+        create_plan_tier_premium(eo, 'EO', plan, flat_amount, percentage)
+        create_plan_tier_premium(es, 'ES', plan, flat_amount, percentage)
+        create_plan_tier_premium(ec, 'EC', plan, flat_amount, percentage)
+        create_plan_tier_premium(ef, 'EF', plan, flat_amount, percentage)
+        create_plan_tier_premium(ep1, 'E1', plan, flat_amount, percentage)
+        create_plan_tier_premium(ep2, 'E2', plan, flat_amount, percentage)
+        create_plan_tier_premium(ep3, 'E3', plan, flat_amount, percentage)
 
 
 def import_critical_illness_plans(xls):
@@ -999,7 +1004,7 @@ def import_critical_illness_plans(xls):
     MINIMUM_BENEFIT = 7
     MAXIMUM_BENEFIT = 8
     FLAT_AMOUNT = 9
-    MULTIPLIER = 10
+    PERCENTAGE = 10
     EMPLOYEE_ONLY = 11
     EMPLOYEE_SPOUSE = 12
     EMPLOYEE_CHILDREN = 13
@@ -1009,7 +1014,7 @@ def import_critical_illness_plans(xls):
     EMPLOYEE_PLUS_3 = 17
     converters = {n: strip for n in range(EMPLOYEE_ONLY)}
     converters.update({CODE - 1: str, CUST_SERVICE_PHONE - 1: str,
-                       FLAT_AMOUNT - 1: zero_if_blank, MULTIPLIER - 1: zero_if_blank})
+                       FLAT_AMOUNT - 1: zero_if_blank, PERCENTAGE - 1: zero_if_blank})
     plans_sheet = xls.parse('Critical Illness Plans', skiprows=[0], converters=converters,
                             keep_default_na=False)
 
@@ -1026,7 +1031,7 @@ def import_critical_illness_plans(xls):
         db.session.add(plan)
         print plan.name
         flat_amount = row[FLAT_AMOUNT]
-        multiplier = row[MULTIPLIER]
+        percentage = row[PERCENTAGE]
         eo = row[EMPLOYEE_ONLY]
         es = row[EMPLOYEE_SPOUSE]
         ec = row[EMPLOYEE_CHILDREN]
@@ -1034,13 +1039,13 @@ def import_critical_illness_plans(xls):
         ep1 = row[EMPLOYEE_PLUS_1]
         ep2 = row[EMPLOYEE_PLUS_2]
         ep3 = row[EMPLOYEE_PLUS_3]
-        create_plan_tier_premium(eo, 'EO', plan, flat_amount, multiplier)
-        create_plan_tier_premium(es, 'ES', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ec, 'EC', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ef, 'EF', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ep1, 'E1', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ep2, 'E2', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ep3, 'E3', plan, flat_amount, multiplier)
+        create_plan_tier_premium(eo, 'EO', plan, flat_amount, percentage)
+        create_plan_tier_premium(es, 'ES', plan, flat_amount, percentage)
+        create_plan_tier_premium(ec, 'EC', plan, flat_amount, percentage)
+        create_plan_tier_premium(ef, 'EF', plan, flat_amount, percentage)
+        create_plan_tier_premium(ep1, 'E1', plan, flat_amount, percentage)
+        create_plan_tier_premium(ep2, 'E2', plan, flat_amount, percentage)
+        create_plan_tier_premium(ep3, 'E3', plan, flat_amount, percentage)
 
 
 def import_other_plans(xls):
@@ -1055,7 +1060,7 @@ def import_other_plans(xls):
     MINIMUM_BENEFIT = 7
     MAXIMUM_BENEFIT = 8
     FLAT_AMOUNT = 9
-    MULTIPLIER = 10
+    PERCENTAGE = 10
     EMPLOYEE_ONLY = 11
     EMPLOYEE_SPOUSE = 12
     EMPLOYEE_CHILDREN = 13
@@ -1065,7 +1070,7 @@ def import_other_plans(xls):
     EMPLOYEE_PLUS_3 = 17
     converters = {n: strip for n in range(EMPLOYEE_ONLY)}
     converters.update({CODE - 1: str, CUST_SERVICE_PHONE - 1: str,
-                       FLAT_AMOUNT - 1: zero_if_blank, MULTIPLIER - 1: zero_if_blank})
+                       FLAT_AMOUNT - 1: zero_if_blank, PERCENTAGE - 1: zero_if_blank})
     plans_sheet = xls.parse('Other Plans', skiprows=[0], converters=converters, keep_default_na=False)
 
     for row in plans_sheet.itertuples():
@@ -1081,7 +1086,7 @@ def import_other_plans(xls):
         db.session.add(plan)
         print plan.name
         flat_amount = row[FLAT_AMOUNT]
-        multiplier = row[MULTIPLIER]
+        percentage = row[PERCENTAGE]
         eo = row[EMPLOYEE_ONLY]
         es = row[EMPLOYEE_SPOUSE]
         ec = row[EMPLOYEE_CHILDREN]
@@ -1089,13 +1094,13 @@ def import_other_plans(xls):
         ep1 = row[EMPLOYEE_PLUS_1]
         ep2 = row[EMPLOYEE_PLUS_2]
         ep3 = row[EMPLOYEE_PLUS_3]
-        create_plan_tier_premium(eo, 'EO', plan, flat_amount, multiplier)
-        create_plan_tier_premium(es, 'ES', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ec, 'EC', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ef, 'EF', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ep1, 'E1', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ep2, 'E2', plan, flat_amount, multiplier)
-        create_plan_tier_premium(ep3, 'E3', plan, flat_amount, multiplier)
+        create_plan_tier_premium(eo, 'EO', plan, flat_amount, percentage)
+        create_plan_tier_premium(es, 'ES', plan, flat_amount, percentage)
+        create_plan_tier_premium(ec, 'EC', plan, flat_amount, percentage)
+        create_plan_tier_premium(ef, 'EF', plan, flat_amount, percentage)
+        create_plan_tier_premium(ep1, 'E1', plan, flat_amount, percentage)
+        create_plan_tier_premium(ep2, 'E2', plan, flat_amount, percentage)
+        create_plan_tier_premium(ep3, 'E3', plan, flat_amount, percentage)
 
 
 enrollment_cache = {}

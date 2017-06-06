@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+# vim:fenc=utf-8
+#
+# Copyright © 2017 Danny Tamez <zematynnad@gmail.com>
+#
+# Distributed under terms of the MIT license.
 from datetime import date
 import locale
 
@@ -263,21 +268,24 @@ def enroll_dependents():
                            )
 
 
-def premium_choices(plan_id, current_ptp):
+def premium_choices(plan_id, current_ptp, add_costs=False):
     premiums = (PlanTierPremium.query.filter(
         PlanTierPremium.plan_id == plan_id)
                 .order_by(desc(PlanTierPremium.premium)))
     choices = []
     for ptp in premiums:
-        choices.append((
-            ptp.tier_type.code,
-            ptp.tier_type.value,
-            ptp.id == current_ptp,
-            locale.currency(ptp.premium, grouping=True),
-            locale.currency(ptp.employer_portion, grouping=True),
-            locale.currency(ptp.employee_portion, grouping=True),
-        ))
-    choices.append(('DE', 'Decline', current_ptp is None, '', '', ''))
+        if add_costs:
+            choices.append((ptp.tier_type.code, ptp.tier_type.value, ptp.id == current_ptp,
+                            locale.currency(ptp.premium, grouping=True),
+                            locale.currency(ptp.employer_portion, grouping=True),
+                            locale.currency(ptp.employee_portion, grouping=True),
+                            ))
+        else:
+            choices.append((ptp.tier_type.code, ptp.tier_type.value))
+    if add_costs:
+        choices.append(('DE', 'Decline', current_ptp is None, '', '', ''))
+    else:
+        choices.append(('DE', 'Decline'))
     return choices
 
 
@@ -425,7 +433,8 @@ class EnrollPlanAJAXView(MethodView):
                 election.plan_id = plan.id
                 election.enrollment_id = enrollment.id
             election_form = ElectionForm(None, election)
-            election_form.selection.choices = premium_choices(plan.id, election.plan_tier_premium_id)
+            # TODO: DT - may not have a tier...
+            election_form.selection.choices = premium_choices(plan.id, election.plan_tier_premium_id, add_costs=True)
             template = env.get_template(self.template_name)
             ctx = {'election': election,
                    'election_form': election_form}
@@ -436,8 +445,10 @@ class EnrollPlanAJAXView(MethodView):
         employee = Employee.query.join(User).filter(User.id == g.user.id).first()
         election = Election()
         form = ElectionForm(request.form)
+        form.selection.choices = premium_choices(form.plan_id.data, request.values['selection'])
         if not form.validate():
             template = env.get_template(self.template_name)
+            form.selection.choices = premium_choices(form.plan_id.data, request.values['selection'], add_costs=True)
             ctx = {'election': election,
                    'election_form': form}
             return template.render(ctx)
@@ -491,7 +502,7 @@ class EnrollPlanAJAXView(MethodView):
                 election.plan = plan
                 election.enrollment_id = enrollment.id
             election_form = ElectionForm()
-            election_form.selection.choices = []
+            election_form.selection.choices = premium_choices(plan.id, election.plan_tier_premium_id, add_costs=True)
         ctx = {'election_form': election_form,
                '{}_selections'.format(self.prefix): selections}
         return render_template(self.template_name, **ctx)

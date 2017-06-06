@@ -1,4 +1,9 @@
-# -*- cgneding: utf-8 -*-
+# -*- coding: utf-8 -*-
+# vie:fenc=utf-8
+#
+# Copyright © 2017 Danny Tamez <zematynnad@gmail.com>
+#
+# Distributed under terms of the MIT license.
 from flask_user import SQLAlchemyAdapter, UserManager, UserMixin
 import inflection
 from sqlalchemy.orm import backref
@@ -101,7 +106,7 @@ TIER_TYPES = [
 
 PAYOUT_TYPES = [
     ('flat_rate', 'Flat Rate'),
-    ('benefit_multiplier', 'Benefit Multiplier'),
+    ('benefit_percentage', 'Benefit Percentage'),
 ]
 
 
@@ -322,6 +327,10 @@ class CoreMixin(object):
     def plan_termination_timing_type_id(cls):
         return db.Column(ChoiceType(PLAN_TERMINATION_TIMING_TYPES), info={'label': 'Plan Termination Type'})
 
+    @declared_attr
+    def plan_teir_premiums(cls):
+        return db.relationship('PlanTierPremium')
+
     group_number = db.Column(db.Unicode(24), nullable=False, info={'label': 'Group Number'})
     original_effective_date = db.Column(db.Date(), info={'label': 'Original Effective Date'})
     renewal_date = db.Column(db.Date(), info={'label': 'Renewal Date'})
@@ -354,6 +363,20 @@ class Plan(Base):
                        info={'label': 'Plan is active?'})
     description = db.Column(db.String(250), info={'label': ''})
     special_instructions = db.Column(db.String(250), info={'label': ''})
+    plan_tier_premiums = db.relationship('PlanTierPremium', back_populates="plan")
+    age_banded_premiums = db.relationship('AgeBandedPremium', back_populates="plan")
+
+    def premium_is_tiered(self):
+        return False
+
+    def premium_is_age_banded(self):
+        return False
+
+    def requires_amount_from_user(self):
+        return False
+
+    def has_coverage_amount_choices(self):
+        return False
 
     __mapper_args__ = {
         'polymorphic_on': plantype,
@@ -365,10 +388,12 @@ class MedicalPlan(Plan, CoreMixin):
     __tablename__ = 'medical_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True, info={'widget': widgets.HiddenInput()})
-
     self_funded = db.Column(db.Boolean(), nullable=False, info={'label': 'Self Funded?'})
     carrier_id = db.Column(db.ForeignKey('carrier.id'))
     carrier = db.relationship('Carrier', uselist=False, info={'label': 'Caarrier'})
+
+    def premium_is_tiered(self):
+        return True
 
     __mapper_args__ = {
         'polymorphic_identity': 'medical',
@@ -382,6 +407,10 @@ class DentalPlan(Plan, CoreMixin):
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
     carrier_id = db.Column(db.ForeignKey('carrier.id'))
     carrier = db.relationship('Carrier', uselist=False)
+
+    def premium_is_tiered(self):
+        return True
+
     __mapper_args__ = {
         'polymorphic_identity': 'dental',
         'inherit_condition': (id == Plan.id),
@@ -394,6 +423,9 @@ class VisionPlan(Plan, CoreMixin):
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
     carrier_id = db.Column(db.ForeignKey('carrier.id'))
     carrier = db.relationship('Carrier', uselist=False)
+
+    def premium_is_tiered(self):
+        return True
 
     __mapper_args__ = {
         'polymorphic_identity': 'vision',
@@ -408,6 +440,9 @@ class MedicalDentalBundlePlan(Plan, CoreMixin):
     carrier_id = db.Column(db.ForeignKey('carrier.id'))
     carrier = db.relationship('Carrier', uselist=False, info={'label': 'Caarrier'})
 
+    def premium_is_tiered(self):
+        return True
+
     __mapper_args__ = {
         'polymorphic_identity': 'medical_dental',
         'inherit_condition': (id == Plan.id),
@@ -420,6 +455,9 @@ class MedicalVisionBundlePlan(Plan, CoreMixin):
     self_funded = db.Column(db.Boolean(), nullable=False, info={'label': 'Self Funded?'})
     carrier_id = db.Column(db.ForeignKey('carrier.id'))
     carrier = db.relationship('Carrier', uselist=False, info={'label': 'Caarrier'})
+
+    def premium_is_tiered(self):
+        return True
 
     __mapper_args__ = {
         'polymorphic_identity': 'medical_vision',
@@ -434,6 +472,9 @@ class MedicalDentalVisionBundlePlan(Plan, CoreMixin):
     carrier_id = db.Column(db.ForeignKey('carrier.id'))
     carrier = db.relationship('Carrier', uselist=False, info={'label': 'Caarrier'})
 
+    def premium_is_tiered(self):
+        return True
+
     __mapper_args__ = {
         'polymorphic_identity': 'medical_detnal_vision',
         'inherit_condition': (id == Plan.id),
@@ -446,6 +487,9 @@ class DentalVisionBundlePlan(Plan, CoreMixin):
     carrier_id = db.Column(db.ForeignKey('carrier.id'))
     carrier = db.relationship('Carrier', uselist=False, info={'label': 'Caarrier'})
 
+    def premium_is_tiered(self):
+        return True
+
     __mapper_args__ = {
         'polymorphic_identity': 'detnal_vision',
         'inherit_condition': (id == Plan.id),
@@ -456,6 +500,9 @@ class EAPPlan(Plan, GroupMixin):
     __tablename__ = 'eap_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+
+    def premium_is_variable(self):
+        return True
 
     __mapper_args__ = {
         'polymorphic_identity': 'eap',
@@ -617,30 +664,49 @@ class CriticalIllnessPlan(Plan, SupplementalMixin):
 
 
 # Plan Premiums
-class AgeBandedPremium(Base):
-    low = db.Column(db.Integer(), nullable=False)
-    high = db.Column(db.Integer(), nullable=False)
-    premium = db.Column(db.Numeric(6, 2), nullable=False)
-    plan_id = db.Column(db.ForeignKey('plan.id'), index=True)
-    plan = db.relationship('Plan', foreign_keys=[plan_id])
-
-
-class PlanTierPremium(Base):
-    """Prices for all plans."""
-    plan_id = db.Column(None, db.ForeignKey('plan.id'), index=True)
-    plan = db.relationship('Plan', foreign_keys=[plan_id], back_populates='plan_tier_premiums')
-    tier_type = db.Column(ChoiceType(TIER_TYPES), info={'label': 'Tier'})
+class PlanPremium(Base):
     premium = db.Column(db.Numeric(6, 2), nullable=False, info={'label': 'Premium'}, server_default='0')
     employer_portion = db.Column(db.Numeric(6, 2), nullable=False, info={'label': 'Employer Portion'},
                                  server_default='0')
-
     employee_portion = db.Column(db.Numeric(6, 2), nullable=False, info={'label': 'Employee Portion'},
                                  server_default='0')
+    premiumtype = db.Column(db.String(50), info={'label': 'Premium Type'})
     flat_amount = db.Column(db.Numeric(6, 2), info={'label': 'Flat Amount'}, server_default='0')
-    multiplier = db.Column(db.Numeric(3, 2), info={'label': 'Multiplier'}, server_default='0')
+    percentage = db.Column(db.Numeric(3, 2), info={'label': 'Percentage'}, server_default='0')
 
-Plan.plan_tier_premiums = db.relationship(
-    'PlanTierPremium', back_populates="plan")
+    __mapper_args__ = {
+        'polymorphic_on': premiumtype,
+    }
+
+
+class AgeBandedPremium(PlanPremium):
+    __tablename__ = 'age_banded_premium'
+    __table_args__ = {'extend_existing': True}
+    id = db.Column(None, db.ForeignKey('plan_premium.id'), primary_key=True, info={'widget': widgets.HiddenInput()})
+    plan_id = db.Column(None, db.ForeignKey('plan.id'), index=True)
+    plan = db.relationship('Plan', foreign_keys=[plan_id], back_populates='age_banded_premiums')
+    low = db.Column(db.Integer(), nullable=False)
+    high = db.Column(db.Integer(), nullable=False)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'age_banded',
+        'inherit_condition': (id == PlanPremium.id),
+    }
+
+
+class PlanTierPremium(PlanPremium):
+    """Prices for all tiered plans."""
+    __tablename__ = 'plan_tier_premium'
+    __table_args__ = {'extend_existing': True}
+    id = db.Column(None, db.ForeignKey('plan_premium.id'), primary_key=True, info={'widget': widgets.HiddenInput()})
+    plan_id = db.Column(None, db.ForeignKey('plan.id'), index=True)
+    plan = db.relationship('Plan', foreign_keys=[plan_id], back_populates='plan_tier_premiums')
+    tier_type = db.Column(ChoiceType(TIER_TYPES), info={'label': 'Tier'})
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'tiered',
+        'inherit_condition': (id == PlanPremium.id),
+    }
 
 
 # Eligibility
@@ -676,6 +742,43 @@ class Election(Base):
     enrollment_id = db.Column(db.Integer, db.ForeignKey('enrollment.id'))
     plan_id = db.Column(db.Integer, db.ForeignKey('plan.id'), index=True)
     plan = db.relationship('Plan')
+    electiontype = db.Column(db.String(50), info={'label': 'Election Type'})
+
+    __mapper_args__ = {
+        'polymorphic_on': electiontype,
+    }
+
+
+class TieredPriceElection(Election):
+    __tablename__ = 'tiered_price_election'
+    __table_args__ = {'extend_existing': True}
+    id = db.Column(None, db.ForeignKey('election.id'), primary_key=True, info={'widget': widgets.HiddenInput()})
     plan_tier_premium_id = db.Column(db.Integer, db.ForeignKey('plan_tier_premium.id'))
     plan_tier_premium = db.relationship('PlanTierPremium')
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'tiered',
+        'inherit_condition': (id == Election.id),
+    }
+
+
+class SelfPricedElection(Election):
+    __tablename__ = 'self_price_election'
+    __table_args__ = {'extend_existing': True}
+    id = db.Column(None, db.ForeignKey('election.id'), primary_key=True, info={'widget': widgets.HiddenInput()})
     amount = db.Column(db.Numeric(11, 2))
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'self_priced',
+        'inherit_condition': (id == Election.id),
+    }
+
+
+class AgeBandedPriceElection(Election):
+    __tablename__ = 'age_banded_price_election'
+    __table_args__ = {'extend_existing': True}
+    id = db.Column(None, db.ForeignKey('election.id'), primary_key=True, info={'widget': widgets.HiddenInput()})
+    __mapper_args__ = {
+        'polymorphic_identity': 'age_banded',
+        'inherit_condition': (id == Election.id),
+    }

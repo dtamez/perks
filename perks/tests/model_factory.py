@@ -267,7 +267,7 @@ class PlanTierPremiumFactory(factory.Factory):
     employer_portion = 150
     employee_portion = 50
     flat_amount = 75
-    multiplier = 2.50
+    percentage = 2.50
 
 
 class MedicalPlanTierPremiumFactory(PlanTierPremiumFactory):
