@@ -105,8 +105,8 @@ TIER_TYPES = [
 
 
 PAYOUT_TYPES = [
-    ('flat_rate', 'Flat Rate'),
-    ('benefit_percentage', 'Benefit Percentage'),
+    ('salary_percentage', 'Percentage of Salary'),
+    ('lump_sum', 'Lump Sum'),
 ]
 
 
@@ -515,6 +515,10 @@ class LTDPlan(Plan, GroupMixin):
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
 
+    max_weekly_benefit = db.Column(db.Numeric(6, 2), nullable=False, info={'label': 'Maximum Weekly Benefit'})
+    max_monthly_benefit = db.Column(db.Numeric(6, 2), nullable=False, info={'label': 'Maximum Monthly Benefit'})
+    benefit_percentage = db.Column(db.Numeric(6, 2), nullable=False, info={'label': 'Benefit Percentage'})
+
     __mapper_args__ = {
         'polymorphic_identity': 'ltd',
         'inherit_condition': (id == Plan.id),
@@ -526,7 +530,6 @@ class STDPlan(Plan, GroupMixin):
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
 
-    payout_interval = db.Column(ChoiceType(PAYOUT_TYPES), info={'label': 'Payout Interval'})
     max_weekly_benefit = db.Column(db.Numeric(6, 2), nullable=False, info={'label': 'Maximum Weekly Benefit'})
     max_monthly_benefit = db.Column(db.Numeric(6, 2), nullable=False, info={'label': 'Maximum Monthly Benefit'})
     benefit_percentage = db.Column(db.Numeric(6, 2), nullable=False, info={'label': 'Benefit Percentage'})

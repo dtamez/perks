@@ -19,6 +19,8 @@
     {{ render_row(ltd_plan_form.code, ltd_plan_form.website) }}
     {{ render_row(ltd_plan_form.cust_service_phone, ltd_plan_form.not_available_in) }}
     {{ render_row(ltd_plan_form.minimum_benefit, ltd_plan_form.maximum_benefit) }}
+    {{ render_row(ltd_plan_form.max_weekly_benefit, ltd_plan_form.max_monthly_benefit) }}
+    {{ render_row(ltd_plan_form.benefit_percentage, None) }}
 
     {{ render_save_update(ltd_plan_form.id, 'ltd_plan') }}
   </form>

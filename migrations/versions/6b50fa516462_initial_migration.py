@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: 41ed8fd5dfb2
+Revision ID: 6b50fa516462
 Revises:
-Create Date: 2017-06-05 21:53:10.568272
+Create Date: 2017-07-05 17:33:59.798685
 
 """
 from alembic import op
@@ -13,7 +13,7 @@ from perks import models
 
 
 # revision identifiers, used by Alembic.
-revision = '41ed8fd5dfb2'
+revision = '6b50fa516462'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -244,6 +244,9 @@ def upgrade():
     sa.Column('minimum_benefit', sa.Numeric(precision=10, scale=2), nullable=False),
     sa.Column('maximum_benefit', sa.Numeric(precision=10, scale=2), nullable=False),
     sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('max_weekly_benefit', sa.Numeric(precision=6, scale=2), nullable=False),
+    sa.Column('max_monthly_benefit', sa.Numeric(precision=6, scale=2), nullable=False),
+    sa.Column('benefit_percentage', sa.Numeric(precision=6, scale=2), nullable=False),
     sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -342,7 +345,6 @@ def upgrade():
     sa.Column('minimum_benefit', sa.Numeric(precision=10, scale=2), nullable=False),
     sa.Column('maximum_benefit', sa.Numeric(precision=10, scale=2), nullable=False),
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('payout_interval', sqlalchemy_utils.types.choice.ChoiceType(models.PAYOUT_INTERVAL_TYPES), nullable=True),
     sa.Column('max_weekly_benefit', sa.Numeric(precision=6, scale=2), nullable=False),
     sa.Column('max_monthly_benefit', sa.Numeric(precision=6, scale=2), nullable=False),
     sa.Column('benefit_percentage', sa.Numeric(precision=6, scale=2), nullable=False),
