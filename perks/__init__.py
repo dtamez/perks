@@ -5,6 +5,7 @@
 #
 # Distributed under terms of the MIT license.
 import logging
+import os
 
 from flask import Flask
 from flask_debugtoolbar import DebugToolbarExtension
@@ -15,7 +16,7 @@ from flask_sqlalchemy import SQLAlchemy as sa
 
 app = Flask(__name__, instance_relative_config=True)
 app.config.from_object('config')
-app.config.from_pyfile('config.py')
+app.config.from_pyfile("{}.py".format(os.getenv('environment_name')))  # dev, staging, prod etc.
 
 db = sa(app)
 mail = Mail(app)
