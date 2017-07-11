@@ -2,6 +2,4 @@ node_modules
 notes.txt
 TODO.txt
 semantic
-instance/dev.py
-instance/staging.py
-instance/prod.py
+instance/local.py
