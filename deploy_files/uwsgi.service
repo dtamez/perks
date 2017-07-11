@@ -1,0 +1,8 @@
+[Unit]
+Description=uWSGI instance to serve Perks application
+
+[Service]
+ExecStart=/usr/local/bin/uwsgi --ini /home/danny/perks/wsgi.ini
+
+[Install]
+WantedBy=multi-user.target
