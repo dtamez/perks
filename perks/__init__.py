@@ -16,7 +16,7 @@ from flask_sqlalchemy import SQLAlchemy as sa
 
 app = Flask(__name__, instance_relative_config=True)
 app.config.from_object('config')
-app.config.from_pyfile("{}.py".format(os.getenv('ENVIRONMENT_NAME', 'staging')))  # dev, staging, prod etc.
+app.config.from_pyfile('local.py')
 
 db = sa(app)
 mail = Mail(app)
