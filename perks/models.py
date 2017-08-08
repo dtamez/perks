@@ -601,10 +601,14 @@ class VoluntaryLifePlan(Plan, PostTaxMixin):
         'inherit_condition': (id == Plan.id),
     }
 
-    def _filter_premiums(self, employee):
+    def _get_dob(self, employee):
+        return employee.dob
+
+    def get_premium_choices(self, chosen_value, employee):
+        choices = []
         filters = [Premium.plan_id == self.id]
         today = date.today()
-        born = employee.dob
+        born = self._get_dob(employee)
         age = today.year - born.year - ((today.month, today.day) < (born.month, born.day))
         q = Premium.query
         # just grab the first premium as it will have the same structure as all the others for this plan
@@ -622,11 +626,7 @@ class VoluntaryLifePlan(Plan, PostTaxMixin):
             q = q.join(AgeBandedTier).filter(AgeBandedTier.plan_id == Premium.plan_id)
             q = q.filter(and_(AgeBandedTier.low <= age, AgeBandedTier.high >= age))
         # now get the one premium that applies to our employee
-        return q.one()
-
-    def get_premium_choices(self, chosen_value, employee):
-        choices = []
-        prem = self._filter_premiums(employee)
+        prem = q.one()
         selected = False
         flat = self.er_flat_amount_contributed
         percent = self.er_percentage_contributed
@@ -658,28 +658,8 @@ class SpouseVoluntaryLifePlan(VoluntaryLifePlan):
         'inherit_condition': (id == Plan.id),
     }
 
-    def _filter_premiums(self, employee):
-        filters = [Premium.plan_id == self.id]
-        today = date.today()
-        born = employee.dob if self.use_employee_age_for_spouse else employee.spouse_dob
-        age = today.year - born.year - ((today.month, today.day) < (born.month, born.day))
-        q = Premium.query
-        # just grab the first premium as it will have the same structure as all the others for this plan
-        prem = self.premiums[0]
-        if prem.age:
-            filters.append(Premium.age == age)
-        if prem.gender:
-            filters.append(Premium.gender == employee.gender)
-        if prem.smoker_status:
-            filters.append(Premium.smoker_status == employee.smoker_type)
-
-        q = q.filter(*filters)
-
-        if prem.age_banded_tier:
-            q = q.join(AgeBandedTier).filter(AgeBandedTier.plan_id == Premium.plan_id)
-            q = q.filter(and_(AgeBandedTier.low <= age, AgeBandedTier.high >= age))
-        # now get the one premium that applies to our employee
-        return q.one()
+    def _get_dob(self, employee):
+        return employee.dob if self.use_employee_age_for_spouse else employee.spouse_dob
 
 
 class ChildVoluntaryLifePlan(VoluntaryLifePlan):
