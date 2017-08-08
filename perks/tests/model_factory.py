@@ -64,7 +64,7 @@ class PersonFactory(factory.Factory):
     ssn = factory.Faker('ssn')
     dob = factory.Faker('date')
     gender = factory.Iterator(models.GENDER_TYPES)
-    marital_status = factory.Iterator(models.MARITAL_STATUSES)
+    marital_status = factory.Iterator(models.MARITAL_STATUS_TYPES)
     smoker_type = factory.Iterator(models.SMOKER_TYPES)
 
 
@@ -257,12 +257,12 @@ class CriticalIllnessPlanFactory(Plan, Supplemental):
     payout_amount = 100000
 
 
-class PlanTierPremiumFactory(factory.Factory):
+class TieredPremiumFactory(factory.Factory):
     class Meta:
-        model = models.PlanTierPremium
+        model = models.TieredPremium
         abstract = True
 
-    tier_type = factory.Iterator(models.TIER_TYPES)
+    tier_type = factory.Iterator(models.FAMILY_TIER_TYPES)
     premium = 200
     employer_portion = 150
     employee_portion = 50
@@ -270,87 +270,87 @@ class PlanTierPremiumFactory(factory.Factory):
     percentage = 2.50
 
 
-class MedicalPlanTierPremiumFactory(PlanTierPremiumFactory):
+class MedicalTieredPremiumFactory(TieredPremiumFactory):
 
     plan = factory.SubFactory(MedicalPlanFactory)
 
 
-class DentalPlanTierPremiumFactory(PlanTierPremiumFactory):
+class DentalTieredPremiumFactory(TieredPremiumFactory):
 
     plan = factory.SubFactory(DentalPlanFactory)
 
 
-class VisionPlanTierPremiumFactory(PlanTierPremiumFactory):
+class VisionTieredPremiumFactory(TieredPremiumFactory):
 
     plan = factory.SubFactory(VisionPlanFactory)
 
 
-class EAPPlanTierPremiumFactory(PlanTierPremiumFactory):
+class EAPTieredPremiumFactory(TieredPremiumFactory):
 
     plan = factory.SubFactory(EAPPlanFactory)
 
 
-class LTDPlanTierPremiumFactory(PlanTierPremiumFactory):
+class LTDTieredPremiumFactory(TieredPremiumFactory):
 
     plan = factory.SubFactory(LTDPlanFactory)
 
 
-class LifeADDPlanTierPremiumFactory(PlanTierPremiumFactory):
+class LifeADDTieredPremiumFactory(TieredPremiumFactory):
 
     plan = factory.SubFactory(LifeADDPlanFactory)
 
 
-class LifeADDDepenentPlanTierPremiumFactory(PlanTierPremiumFactory):
+class LifeADDDepenentTieredPremiumFactory(TieredPremiumFactory):
 
     plan = factory.SubFactory(LifeADDDependentPlanFactory)
 
 
-class STDPlanTierPremiumFactory(PlanTierPremiumFactory):
+class STDTieredPremiumFactory(TieredPremiumFactory):
 
     plan = factory.SubFactory(STDPlanFactory)
 
 
-class FSAPlanTierPremiumFactory(PlanTierPremiumFactory):
+class FSATieredPremiumFactory(TieredPremiumFactory):
 
     plan = factory.SubFactory(FSAPlanFactory)
 
 
-class ParkingTransitPlanTierPremiumFactory(PlanTierPremiumFactory):
+class ParkingTransitTieredPremiumFactory(TieredPremiumFactory):
 
     plan = factory.SubFactory(ParkingTransitPlanFactory)
 
 
-class HSAPlanTierPremiumFactory(PlanTierPremiumFactory):
+class HSATieredPremiumFactory(TieredPremiumFactory):
 
     plan = factory.SubFactory(HSAPlanFactory)
 
 
-class Employee401KPlanTierPremiumFactory(PlanTierPremiumFactory):
+class Employee401KTieredPremiumFactory(TieredPremiumFactory):
 
     plan = factory.SubFactory(Employee401KPlanFactory)
 
 
-class SupllementalInsurancePlanTierPremiumFactory(PlanTierPremiumFactory):
+class SupllementalInsuranceTieredPremiumFactory(TieredPremiumFactory):
 
     plan = factory.SubFactory(SupplumentalInsurancePlanFactory)
 
 
-class LongTermCarePlanTierPremiumFactory(PlanTierPremiumFactory):
+class LongTermCareTieredPremiumFactory(TieredPremiumFactory):
 
     plan = factory.SubFactory(LongTermCarePlanFactory)
 
 
-class OtherPlanTierPremiumFactory(PlanTierPremiumFactory):
+class OtherTieredPremiumFactory(TieredPremiumFactory):
 
     plan = factory.SubFactory(OtherPlanFactory)
 
 
-class CancerPlanTierPremiumFactory(PlanTierPremiumFactory):
+class CancerTieredPremiumFactory(TieredPremiumFactory):
 
     plan = factory.SubFactory(CancerPlanFactory)
 
 
-class CriticalIllnessPlanTierPremiumFactory(PlanTierPremiumFactory):
+class CriticalIllnessTieredPremiumFactory(TieredPremiumFactory):
 
     plan = factory.SubFactory(CriticalIllnessPlanFactory)
 

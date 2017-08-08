@@ -1,0 +1,56 @@
+{% from "_macros.html" import render_save_update, render_enroll_table, render_ajax_methods %}
+
+{{ render_ajax_methods('enroll', 'voluntary_life') }}
+
+<div id="voluntary_lifes_wrapper">
+  <h4 class="ui dividing header">Voluntary Life Plan Elections</h4>
+
+  <form class="ui form {% if election is not defined %}hidden{% endif %}" action="" method="post" id="form_voluntary_lifes">
+    {% if election_form %}
+      {{ election_form.id }}
+      {{ election_form.employee_id }}
+      {{ election_form.enrollment_id }}
+      {{ election_form.premium_id }}
+      {{ election_form.plan_id }}
+      {{ election_form.csrf_token }}
+    {% endif %}
+
+    <table class="ui table">
+      <thead>
+        <tr>
+          <th>Coverage Amount</th>
+          <th>Total Premium</th>
+          <th>Employer Contribution</th>
+          <th>Your Cost</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% if election_form %}
+        {% for value, label, checked, total_premium, employer_cost, employee_cost in election_form.selection.choices %}
+          <tr>
+            <td>
+              <div class="field">
+                <div class="ui radio checkbox">
+                  <input type="radio" name="{{ election_form.selection.id }}" id="{{ election_form.selection.id }}" value="{{ value }}"{% if checked %} checked{% endif %} tabindex="0" >
+                  <label>{{ label }} </label>
+                </div>
+              </div>
+            </td>
+            <td>{{ total_premium}}</td>
+            <td>{{ employer_cost }}</td>
+            <td>{{ employee_cost }}</td>
+          </tr>
+      {% endfor %}
+    {% endif %}
+      </tbody>
+    </table>
+
+      {% if election_form %}
+      {{ render_save_update(election_form.plan_id, 'voluntary_life', None, election_form.id) }}
+      {% endif %}
+  </form>
+  {% if voluntary_life_selections %}
+      {{ render_enroll_table(voluntary_life_selections, 'voluntary_life') }}
+  {% endif %}
+
+</div>

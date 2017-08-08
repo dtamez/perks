@@ -1,9 +1,9 @@
 {% extends 'admin.html' %}
 {% from "_macros.html" import render_formatters, render_row, render_save_update, render_table, render_ajax_methods %}
 {% block step_content %}
-  {% for plan, plan_tier_premium_form in plan_forms %}
-    {% set plan_tier_premiums = plan.plan_tier_premiums %}
-    {% include 'admin/_plan_tier_premiums.html' %}
+  {% for plan, tiered_premium_form in plan_forms %}
+    {% set tiered_premiums = plan.tiered_premius %}
+    {% include 'admin/_tiered_premiums.html' %}
     <br>
   {% endfor %}
 {% endblock step_content %}

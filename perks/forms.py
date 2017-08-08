@@ -14,7 +14,6 @@ from wtforms import (
     IntegerField,
     RadioField,
     SelectField,
-    SelectMultipleField,
     StringField,
     SubmitField,
     validators,
@@ -63,12 +62,40 @@ class EmployeeInfoForm(ModelForm):
 
 class ElectionForm(Form):
     id = HiddenField()
+    plan_id = HiddenField()
     employee_id = HiddenField()
     enrollment_id = HiddenField()
     selection = RadioField('Election')
-    plan_tier_premium_id = HiddenField()
+    premium_id = HiddenField()  # used if a tier is selected
+    coverage_amount = HiddenField()  # used if a coverage amount or contribution amount is selected
+    elected = HiddenField()  # used if a yes or no choice is all that's needed
+
+
+class BooleanElectionForm(Form):
+    id = HiddenField()
     plan_id = HiddenField()
-    amount = DecimalField()
+    employee_id = HiddenField()
+    enrollment_id = HiddenField()
+    selection = RadioField('Election')
+    elected = HiddenField()  # used if a yes or no choice is all that's needed
+
+
+class AmountNeededElectionForm(Form):
+    id = HiddenField()
+    plan_id = HiddenField()
+    employee_id = HiddenField()
+    enrollment_id = HiddenField()
+    selection = RadioField('Election')
+    coverage_amount = HiddenField()  # used if a coverage amount or contribution amount is selected
+
+
+class TieredElectionForm(Form):
+    id = HiddenField()
+    plan_id = HiddenField()
+    employee_id = HiddenField()
+    enrollment_id = HiddenField()
+    selection = RadioField('Election')
+    premium_id = HiddenField()  # used if a tier is selected
 
 
 # Admin
@@ -169,7 +196,6 @@ class MedicalPlanForm(AdminPlanForm):
         model = models.MedicalPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
     carrier = QuerySelectField('Carrier', query_factory=carriers, get_label='name')
 
 
@@ -186,7 +212,6 @@ class DentalPlanForm(AdminPlanForm):
         model = models.DentalPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
     carrier = QuerySelectField('Carrier', query_factory=carriers, get_label='name')
 
 
@@ -199,7 +224,6 @@ class VisionPlanForm(AdminPlanForm):
         model = models.VisionPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
     carrier = QuerySelectField('Carrier', query_factory=carriers, get_label='name')
 
 
@@ -212,9 +236,6 @@ class EAPPlanForm(AdminPlanForm):
         model = models.EAPPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
-    minimum_benefit = StringField()
-    maximum_benefit = StringField()
 
 
 class LTDPlanForm(AdminPlanForm):
@@ -226,9 +247,17 @@ class LTDPlanForm(AdminPlanForm):
         model = models.LTDPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
-    minimum_benefit = StringField()
-    maximum_benefit = StringField()
+
+
+class LTDVoluntaryPlanForm(AdminPlanForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.update({'prefix': 'ltd_voluntary_plan'})
+        super(LTDVoluntaryPlanForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = models.LTDVoluntaryPlan
+        date_format = '%m/%d/%Y'
+        include = ['id']
 
 
 class STDPlanForm(AdminPlanForm):
@@ -240,12 +269,10 @@ class STDPlanForm(AdminPlanForm):
         model = models.STDPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
     payout_interval = IntegerField('Payout Interval')
     max_weekly_benefit = StringField('Maximum Weekly Benefit')
     max_monthly_benefit = StringField('Maximum Monthly Benefit')
     benefit_percentage = StringField('Benefit Percentage')
-    mandatory_in_states = SelectMultipleField('Mandatory in States', choices=models.STATES)
 
 
 class LifeADDPlanForm(AdminPlanForm):
@@ -254,38 +281,20 @@ class LifeADDPlanForm(AdminPlanForm):
         super(LifeADDPlanForm, self).__init__(*args, **kwargs)
 
     class Meta:
-        model = models.LifeADDPlan
+        model = models.BasicLifePlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
-    minimum_benefit = StringField()
-    maximum_benefit = StringField()
 
 
-class LifeADDDependentPlanForm(AdminPlanForm):
-    def __init__(self, *args, **kwargs):
-        kwargs.update({'prefix': 'addd_plan'})
-        super(LifeADDDependentPlanForm, self).__init__(*args, **kwargs)
-
-    class Meta:
-        model = models.LifeADDDependentPlan
-        date_format = '%m/%d/%Y'
-        include = ['id']
-    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
-    minimum_benefit = StringField()
-    maximum_benefit = StringField()
-
-
-class FSAPlanForm(AdminPlanForm):
+class FSAMedicalPlanForm(AdminPlanForm):
     def __init__(self, *args, **kwargs):
         kwargs.update({'prefix': 'fsa_plan'})
-        super(FSAPlanForm, self).__init__(*args, **kwargs)
+        super(FSAMedicalPlanForm, self).__init__(*args, **kwargs)
 
     class Meta:
-        model = models.FSAPlan
+        model = models.FSAMedicalPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 
 # Supplemental
@@ -298,7 +307,6 @@ class ParkingTransitPlanForm(AdminPlanForm):
         model = models.ParkingTransitPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 
 class HSAPlanForm(AdminPlanForm):
@@ -310,7 +318,6 @@ class HSAPlanForm(AdminPlanForm):
         model = models.HSAPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 
 class Employee401KPlanForm(AdminPlanForm):
@@ -322,19 +329,6 @@ class Employee401KPlanForm(AdminPlanForm):
         model = models.Employee401KPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
-
-
-class SupplementalInsurancePlanForm(AdminPlanForm):
-    def __init__(self, *args, **kwargs):
-        kwargs.update({'prefix': 'supp_life_plan'})
-        super(SupplementalInsurancePlanForm, self).__init__(*args, **kwargs)
-
-    class Meta:
-        model = models.SupplumentalInsurancePlan
-        date_format = '%m/%d/%Y'
-        include = ['id']
-    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 
 class LongTermCarePlanForm(AdminPlanForm):
@@ -346,19 +340,6 @@ class LongTermCarePlanForm(AdminPlanForm):
         model = models.LongTermCarePlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
-
-
-class OtherPlanForm(AdminPlanForm):
-    def __init__(self, *args, **kwargs):
-        kwargs.update({'prefix': 'other_plan'})
-        super(OtherPlanForm, self).__init__(*args, **kwargs)
-
-    class Meta:
-        model = models.OtherPlan
-        date_format = '%m/%d/%Y'
-        include = ['id']
-    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 
 class CancerPlanForm(AdminPlanForm):
@@ -370,7 +351,6 @@ class CancerPlanForm(AdminPlanForm):
         model = models.CancerPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 
 class CriticalIllnessPlanForm(AdminPlanForm):
@@ -382,24 +362,15 @@ class CriticalIllnessPlanForm(AdminPlanForm):
         model = models.CriticalIllnessPlan
         date_format = '%m/%d/%Y'
         include = ['id']
-    not_available_in = SelectMultipleField('Not available in', choices=models.STATES)
 
 
-#  class AgeBandedPremiumForm(Form):
-    #  id = HiddenField()
-    #  low = IntegerField('Low')
-    #  high = IntegerField('High')
-    #  premium = DecimalField('Premium')
-    #  plan_id = SelectField('Plan', [(p.id, p.name) for p in models.Plan.query.all()])
-
-
-class PlanTierPremiumForm(Form):
+class PremiumForm(Form):
     def __init__(self, *args, **kwargs):
-        kwargs.update({'prefix': 'plan_tier_premium'})
-        super(PlanTierPremiumForm, self).__init__(*args, **kwargs)
+        kwargs.update({'prefix': 'premium'})
+        super(PremiumForm, self).__init__(*args, **kwargs)
     id = HiddenField()
     plan_id = HiddenField()
-    tier_type = SelectField('Tier', choices=models.TIER_TYPES)
+    tier_type = SelectField('Tier', choices=models.FAMILY_TIER_TYPES)
     premium = DecimalField('Premium')
     employer_portion = DecimalField('Employer Portion')
     employee_portion = DecimalField('Employee Portion')

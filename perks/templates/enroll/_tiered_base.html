@@ -7,12 +7,14 @@
   <h4 class="ui dividing header">{% block plan_header %}{% endblock %} Plan Elections</h4>
 
   <form class="ui form {% if election is not defined %}hidden{% endif %}" action="" method="post" id="form_{% block form_id %}{% endblock %}s">
-    {{ election_form.id }}
-    {{ election_form.employee_id }}
-    {{ election_form.enrollment_id }}
-    {{ election_form.plan_tier_premium_id }}
-    {{ election_form.plan_id }}
-    {{ election_form.csrf_token }}
+    {% if election_form %}
+      {{ election_form.id }}
+      {{ election_form.employee_id }}
+      {{ election_form.enrollment_id }}
+      {{ election_form.premium_id }}
+      {{ election_form.plan_id }}
+      {{ election_form.csrf_token }}
+    {% endif %}
 
     <table class="ui table">
       <thead>
@@ -21,6 +23,7 @@
         </tr>
       </thead>
       <tbody>
+      {% if election_form %}
         {% for value, label, checked, total_premium, employer_cost, employee_cost in election_form.selection.choices %}
           <tr>
             <td>
@@ -36,12 +39,14 @@
             <td>{{ employee_cost }}</td>
           </tr>
         {% endfor %}
-
+      {% endif %}
       </tbody>
     </table>
 
+    {% if election_form %}
     {% block save_update %}
     {% endblock save_update %}
+    {% endif %}
   </form>
   {% block enroll_table %}
   {% endblock %}
