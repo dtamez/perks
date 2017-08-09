@@ -1,22 +1,34 @@
 """initial migration
 
-Revision ID: ac7fbb7cd682
+Revision ID: 8b32ec95193a
 Revises:
-Create Date: 2017-08-04 21:07:36.601289
+Create Date: 2017-08-09 11:38:15.547114
 
 """
 from alembic import op
 import sqlalchemy as sa
+
 from sqlalchemy_utils.types.choice import ChoiceType
 from sqlalchemy_utils.types.email import EmailType
 from sqlalchemy_utils.types.phone_number import PhoneNumberType
 from sqlalchemy_utils.types.url import URLType
 
 
-from perks import models
+from perks.models import (
+    BENEFICIARY_TYPES,
+    DEPENDENT_TYPES,
+    FAMILY_TIER_TYPES,
+    GENDER_TYPES,
+    LIFE_EVENT_TYPES,
+    MARITAL_STATUS_TYPES,
+    PLAN_TERMINATION_TIMING_TYPES,
+    SALARY_MODE_TYPES,
+    SMOKER_TYPES,
+    STATES,
+)
 
 # revision identifiers, used by Alembic.
-revision = 'ac7fbb7cd682'
+revision = '8b32ec95193a'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -29,7 +41,7 @@ def upgrade():
         sa.Column('street_1', sa.Unicode(length=100), nullable=False),
         sa.Column('street_2', sa.Unicode(length=100), nullable=True),
         sa.Column('city', sa.Unicode(length=100), nullable=False),
-        sa.Column('state', ChoiceType(models.STATES), nullable=False),
+        sa.Column('state', ChoiceType(STATES), nullable=False),
         sa.Column('zip_code', sa.Unicode(length=10), nullable=False),
         sa.PrimaryKeyConstraint('id')
     )
@@ -116,9 +128,9 @@ def upgrade():
         sa.Column('last_name', sa.Unicode(length=50), server_default=u'', nullable=False),
         sa.Column('ssn', sa.Unicode(length=11), nullable=False),
         sa.Column('dob', sa.Date(), nullable=False),
-        sa.Column('gender', ChoiceType(models.GENDER_TYPES), nullable=True),
-        sa.Column('marital_status', ChoiceType(models.MARITAL_STATUS_TYPES), nullable=True),
-        sa.Column('smoker_type', ChoiceType(models.SMOKER_TYPES), nullable=True),
+        sa.Column('gender', ChoiceType(GENDER_TYPES), nullable=True),
+        sa.Column('marital_status', ChoiceType(MARITAL_STATUS_TYPES), nullable=True),
+        sa.Column('smoker_type', ChoiceType(SMOKER_TYPES), nullable=True),
         sa.Column('user_id', sa.Integer(), nullable=True),
         sa.Column('hire_date', sa.Date(), nullable=False),
         sa.Column('effective_date', sa.Date(), nullable=False),
@@ -127,7 +139,7 @@ def upgrade():
         sa.Column('group_id', sa.String(length=50), nullable=False),
         sa.Column('sub_group_id', sa.String(length=50), nullable=False),
         sa.Column('sub_group_effective_date', sa.Date(), nullable=False),
-        sa.Column('salary_mode', ChoiceType(models.SALARY_MODE_TYPES), nullable=True),
+        sa.Column('salary_mode', ChoiceType(SALARY_MODE_TYPES), nullable=True),
         sa.Column('salary_effective_date', sa.Date(), nullable=False),
         sa.Column('salary', sa.Numeric(precision=9, scale=2), nullable=False),
         sa.Column('phone', PhoneNumberType(length=20), nullable=True),
@@ -138,7 +150,7 @@ def upgrade():
         sa.Column('location_id', sa.Integer(), nullable=True),
         sa.Column('address_id', sa.Integer(), nullable=True),
         sa.Column('spouse_dob', sa.Date(), nullable=False),
-        sa.Column('spouse_smoker_type', ChoiceType(models.SMOKER_TYPES), nullable=True),
+        sa.Column('spouse_smoker_type', ChoiceType(SMOKER_TYPES), nullable=True),
         sa.ForeignKeyConstraint(['address_id'], ['address.id'], ),
         sa.ForeignKeyConstraint(['location_id'], ['location.id'], ),
         sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
@@ -209,10 +221,10 @@ def upgrade():
         sa.Column('last_name', sa.Unicode(length=50), server_default=u'', nullable=False),
         sa.Column('ssn', sa.Unicode(length=11), nullable=False),
         sa.Column('dob', sa.Date(), nullable=False),
-        sa.Column('gender', ChoiceType(models.GENDER_TYPES), nullable=True),
-        sa.Column('marital_status', ChoiceType(models.MARITAL_STATUS_TYPES), nullable=True),
-        sa.Column('smoker_type', ChoiceType(models.SMOKER_TYPES), nullable=True),
-        sa.Column('beneficiary_type', ChoiceType(models.BENEFICIARY_TYPES), nullable=True),
+        sa.Column('gender', ChoiceType(GENDER_TYPES), nullable=True),
+        sa.Column('marital_status', ChoiceType(MARITAL_STATUS_TYPES), nullable=True),
+        sa.Column('smoker_type', ChoiceType(SMOKER_TYPES), nullable=True),
+        sa.Column('beneficiary_type', ChoiceType(BENEFICIARY_TYPES), nullable=True),
         sa.Column('employee_id', sa.Integer(), nullable=True),
         sa.Column('address_id', sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(['address_id'], ['address.id'], ),
@@ -248,7 +260,7 @@ def upgrade():
         sa.Column('doctor_selection_required', sa.Boolean(), nullable=True),
         sa.Column('cobra_eligible', sa.Boolean(), nullable=False),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('plan_termination_timing_type_id', ChoiceType(models.PLAN_TERMINATION_TIMING_TYPES), nullable=True),
+        sa.Column('plan_termination_timing_type_id', ChoiceType(PLAN_TERMINATION_TIMING_TYPES), nullable=True),
         sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
@@ -262,7 +274,7 @@ def upgrade():
         sa.Column('doctor_selection_required', sa.Boolean(), nullable=True),
         sa.Column('cobra_eligible', sa.Boolean(), nullable=False),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('plan_termination_timing_type_id', ChoiceType(models.PLAN_TERMINATION_TIMING_TYPES), nullable=True),
+        sa.Column('plan_termination_timing_type_id', ChoiceType(PLAN_TERMINATION_TIMING_TYPES), nullable=True),
         sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
@@ -274,10 +286,10 @@ def upgrade():
         sa.Column('last_name', sa.Unicode(length=50), server_default=u'', nullable=False),
         sa.Column('ssn', sa.Unicode(length=11), nullable=False),
         sa.Column('dob', sa.Date(), nullable=False),
-        sa.Column('gender', ChoiceType(models.GENDER_TYPES), nullable=True),
-        sa.Column('marital_status', ChoiceType(models.MARITAL_STATUS_TYPES), nullable=True),
-        sa.Column('smoker_type', ChoiceType(models.SMOKER_TYPES), nullable=True),
-        sa.Column('dependent_type', ChoiceType(models.DEPENDENT_TYPES), nullable=True),
+        sa.Column('gender', ChoiceType(GENDER_TYPES), nullable=True),
+        sa.Column('marital_status', ChoiceType(MARITAL_STATUS_TYPES), nullable=True),
+        sa.Column('smoker_type', ChoiceType(SMOKER_TYPES), nullable=True),
+        sa.Column('dependent_type', ChoiceType(DEPENDENT_TYPES), nullable=True),
         sa.Column('full_time_student', sa.Boolean(), server_default='0', nullable=True),
         sa.Column('disabled', sa.Boolean(), server_default='0', nullable=True),
         sa.Column('disability_date', sa.Date(), nullable=True),
@@ -303,7 +315,7 @@ def upgrade():
         'enrollment',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('employee_id', sa.Integer(), nullable=True),
-        sa.Column('life_event', ChoiceType(models.LIFE_EVENT_TYPES), nullable=True),
+        sa.Column('life_event', ChoiceType(LIFE_EVENT_TYPES), nullable=True),
         sa.Column('enrollment_period_id', sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(['employee_id'], ['employee.id'], ),
         sa.ForeignKeyConstraint(['enrollment_period_id'], ['enrollment_period.id'], ),
@@ -378,10 +390,7 @@ def upgrade():
     )
     op.create_table(
         'ltd_voluntary_plan',
-        sa.Column('pre_tax', sa.Boolean(), nullable=False),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('max_monthly_benefit', sa.Numeric(precision=9, scale=2), nullable=False),
-        sa.Column('percentage_of_salary_paid', sa.Numeric(precision=3, scale=2), nullable=False),
         sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
@@ -395,7 +404,7 @@ def upgrade():
         sa.Column('doctor_selection_required', sa.Boolean(), nullable=True),
         sa.Column('cobra_eligible', sa.Boolean(), nullable=False),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('plan_termination_timing_type_id', ChoiceType(models.PLAN_TERMINATION_TIMING_TYPES), nullable=True),
+        sa.Column('plan_termination_timing_type_id', ChoiceType(PLAN_TERMINATION_TIMING_TYPES), nullable=True),
         sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
@@ -409,7 +418,7 @@ def upgrade():
         sa.Column('doctor_selection_required', sa.Boolean(), nullable=True),
         sa.Column('cobra_eligible', sa.Boolean(), nullable=False),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('plan_termination_timing_type_id', ChoiceType(models.PLAN_TERMINATION_TIMING_TYPES), nullable=True),
+        sa.Column('plan_termination_timing_type_id', ChoiceType(PLAN_TERMINATION_TIMING_TYPES), nullable=True),
         sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
@@ -423,7 +432,7 @@ def upgrade():
         sa.Column('doctor_selection_required', sa.Boolean(), nullable=True),
         sa.Column('cobra_eligible', sa.Boolean(), nullable=False),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('plan_termination_timing_type_id', ChoiceType(models.PLAN_TERMINATION_TIMING_TYPES), nullable=True),
+        sa.Column('plan_termination_timing_type_id', ChoiceType(PLAN_TERMINATION_TIMING_TYPES), nullable=True),
         sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
@@ -437,7 +446,7 @@ def upgrade():
         sa.Column('doctor_selection_required', sa.Boolean(), nullable=True),
         sa.Column('cobra_eligible', sa.Boolean(), nullable=False),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('plan_termination_timing_type_id', ChoiceType(models.PLAN_TERMINATION_TIMING_TYPES), nullable=True),
+        sa.Column('plan_termination_timing_type_id', ChoiceType(PLAN_TERMINATION_TIMING_TYPES), nullable=True),
         sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
@@ -496,7 +505,7 @@ def upgrade():
         sa.Column('doctor_selection_required', sa.Boolean(), nullable=True),
         sa.Column('cobra_eligible', sa.Boolean(), nullable=False),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('plan_termination_timing_type_id', ChoiceType(models.PLAN_TERMINATION_TIMING_TYPES), nullable=True),
+        sa.Column('plan_termination_timing_type_id', ChoiceType(PLAN_TERMINATION_TIMING_TYPES), nullable=True),
         sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
@@ -525,11 +534,11 @@ def upgrade():
         sa.Column('plan_id', sa.Integer(), nullable=True),
         sa.Column('amount', sa.Numeric(precision=9, scale=2), nullable=True),
         sa.Column('rate', sa.Numeric(precision=6, scale=2), nullable=True),
-        sa.Column('gender', ChoiceType(models.GENDER_TYPES), nullable=True),
-        sa.Column('smoker_status', ChoiceType(models.SMOKER_TYPES), nullable=True),
+        sa.Column('gender', ChoiceType(GENDER_TYPES), nullable=True),
+        sa.Column('smoker_status', ChoiceType(SMOKER_TYPES), nullable=True),
         sa.Column('age', sa.Integer(), nullable=True),
         sa.Column('age_banded_tier_id', sa.Integer(), nullable=True),
-        sa.Column('family_tier', ChoiceType(models.FAMILY_TIER_TYPES), nullable=True),
+        sa.Column('family_tier', ChoiceType(FAMILY_TIER_TYPES), nullable=True),
         sa.ForeignKeyConstraint(['age_banded_tier_id'], ['age_banded_tier.id'], ),
         sa.ForeignKeyConstraint(['plan_id'], ['plan.id'], ),
         sa.PrimaryKeyConstraint('id')
@@ -541,6 +550,8 @@ def upgrade():
         sa.Column('enrollment_id', sa.Integer(), nullable=True),
         sa.Column('plan_id', sa.Integer(), nullable=True),
         sa.Column('premium_id', sa.Integer(), nullable=True),
+        sa.Column('amount', sa.Integer(), nullable=True),
+        sa.Column('elected', sa.Boolean(), nullable=True),
         sa.ForeignKeyConstraint(['enrollment_id'], ['enrollment.id'], ),
         sa.ForeignKeyConstraint(['plan_id'], ['plan.id'], ),
         sa.ForeignKeyConstraint(['premium_id'], ['premium.id'], ),

@@ -42,6 +42,8 @@ def main():  # NOQA
     delete_all(models.FSAMedicalPlan.query.all())
     delete_all(models.FSADependentCarePlan.query.all())
     delete_all(models.VoluntaryLifePlan.query.all())
+    delete_all(models.SpouseVoluntaryLifePlan.query.all())
+    delete_all(models.ChildVoluntaryLifePlan.query.all())
     delete_all(models.StandaloneADDPlan.query.all())
     delete_all(models.BasicLifePlan.query.all())
     delete_all(models.STDPlan.query.all())

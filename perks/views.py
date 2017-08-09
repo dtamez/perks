@@ -25,7 +25,6 @@ from .forms import (
     DentalPlanForm,
     DependentForm,
     EAPPlanForm,
-    ElectionForm,
     Employee401KPlanForm,
     EmployeeForm,
     EmployeeInfoForm,
@@ -264,45 +263,6 @@ def enroll_dependents():
                            )
 
 
-# def premium_choices(plan_id, chosen_value):  # NOQA
-#   # do we have gender based, age based, or smoker based premiums?
-#   # if so remove the ones that don't apply to this employee
-#   # once that's done we'll either have one left or family tiered options left
-#   employee = Employee.query.join(User).filter(User.id == g.user.id).one()
-#   today = date.today()
-#   born = employee.dob
-#   age = today.year - born.year - ((today.month, today.day) < (born.month, born.day))
-#   plan = Plan.query.get(plan_id)
-#   flat = plan.er_flat_amount_contributed
-#   percent = plan.er_percentage_contributed
-#   choices = []
-#   filters = [Premium.plan_id == plan_id]
-#    prem = Premium.query.filter(*filters).first()
-#
-#    # if no premiums - FSA, HSA - user has to choose an amount between certain bounds and then
-#    # amoun is divided by 12
-#   q = Premium.query
-#   if prem.age:
-#       filters.append(Premium.age == age)
-#   if prem.gender:
-#       filters.append(Premium.gender == employee.gender)
-#   if prem.smoker_status:
-#       filters.append(Premium.smoker_status == employee.smoker_type)
-
-#   q = q.filter(*filters)
-
-#   if prem.age_banded_tier:
-#       q = q.join(AgeBandedTier).filter(AgeBandedTier.plan_id == Premium.plan_id)
-#       q = q.filter(and_(AgeBandedTier.low <= age, AgeBandedTier.high >= age))
-#   premiums = q.all()
-
-#    # if plan.salary_chunk_size:
-#    # then set total to rate * salary / chunk size
-#    # total = premium.rate * math.ceil(employee.salary / plan.salary_chunk_size)
-#    # elif plan.coverage_chunk_size:
-#    # get all coverage choices and compute premium.amount for each one
-
-
 def get_selections(plans, enrollment_id):
     selections = []
     for plan in plans:
@@ -315,17 +275,15 @@ def get_selections(plans, enrollment_id):
             Election.plan_id == plan.id).first()
         if election and election.premium:
             selection['election_label'] = (election.premium.family_tier.value)
-        elif election and election.coverage_amount:
-            selection['amount'] = election.coverage_amount
-            selection['election_label'] = election.coverage_amount
+        elif election and election.amount:
+            selection['amount'] = election.amount
+            selection['election_label'] = election.amount
     return selections
 
 
 @app.route('/enroll/core', methods=['GET'])
 @login_required
 def enroll_core():
-    import ipdb
-    ipdb.set_trace()
     g.active_tab = 'enroll'
     g.active_step = 'core'
     employee = Employee.query.join(User).filter(
@@ -431,7 +389,7 @@ class EnrollPlanAJAXView(MethodView):
             form_class = plan.get_election_form()
             election_form = form_class(None, election)
             election_form.selection.choices = plan.get_premium_choices(
-                election.premium_id or election.coverage_amount, employee)
+                election.premium_id or election.amount or election.elected, employee)
             template = env.get_template(self.template_name)
             ctx = {'election': election,
                    'election_form': election_form}
@@ -441,58 +399,35 @@ class EnrollPlanAJAXView(MethodView):
     def post(self):
         employee = Employee.query.join(User).filter(User.id == g.user.id).first()
         election = Election()
+        election.id = None
         plan_id = request.form['plan_id']
         plan = Plan.query.get(plan_id)
         form_class = plan.get_election_form()
         form = form_class(request.form)
         form.selection.choices = plan.get_premium_choices(request.values['selection'], employee)
-        # TODO: Fix this
-        # if not form.validate():
-        #   # template = env.get_template(self.template_name)
-        #   # form.selection.choices = premium_choices(form.plan_id.data, request.values['selection'])
-        #   # ctx = {'election': election,
-        #          # 'election_form': form}
-        #   # return template.render(ctx)
-
         form.populate_obj(election)
-        election.id = None
-        election.employee = employee
-        choice = form.selection.data
-        # TODO: Get rid of this and use polymorphism
-        if isinstance(plan, VoluntaryLifePlan):
-            if choice and choice.isdigit():
-                election.coverage_amount = int(choice)
-                election.premium_id = None
-        else:
-            premium = Premium.query.filter(
-                Premium.family_tier == choice,
-                Premium.plan_id == form.plan_id.data).first()
-            election.premium = premium
-
+        form.populate_election(election)
         db.session.add(election)
         db.session.commit()
 
         return self.display_all()
 
     def put(self, id):
-        import ipdb
-        ipdb.set_trace()
-        form = ElectionForm(request.form)
+        employee = Employee.query.join(User).filter(User.id == g.user.id).first()
+        plan = Plan.query.get(id)
+        form_class = plan.get_election_form()
+        form = form_class(request.form)
+        form.selection.choices = plan.get_premium_choices(request.values['selection'], employee)
         assert(form.enrollment_id.data)
         enrollment = Enrollment.query.get(form.enrollment_id.data)
         election = Election.query.filter(Election.enrollment_id == enrollment.id, Election.plan_id == id).one()
-        choice = form.selection.data
-        # TODO: DT adjust this for all premium possibilities not just tiered premiums...
-        premium = Premium.query.filter(Premium.plan_id == id, Premium.family_tier == choice).first()
-        election.premium = premium
-
+        form.populate_obj(election)
+        form.populate_election(election)
         db.session.add(election)
         db.session.commit()
         return self.display_all()
 
     def display_all(self):
-        import ipdb
-        ipdb.set_trace()
         employee = Employee.query.join(User).filter(User.id == g.user.id).first()
         plans = self.plan_class.query.all()
         enrollment = Enrollment.query.filter(Enrollment.employee_id == employee.id).one()
@@ -504,15 +439,18 @@ class EnrollPlanAJAXView(MethodView):
                                              Election.plan_id == plan.id).first()
             if election and election.premium:
                 selection['election_label'] = (election.premium.family_tier.value)
-            elif election and election.coverage_amount:
-                selection['amount'] = (election.coverage_amount)
-                selection['election_label'] = election.coverage_amount
+            elif election and election.amount:
+                selection['amount'] = (election.amount)
+                selection['election_label'] = election.amount
+            elif election and election.elected:
+                selection['election_label'] = 'Enrolled'
             else:
                 election = Election()
                 election.plan = plan
                 election.enrollment_id = enrollment.id
-            election_form = ElectionForm()
-            election_form.selection.choices = plan.get_premium_choices(election.premium_id, employee)
+            form_class = plan.get_election_form()
+            election_form = form_class()
+            election_form.selection.choices = plan.get_premium_choices(election_form.data['selection'], employee)
         ctx = {'election_form': election_form,
                '{}_selections'.format(self.prefix): selections}
         return render_template(self.template_name, **ctx)

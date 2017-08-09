@@ -311,6 +311,20 @@ class Employee(PersonMixin, Base):
     spouse_dob = db.Column(db.Date, nullable=False, info={'label': 'Spouse Date of Birth'})
     spouse_smoker_type = db.Column(ChoiceType(SMOKER_TYPES), info={'label': 'Spouse Smoker Status'})
 
+    def get_monthly_salary(self):
+        if self.salary_mode == 'hourly':
+            return self.salary * 40 * 52 / 12
+        elif self.salary_mode == 'weekly':
+            return self.salary * 52 / 12
+        elif self.salary_mode == 'bi-weekly':
+            return self.salary * 26 / 12
+        elif self.salary_mode == 'semi-monthly':
+            return self.salary * 2
+        elif self.salary_mode == 'monthly':
+            return self.salary
+        elif self.salary_mode == 'annually':
+            return self.salary / 12
+
 
 class Carrier(Base):
     name = db.Column(db.Unicode(50), nullable=False, info={'label': 'Name'})
@@ -392,217 +406,10 @@ class PlanPremiumMetaValuesMixin(object):
         db.Integer, info={'label': 'Premium is based on this portion of elected coverage'})
 
 
-class IRSLimits(Base):
-    min_fsa_medical_contribution = db.Column(db.Numeric(9, 2))
-    max_fsa_medical_contribution = db.Column(db.Numeric(9, 2))
-    max_fsa_dependent_care_contribution = db.Column(db.Numeric(9, 2))
-    max_hsa_individual_contribution = db.Column(db.Numeric(9, 2))
-    max_hsa_family_contribution = db.Column(db.Numeric(9, 2))
-    max_hsa_family_over_55_contribution = db.Column(db.Numeric(9, 2))
-    max_401k_salary_deferal = db.Column(db.Numeric(9, 2))
-    max_401k_salary_deferal_over_50 = db.Column(db.Numeric(9, 2))
-
-
-class Plan(Base, EmployerContributionMixin, PlanPremiumMetaValuesMixin):
-    plantype = db.Column(db.String(50), info={'label': 'Plan Type'})
-    code = db.Column(db.String(10), info={'label': 'Code'})
-    name = db.Column(db.Unicode(70), info={'label': 'Name'})
-    description = db.Column(db.String(250), info={'label': ''})
-    special_instructions = db.Column(db.String(250), info={'label': ''})
-    active = db.Column('is_active', db.Boolean, nullable=False, index=True, server_default='1',
-                       info={'label': 'Plan is active?'})
-    carrier_id = db.Column(db.ForeignKey('carrier.id'))
-    carrier = db.relationship('Carrier', uselist=False, info={'label': 'Caarrier'})
-    website = db.Column(URLType, info={'label': 'Website'})
-    cust_service_phone = db.Column(PhoneNumberType, info={'label': 'Customer Service Phone'})
-    premiums = db.relationship('Premium', back_populates="plan")
-
+class AmountNeededElectionMixin(object):
     def get_election_form(self):
-        if self.premiums:
-            prem = self.premiums[0]
-            if prem.family_tier:
-                from perks.forms import TieredElectionForm
-                return TieredElectionForm
-            elif prem.rate:
-                from perks.forms import AmountNeededElectionForm
-                return AmountNeededElectionForm
-            else:
-                from perks.forms import BooleanElectionForm
-                return BooleanElectionForm
-
-    __mapper_args__ = {
-        'polymorphic_on': plantype,
-        'order_by': name
-    }
-
-
-# Core plans
-class MedicalPlan(Plan, CoreMixin, PreOrPostTaxMixin):
-    __tablename__ = 'medical_plan'
-    __table_args__ = {'extend_existing': True}
-    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True, info={'widget': widgets.HiddenInput()})
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'medical',
-        'inherit_condition': (id == Plan.id),
-    }
-
-
-class DentalPlan(Plan, CoreMixin, PreOrPostTaxMixin):
-    __tablename__ = 'dental_plan'
-    __table_args__ = {'extend_existing': True}
-    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'dental',
-        'inherit_condition': (id == Plan.id),
-    }
-
-
-class VisionPlan(Plan, CoreMixin, PreOrPostTaxMixin):
-    __tablename__ = 'vision_plan'
-    __table_args__ = {'extend_existing': True}
-    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'vision',
-        'inherit_condition': (id == Plan.id),
-    }
-
-
-class MedicalDentalBundlePlan(Plan, CoreMixin, PreOrPostTaxMixin):
-    __tablename__ = 'medical_dental_bundle_plan'
-    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'medical_dental',
-        'inherit_condition': (id == Plan.id),
-    }
-
-
-class MedicalVisionBundlePlan(Plan, CoreMixin, PreOrPostTaxMixin):
-    __tablename__ = 'medical_vision_bundle_plan'
-    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'medical_vision',
-        'inherit_condition': (id == Plan.id),
-    }
-
-
-class MedicalDentalVisionBundlePlan(Plan, CoreMixin, PreOrPostTaxMixin):
-    __tablename__ = 'medical_dental_vision_bundle_plan'
-    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'medical_detnal_vision',
-        'inherit_condition': (id == Plan.id),
-    }
-
-
-class DentalVisionBundlePlan(Plan, CoreMixin, PreOrPostTaxMixin):
-    __tablename__ = 'dental_vision_bundle_plan'
-    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'detnal_vision',
-        'inherit_condition': (id == Plan.id),
-    }
-
-
-# Group Plans
-# Life
-
-class BasicLifePlan(Plan, PostTaxMixin):
-    # has a composite premium, 100% employer paid
-    __tablename__ = 'life_add_plan'
-    __table_args__ = {'extend_existing': True}
-    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
-    # rates
-    # benefits
-    multiple_of_salary_paid = db.Column(db.Numeric(4, 2))
-    min_benefit = db.Column(db.Numeric(9, 2))
-    max_benefit = db.Column(db.Numeric(9, 2))
-    spouse_benefit = db.Column(db.Numeric(9, 2))
-    child_benefit = db.Column(db.Numeric(9, 2))
-    guarantee_issue = db.Column(db.Numeric(9, 2))
-    age_based_reductions = db.relationship('AgeBasedReduction', back_populates="plan")
-    addl_salary_multiple_accidental_death = db.Column(db.Numeric(4, 2))
-    addl_salary_multiple_accidental_dismemberment = db.Column(db.Numeric(4, 2))
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'life_add',
-        'inherit_condition': (id == Plan.id),
-    }
-
-    def _filter_premiums(self, employee):
-        filters = [Premium.plan_id == self.id]
-        today = date.today()
-        born = employee.dob
-        age = today.year - born.year - ((today.month, today.day) < (born.month, born.day))
-        q = Premium.query
-        # just grab the first premium as it will have the same structure as all the others for this plan
-        prem = self.premiums[0]
-        if prem.age:
-            filters.append(Premium.age == age)
-        if prem.gender:
-            filters.append(Premium.gender == employee.gender)
-        if prem.smoker_status:
-            filters.append(Premium.smoker_status == employee.smoker_type)
-
-        q = q.filter(*filters)
-
-        if prem.age_banded_tier:
-            q = q.join(AgeBandedTier).filter(AgeBandedTier.plan_id == Premium.plan_id)
-            q = q.filter(and_(AgeBandedTier.low <= age, AgeBandedTier.high >= age))
-        # now get the one premium that applies to our employee
-        return q.one()
-
-    def get_premium_choices(self, chosen_value, employee):
-        choices = []
-        prem = self._filter_premiums(employee)
-        selected = False
-        flat = self.er_flat_amount_contributed
-        percent = self.er_percentage_contributed
-        for coverage in range(self.min_election, self.max_election + 1, self.increments):
-            total = (coverage / 1000) * prem.rate
-            if flat:
-                er = flat
-            else:
-                er = total * (percent or 0)
-            ee = total - er
-            if chosen_value and chosen_value != 'DE':
-                selected = int(chosen_value) == coverage
-            choices.append((coverage, coverage, selected,
-                            locale.currency(total, grouping=True),
-                            locale.currency(er, grouping=True),
-                            locale.currency(ee, grouping=True)))
-        choices.append(('DE', 'Decline', chosen_value is None, '', '', ''))
-        return choices
-
-
-class VoluntaryLifePlan(Plan, PostTaxMixin):
-    __tablename__ = 'voluntary_life_plan'
-    __table_args__ = {'extend_existing': True}
-    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
-    # rates
-    increments = db.Column(db.Integer)
-    min_election = db.Column(db.Numeric(9, 2))
-    max_election = db.Column(db.Numeric(9, 2))
-    # benefits
-    age_based_reductions = db.relationship('AgeBasedReduction', back_populates="plan")
-    guarantee_issue = db.Column(db.Numeric(9, 2))
-    # optional ADD
-    addl_salary_multiple_accidental_dismemberment = db.Column(db.Numeric(4, 2))
-    age_based_reductions = db.relationship('AgeBasedReduction', back_populates="plan")
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'voluntary_life',
-        'inherit_condition': (id == Plan.id),
-    }
-
-    def _get_dob(self, employee):
-        return employee.dob
+            from perks.forms import AmountNeededElectionForm
+            return AmountNeededElectionForm
 
     def get_premium_choices(self, chosen_value, employee):
         choices = []
@@ -645,6 +452,213 @@ class VoluntaryLifePlan(Plan, PostTaxMixin):
                             locale.currency(ee, grouping=True)))
         choices.append(('DE', 'Decline', chosen_value is None, '', '', ''))
         return choices
+
+
+class TieredElectionMixin(object):
+    def get_election_form(self):
+            from perks.forms import TieredElectionForm
+            return TieredElectionForm
+
+
+class BooleanElectionMixin(object):
+
+    def get_premium_choices(self, chosen_value, employee):
+        choices = []
+        filters = [Premium.plan_id == self.id]
+        today = date.today()
+        born = employee.dob
+        age = today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+        q = Premium.query
+        # just grab the first premium as it will have the same structure as all the others for this plan
+        prem = self.premiums[0]
+        if prem.age:
+            filters.append(Premium.age == age)
+        if prem.gender:
+            filters.append(Premium.gender == employee.gender)
+        if prem.smoker_status:
+            filters.append(Premium.smoker_status == employee.smoker_type)
+
+        q = q.filter(*filters)
+
+        if prem.age_banded_tier:
+            q = q.join(AgeBandedTier).filter(AgeBandedTier.plan_id == Premium.plan_id)
+            q = q.filter(and_(AgeBandedTier.low <= age, AgeBandedTier.high >= age))
+        # now get the one premium that applies to our employee
+        prem = q.one()
+        flat = self.er_flat_amount_contributed
+        percent = self.er_percentage_contributed
+        total = prem.rate * employee.get_monthly_salary()
+        if flat:
+            er = flat
+        else:
+            er = total * (percent or 0)
+        ee = total - er
+        selected = chosen_value  # should be True or False (election.elected)
+        choices.append(('Enroll', 'Enroll', selected,
+                        locale.currency(total, grouping=True),
+                        locale.currency(er, grouping=True),
+                        locale.currency(ee, grouping=True)))
+        choices.append(('DE', 'Decline', not selected, '', '', ''))
+        return choices
+
+    def get_election_form(self):
+        from perks.forms import BooleanElectionForm
+        return BooleanElectionForm
+
+
+class IRSLimits(Base):
+    min_fsa_medical_contribution = db.Column(db.Numeric(9, 2))
+    max_fsa_medical_contribution = db.Column(db.Numeric(9, 2))
+    max_fsa_dependent_care_contribution = db.Column(db.Numeric(9, 2))
+    max_hsa_individual_contribution = db.Column(db.Numeric(9, 2))
+    max_hsa_family_contribution = db.Column(db.Numeric(9, 2))
+    max_hsa_family_over_55_contribution = db.Column(db.Numeric(9, 2))
+    max_401k_salary_deferal = db.Column(db.Numeric(9, 2))
+    max_401k_salary_deferal_over_50 = db.Column(db.Numeric(9, 2))
+
+
+class Plan(Base, EmployerContributionMixin, PlanPremiumMetaValuesMixin):
+    plantype = db.Column(db.String(50), info={'label': 'Plan Type'})
+    code = db.Column(db.String(10), info={'label': 'Code'})
+    name = db.Column(db.Unicode(70), info={'label': 'Name'})
+    description = db.Column(db.String(250), info={'label': ''})
+    special_instructions = db.Column(db.String(250), info={'label': ''})
+    active = db.Column('is_active', db.Boolean, nullable=False, index=True, server_default='1',
+                       info={'label': 'Plan is active?'})
+    carrier_id = db.Column(db.ForeignKey('carrier.id'))
+    carrier = db.relationship('Carrier', uselist=False, info={'label': 'Caarrier'})
+    website = db.Column(URLType, info={'label': 'Website'})
+    cust_service_phone = db.Column(PhoneNumberType, info={'label': 'Customer Service Phone'})
+    premiums = db.relationship('Premium', back_populates="plan")
+
+    __mapper_args__ = {
+        'polymorphic_on': plantype,
+        'order_by': name
+    }
+
+
+# Core plans
+class MedicalPlan(Plan, CoreMixin, PreOrPostTaxMixin, TieredElectionMixin):
+    __tablename__ = 'medical_plan'
+    __table_args__ = {'extend_existing': True}
+    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True, info={'widget': widgets.HiddenInput()})
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'medical',
+        'inherit_condition': (id == Plan.id),
+    }
+
+
+class DentalPlan(Plan, CoreMixin, PreOrPostTaxMixin, TieredElectionMixin):
+    __tablename__ = 'dental_plan'
+    __table_args__ = {'extend_existing': True}
+    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'dental',
+        'inherit_condition': (id == Plan.id),
+    }
+
+
+class VisionPlan(Plan, CoreMixin, PreOrPostTaxMixin, TieredElectionMixin):
+    __tablename__ = 'vision_plan'
+    __table_args__ = {'extend_existing': True}
+    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'vision',
+        'inherit_condition': (id == Plan.id),
+    }
+
+
+class MedicalDentalBundlePlan(Plan, CoreMixin, PreOrPostTaxMixin, TieredElectionMixin):
+    __tablename__ = 'medical_dental_bundle_plan'
+    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'medical_dental',
+        'inherit_condition': (id == Plan.id),
+    }
+
+
+class MedicalVisionBundlePlan(Plan, CoreMixin, PreOrPostTaxMixin, TieredElectionMixin):
+    __tablename__ = 'medical_vision_bundle_plan'
+    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'medical_vision',
+        'inherit_condition': (id == Plan.id),
+    }
+
+
+class MedicalDentalVisionBundlePlan(Plan, CoreMixin, PreOrPostTaxMixin, TieredElectionMixin):
+    __tablename__ = 'medical_dental_vision_bundle_plan'
+    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'medical_detnal_vision',
+        'inherit_condition': (id == Plan.id),
+    }
+
+
+class DentalVisionBundlePlan(Plan, CoreMixin, PreOrPostTaxMixin, TieredElectionMixin):
+    __tablename__ = 'dental_vision_bundle_plan'
+    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'detnal_vision',
+        'inherit_condition': (id == Plan.id),
+    }
+
+
+# Group Plans
+# Life
+
+class BasicLifePlan(Plan, PostTaxMixin, BooleanElectionMixin):
+    # has a composite premium, 100% employer paid
+    __tablename__ = 'life_add_plan'
+    __table_args__ = {'extend_existing': True}
+    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+    # rates
+    # benefits
+    multiple_of_salary_paid = db.Column(db.Numeric(4, 2))
+    min_benefit = db.Column(db.Numeric(9, 2))
+    max_benefit = db.Column(db.Numeric(9, 2))
+    spouse_benefit = db.Column(db.Numeric(9, 2))
+    child_benefit = db.Column(db.Numeric(9, 2))
+    guarantee_issue = db.Column(db.Numeric(9, 2))
+    age_based_reductions = db.relationship('AgeBasedReduction', back_populates="plan")
+    addl_salary_multiple_accidental_death = db.Column(db.Numeric(4, 2))
+    addl_salary_multiple_accidental_dismemberment = db.Column(db.Numeric(4, 2))
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'life_add',
+        'inherit_condition': (id == Plan.id),
+    }
+
+
+class VoluntaryLifePlan(Plan, PostTaxMixin, AmountNeededElectionMixin):
+    __tablename__ = 'voluntary_life_plan'
+    __table_args__ = {'extend_existing': True}
+    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+    # rates
+    increments = db.Column(db.Integer)
+    min_election = db.Column(db.Numeric(9, 2))
+    max_election = db.Column(db.Numeric(9, 2))
+    # benefits
+    age_based_reductions = db.relationship('AgeBasedReduction', back_populates="plan")
+    guarantee_issue = db.Column(db.Numeric(9, 2))
+    # optional ADD
+    addl_salary_multiple_accidental_dismemberment = db.Column(db.Numeric(4, 2))
+    age_based_reductions = db.relationship('AgeBasedReduction', back_populates="plan")
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'voluntary_life',
+        'inherit_condition': (id == Plan.id),
+    }
+
+    def _get_dob(self, employee):
+        return employee.dob
 
 
 class SpouseVoluntaryLifePlan(VoluntaryLifePlan):
@@ -719,7 +733,7 @@ class UniversalLifePlan(Plan, PostTaxMixin):
 
 
 # LTD
-class LTDPlan(Plan, GroupMixin, PreOrPostTaxMixin):
+class LTDPlan(Plan, GroupMixin, PreOrPostTaxMixin, BooleanElectionMixin):
     __tablename__ = 'ltd_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
@@ -734,16 +748,12 @@ class LTDPlan(Plan, GroupMixin, PreOrPostTaxMixin):
     }
 
 
-class LTDVoluntaryPlan(Plan, GroupMixin, PreOrPostTaxMixin):
+class LTDVoluntaryPlan(LTDPlan):
     # has age banded rates (e.g. 25 - 34 = 0.05, 35 - 39 = 0.06)
-    # has an elected coverage amount  (e.g. $80K or $90K in 10K intervals)
     # so monthly premium for age 37 at $70,000 = 0.06 * 70 or $4.20/month
     __tablename__ = 'ltd_voluntary_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
-
-    max_monthly_benefit = db.Column(db.Numeric(9, 2), nullable=False, info={'label': 'Maximum Monthly Benefit'})
-    percentage_of_salary_paid = db.Column(db.Numeric(3, 2), nullable=False, info={'label': 'Benefit Percentage'})
 
     __mapper_args__ = {
         'polymorphic_identity': 'ltd_voluntary',
@@ -752,7 +762,7 @@ class LTDVoluntaryPlan(Plan, GroupMixin, PreOrPostTaxMixin):
 
 
 # STD
-class STDPlan(Plan, GroupMixin, PostTaxMixin):
+class STDPlan(Plan, GroupMixin, PostTaxMixin, BooleanElectionMixin):
     __tablename__ = 'std_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
@@ -766,7 +776,7 @@ class STDPlan(Plan, GroupMixin, PostTaxMixin):
     }
 
 
-class STDVoluntaryPlan(Plan, GroupMixin, PostTaxMixin):
+class STDVoluntaryPlan(Plan, GroupMixin, PostTaxMixin, BooleanElectionMixin):
     # has a weekly benefit not a monthly benefit -> = % of weekly salary usually 60% or so
     # premium = age banded rate (e.g. 0.29) * weekly benefit / $10)
     # weekly salary = $500 and age rate is 0.31 and plan pays 60% of salary THEN
@@ -1007,4 +1017,5 @@ class Election(Base):
     plan = db.relationship('Plan')
     premium_id = db.Column(db.Integer, db.ForeignKey('premium.id'))
     premium = db.relationship('Premium')
-    coverage_amount = db.Column(db.Integer)
+    amount = db.Column(db.Integer)
+    elected = db.Column(db.Boolean)

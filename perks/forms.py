@@ -18,9 +18,11 @@ from wtforms import (
     SubmitField,
     validators,
 )
-from perks import models
+from wtforms.widgets import HiddenInput
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from wtforms_alchemy import ModelForm, ModelFormField
+
+from perks import models
 
 
 # Adds first and last name to RegisterForm's required fields.
@@ -60,42 +62,43 @@ class EmployeeInfoForm(ModelForm):
     id = HiddenField()
 
 
-class ElectionForm(Form):
-    id = HiddenField()
-    plan_id = HiddenField()
-    employee_id = HiddenField()
-    enrollment_id = HiddenField()
-    selection = RadioField('Election')
-    premium_id = HiddenField()  # used if a tier is selected
-    coverage_amount = HiddenField()  # used if a coverage amount or contribution amount is selected
-    elected = HiddenField()  # used if a yes or no choice is all that's needed
-
-
 class BooleanElectionForm(Form):
-    id = HiddenField()
-    plan_id = HiddenField()
-    employee_id = HiddenField()
-    enrollment_id = HiddenField()
+    id = IntegerField(widget=HiddenInput())
+    plan_id = IntegerField(widget=HiddenInput())
+    employee_id = IntegerField(widget=HiddenInput())
+    enrollment_id = IntegerField(widget=HiddenInput())
     selection = RadioField('Election')
-    elected = HiddenField()  # used if a yes or no choice is all that's needed
+
+    def populate_election(self, election):
+        election.elected = self.selection.data == 'Enroll'
 
 
 class AmountNeededElectionForm(Form):
-    id = HiddenField()
-    plan_id = HiddenField()
-    employee_id = HiddenField()
-    enrollment_id = HiddenField()
+    id = IntegerField(widget=HiddenInput())
+    plan_id = IntegerField(widget=HiddenInput())
+    employee_id = IntegerField(widget=HiddenInput())
+    enrollment_id = IntegerField(widget=HiddenInput())
     selection = RadioField('Election')
-    coverage_amount = HiddenField()  # used if a coverage amount or contribution amount is selected
+    amount = IntegerField(widget=HiddenInput())
+
+    def populate_election(self, election):
+        election.amount = int(self.selection.data)
+        election.premium_id = None   # not sure if this is needed
 
 
 class TieredElectionForm(Form):
-    id = HiddenField()
-    plan_id = HiddenField()
-    employee_id = HiddenField()
-    enrollment_id = HiddenField()
+    id = IntegerField(widget=HiddenInput())
+    plan_id = IntegerField(widget=HiddenInput())
+    employee_id = IntegerField(widget=HiddenInput())
+    enrollment_id = IntegerField(widget=HiddenInput())
     selection = RadioField('Election')
-    premium_id = HiddenField()  # used if a tier is selected
+    premium_id = IntegerField(widget=HiddenInput())  # used if a tier is selected
+
+    def populate_election(self, election):
+        premium = models.Premium.query.filter(
+            models.Premium.family_tier == self.selection.data,
+            models.Premium.plan_id == self.plan_id.data).first()
+        election.premium = premium
 
 
 # Admin

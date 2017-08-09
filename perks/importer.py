@@ -684,7 +684,7 @@ def create_tiered_election(code, premium, amount):
     election.plan = plan
     election.premium = premium
     if amount:
-        election.coverage_amount = int(amount)
+        election.amount = int(amount)
     return election
 
 
