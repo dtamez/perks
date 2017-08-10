@@ -1,4 +1,4 @@
-{% extends "enroll/_tiered_base.html" %}
+{% extends "enroll/_base.html" %}
 {% block ajax_methods %}
   {{ render_ajax_methods('enroll', 'vision') }}
 {% endblock %}
@@ -6,6 +6,7 @@
 {% block plan_wrapper %}vision{% endblock %}
 {% block plan_header %}Vision{% endblock %}
 {% block form_id %}vision{% endblock %}
+{% block category_header %}Tier{% endblock %}
 {% block save_update %}
     {{ render_save_update(election_form.plan_id, 'vision', None, election_form.id) }}
 {% endblock %}

@@ -583,7 +583,8 @@ def import_std_plans(xls, sheet_name, klass):
 
 def import_fsa_plan(xls, sheet_name, klass):
     print 'importing {} plans'.format(klass.__name__)
-    converters = {n: strip for n in range(9)}
+    MIN_CONTRIBUTION = 10
+    converters = {n: strip for n in range(MIN_CONTRIBUTION)}
     converters.update({0: str, 3: str})
     sheet = xls.parse(sheet_name, converters=converters, keep_default_na=False)
 
@@ -592,12 +593,14 @@ def import_fsa_plan(xls, sheet_name, klass):
         get_common(row, plan)
         db.session.add(plan)
         get_premium_related(row, plan)
+        plan.min_contribution = Decimal(row[MIN_CONTRIBUTION])
         print plan.name
 
 
 def import_hsa_plan(xls, sheet_name, klass):
     print 'importing {} plans'.format(klass.__name__)
-    converters = {n: strip for n in range(9)}
+    MIN_CONTRIBUTION = 10
+    converters = {n: strip for n in range(MIN_CONTRIBUTION)}
     converters.update({0: str, 3: str})
     sheet = xls.parse(sheet_name, converters=converters, keep_default_na=False)
 
@@ -606,12 +609,14 @@ def import_hsa_plan(xls, sheet_name, klass):
         get_common(row, plan)
         db.session.add(plan)
         get_premium_related(row, plan)
+        plan.min_contribution = Decimal(row[MIN_CONTRIBUTION])
         print plan.name
 
 
 def import_employee_401k_plans(xls):
     print 'importing 401k plans'
-    converters = {n: strip for n in range(9)}
+    EMPLOYER_PERCENT_MATCH, EMPLOYER_MAX_CONTRIB, MIN_CONTRIBUTION = range(10, 13)
+    converters = {n: strip for n in range(MIN_CONTRIBUTION)}
     converters.update({0: str, 3: str})
     sheet = xls.parse('401K Plans', converters=converters, keep_default_na=False)
 
@@ -620,6 +625,9 @@ def import_employee_401k_plans(xls):
         get_common(row, plan)
         db.session.add(plan)
         get_premium_related(row, plan)
+        plan.employer_percent_matched = int(row[EMPLOYER_PERCENT_MATCH]) / 100
+        plan.min_contribution = Decimal(row[EMPLOYER_MAX_CONTRIB])
+        plan.min_contribution = Decimal(row[MIN_CONTRIBUTION])
         print plan.name
 
 

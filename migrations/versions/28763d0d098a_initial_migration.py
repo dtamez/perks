@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: 8b32ec95193a
+Revision ID: 28763d0d098a
 Revises:
-Create Date: 2017-08-09 11:38:15.547114
+Create Date: 2017-08-09 22:19:04.753378
 
 """
 from alembic import op
@@ -27,8 +27,9 @@ from perks.models import (
     STATES,
 )
 
+
 # revision identifiers, used by Alembic.
-revision = '8b32ec95193a'
+revision = '28763d0d098a'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -81,7 +82,6 @@ def upgrade():
     op.create_table(
         'irs_limits',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('min_fsa_medical_contribution', sa.Numeric(precision=9, scale=2), nullable=True),
         sa.Column('max_fsa_medical_contribution', sa.Numeric(precision=9, scale=2), nullable=True),
         sa.Column('max_fsa_dependent_care_contribution', sa.Numeric(precision=9, scale=2), nullable=True),
         sa.Column('max_hsa_individual_contribution', sa.Numeric(precision=9, scale=2), nullable=True),
@@ -331,6 +331,7 @@ def upgrade():
     op.create_table(
         'fsa_medical_plan',
         sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('min_contribution', sa.Numeric(precision=9, scale=2), nullable=False),
         sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )

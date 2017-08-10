@@ -11,6 +11,7 @@
       {{ election_form.id }}
       {{ election_form.employee_id }}
       {{ election_form.enrollment_id }}
+      {{ election_form.premium_id }}
       {{ election_form.plan_id }}
       {{ election_form.csrf_token }}
     {% endif %}
@@ -23,28 +24,30 @@
       </thead>
       <tbody>
       {% if election_form %}
-        {% for value, label, checked, total_premium, employer_cost, employee_cost in election_form.selection.choices %}
-          <tr>
-            <td>
-              <div class="field">
-                <div class="ui radio checkbox">
-                  <input type="radio" name="{{ election_form.selection.id }}" id="{{ election_form.selection.id }}" value="{{ value }}"{% if checked %} checked{% endif %} tabindex="0" >
-                  <label>{{ label }} </label>
+        {% block form_input %}
+          {% for value, label, checked, total_premium, employer_cost, employee_cost in election_form.selection.choices %}
+            <tr>
+              <td>
+                <div class="field">
+                  <div class="ui radio checkbox">
+                    <input type="radio" name="{{ election_form.selection.id }}" id="{{ election_form.selection.id }}" value="{{ value }}"{% if checked %} checked{% endif %} tabindex="0" >
+                    <label>{{ label }} </label>
+                  </div>
                 </div>
-              </div>
-            </td>
-            <td>{{ total_premium }}</td>
-            <td>{{ employer_cost }}</td>
-            <td>{{ employee_cost }}</td>
-          </tr>
-        {% endfor %}
+              </td>
+              <td>{{ total_premium }}</td>
+              <td>{{ employer_cost }}</td>
+              <td>{{ employee_cost }}</td>
+            </tr>
+          {% endfor %}
+        {% endblock %}
       {% endif %}
       </tbody>
     </table>
 
     {% if election_form %}
-    {% block save_update %}
-    {% endblock save_update %}
+      {% block save_update %}
+      {% endblock save_update %}
     {% endif %}
   </form>
   {% block enroll_table %}

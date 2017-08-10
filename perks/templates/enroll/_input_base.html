@@ -1,0 +1,20 @@
+{% extends "enroll/_base.html" %}
+
+        {% block form_input %}
+          {% for minimum, maximum, value, total_premium, employer_cost, employee_cost in election_form.selection.choices %}
+            <tr>
+              <td>
+                <div class="field">
+                  <div class="ui">
+                    <label>Elected amount</label>
+                    <input type="number" name="elected_amount" id="elected_amount" value="{{ value }}"
+                    tabindex="0" min="{{ minimum }}" max="{{ maximum }}">
+                  </div>
+                </div>
+              </td>
+              <td>{{ total_premium }}</td>
+              <td>{{ employer_cost }}</td>
+              <td>{{ employee_cost }}</td>
+            </tr>
+          {% endfor %}
+        {% endblock %}

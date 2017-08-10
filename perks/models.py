@@ -366,24 +366,6 @@ class CoreMixin(object):
     doctor_selection_required = db.Column(db.Boolean, info={'label': 'Doctor Selection Required?'})
     cobra_eligible = db.Column(db.Boolean, nullable=False, default=False, info={'label': 'Cobra Eligible?'})
 
-    def get_premium_choices(self, chosen_value, employee):
-        flat = self.er_flat_amount_contributed
-        percent = self.er_percentage_contributed
-        choices = []
-        for premium in self.premiums:
-            total = premium.amount
-            if flat:
-                er = flat
-            else:
-                er = total * (percent or 0)
-            ee = total - er
-            choices.append((premium.family_tier.code, premium.family_tier.value, premium.id == chosen_value,
-                            locale.currency(total, grouping=True),
-                            locale.currency(er, grouping=True),
-                            locale.currency(ee, grouping=True)))
-        choices.append(('DE', 'Decline', chosen_value is None, '', '', ''))
-        return choices
-
 
 class GroupMixin(object):
     pass
@@ -406,7 +388,27 @@ class PlanPremiumMetaValuesMixin(object):
         db.Integer, info={'label': 'Premium is based on this portion of elected coverage'})
 
 
-class AmountNeededElectionMixin(object):
+class AmountSuppliedElectionMixin(object):
+
+    def get_election_form(self):
+            from perks.forms import AmountNeededElectionForm
+            return AmountNeededElectionForm
+
+    def get_premium_choices(self, chosen_value, employee):
+        min_election, max_election = self.get_min_max_elections()
+        flat = self.er_flat_amount_contributed
+        percent = self.er_percentage_contributed
+        total = chosen_value or 0
+        if flat:
+            er = flat
+        else:
+            er = total * (percent or 0)
+        ee = total - er
+        return [(min_election, max_election, chosen_value, total, er, ee)]
+
+
+class AmountChosenElectionMixin(object):
+
     def get_election_form(self):
             from perks.forms import AmountNeededElectionForm
             return AmountNeededElectionForm
@@ -455,9 +457,28 @@ class AmountNeededElectionMixin(object):
 
 
 class TieredElectionMixin(object):
+
     def get_election_form(self):
             from perks.forms import TieredElectionForm
             return TieredElectionForm
+
+    def get_premium_choices(self, chosen_value, employee):
+        flat = self.er_flat_amount_contributed
+        percent = self.er_percentage_contributed
+        choices = []
+        for premium in self.premiums:
+            total = premium.amount
+            if flat:
+                er = flat
+            else:
+                er = total * (percent or 0)
+            ee = total - er
+            choices.append((premium.family_tier.code, premium.family_tier.value, premium.id == chosen_value,
+                            locale.currency(total, grouping=True),
+                            locale.currency(er, grouping=True),
+                            locale.currency(ee, grouping=True)))
+        choices.append(('DE', 'Decline', chosen_value is None, '', '', ''))
+        return choices
 
 
 class BooleanElectionMixin(object):
@@ -507,7 +528,6 @@ class BooleanElectionMixin(object):
 
 
 class IRSLimits(Base):
-    min_fsa_medical_contribution = db.Column(db.Numeric(9, 2))
     max_fsa_medical_contribution = db.Column(db.Numeric(9, 2))
     max_fsa_dependent_care_contribution = db.Column(db.Numeric(9, 2))
     max_hsa_individual_contribution = db.Column(db.Numeric(9, 2))
@@ -637,7 +657,7 @@ class BasicLifePlan(Plan, PostTaxMixin, BooleanElectionMixin):
     }
 
 
-class VoluntaryLifePlan(Plan, PostTaxMixin, AmountNeededElectionMixin):
+class VoluntaryLifePlan(Plan, PostTaxMixin, AmountChosenElectionMixin):
     __tablename__ = 'voluntary_life_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
@@ -797,10 +817,15 @@ class STDVoluntaryPlan(Plan, GroupMixin, PostTaxMixin, BooleanElectionMixin):
 
 
 # Savings Plans
-class FSAMedicalPlan(Plan, GroupMixin, PreTaxMixin):
+class FSAMedicalPlan(Plan, GroupMixin, PreTaxMixin, AmountSuppliedElectionMixin):
     __tablename__ = 'fsa_medical_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+    min_contribution = db.Column(db.Numeric(9, 2), nullable=False)
+
+    def get_min_max_elections(self):
+        limits = IRSLimits.query.first()
+        return self.min_contribution, limits.max_fsa_medical_contribution
 
     __mapper_args__ = {
         'polymorphic_identity': 'fsa_medical',
@@ -808,10 +833,15 @@ class FSAMedicalPlan(Plan, GroupMixin, PreTaxMixin):
     }
 
 
-class FSADependentCarePlan(Plan, GroupMixin, PreTaxMixin):
+class FSADependentCarePlan(Plan, GroupMixin, PreTaxMixin, AmountSuppliedElectionMixin):
     __tablename__ = 'fsa_dependent_care_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+    min_contribution = db.Column(db.Numeric(9, 2), nullable=False)
+
+    def get_min_max_elections(self):
+        limits = IRSLimits.query.first()
+        return self.min_contribution, limits.max_fsa_dependent_care_contribution
 
     __mapper_args__ = {
         'polymorphic_identity': 'fsa_dependent_care',
@@ -819,10 +849,16 @@ class FSADependentCarePlan(Plan, GroupMixin, PreTaxMixin):
     }
 
 
-class HSAPlan(Plan, GroupMixin, PreTaxMixin):
+class HSAPlan(Plan, GroupMixin, PreTaxMixin, AmountSuppliedElectionMixin):
     __tablename__ = 'hsa_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+    min_contribution = db.Column(db.Numeric(9, 2), nullable=False)
+
+    def get_min_max_elections(self):
+        limits = IRSLimits.query.first()
+        # TODO: Where do family and individual contributions come into play?
+        return self.min_contribution, limits.max_hsa_individual_contribution
 
     __mapper_args__ = {
         'polymorphic_identity': 'hsa',
@@ -830,10 +866,15 @@ class HSAPlan(Plan, GroupMixin, PreTaxMixin):
     }
 
 
-class HRAPlan(Plan, GroupMixin, PreTaxMixin):
+class HRAPlan(Plan, GroupMixin, PreTaxMixin, AmountSuppliedElectionMixin):
     __tablename__ = 'hra_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+    min_contribution = db.Column(db.Numeric(9, 2), nullable=False)
+
+    def get_min_max_elections(self):
+        limits = IRSLimits.query.first()
+        return self.min_contribution, limits.max_hra_contribution
 
     __mapper_args__ = {
         'polymorphic_identity': 'hra',
@@ -841,10 +882,17 @@ class HRAPlan(Plan, GroupMixin, PreTaxMixin):
     }
 
 
-class Employee401KPlan(Plan, GroupMixin, PreTaxMixin):
+class Employee401KPlan(Plan, GroupMixin, PreTaxMixin, AmountSuppliedElectionMixin):
     __tablename__ = 'employee_401k_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+    employer_percent_matched = db.Column(db.Numeric(3, 2), nullable=False)
+    employer_max_contribution = db.Column(db.Numeric(9, 2), nullable=False)
+    min_contribution = db.Column(db.Numeric(9, 2), nullable=False)
+
+    def get_min_max_elections(self):
+        limits = IRSLimits.query.first()
+        return self.min_contribution, limits.max_401k_salary_deferal
 
     __mapper_args__ = {
         'polymorphic_identity': '401k',
@@ -853,7 +901,7 @@ class Employee401KPlan(Plan, GroupMixin, PreTaxMixin):
 
 
 # Misc. Group
-class EAPPlan(Plan, GroupMixin, PostTaxMixin):
+class EAPPlan(Plan, GroupMixin, PostTaxMixin, BooleanElectionMixin):
     __tablename__ = 'eap_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
@@ -864,7 +912,7 @@ class EAPPlan(Plan, GroupMixin, PostTaxMixin):
     }
 
 
-class LongTermCarePlan(Plan, GroupMixin, PreOrPostTaxMixin):
+class LongTermCarePlan(Plan, GroupMixin, PreOrPostTaxMixin, TieredElectionMixin):
     __tablename__ = 'long_term_care_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
@@ -876,12 +924,15 @@ class LongTermCarePlan(Plan, GroupMixin, PreOrPostTaxMixin):
 
 
 # Supplemental Plans
-class CriticalIllnessPlan(Plan, SupplementalMixin, PostTaxMixin):
+class CriticalIllnessPlan(Plan, SupplementalMixin, PostTaxMixin, AmountChosenElectionMixin):
     __tablename__ = 'cricial_illness_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
 
     payout_amount = db.Column(db.Numeric(9, 2))
+
+    def _get_dob(self, employee):
+        return employee.dob
 
     __mapper_args__ = {
         'polymorphic_identity': 'critical_illness',
@@ -889,7 +940,7 @@ class CriticalIllnessPlan(Plan, SupplementalMixin, PostTaxMixin):
     }
 
 
-class CancerPlan(Plan, SupplementalMixin, PostTaxMixin):
+class CancerPlan(Plan, SupplementalMixin, PostTaxMixin, TieredElectionMixin):
     __tablename__ = 'cancer_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
@@ -900,7 +951,7 @@ class CancerPlan(Plan, SupplementalMixin, PostTaxMixin):
     }
 
 
-class AccidentPlan(Plan, SupplementalMixin, PostTaxMixin):
+class AccidentPlan(Plan, SupplementalMixin, PostTaxMixin, TieredElectionMixin):
     __tablename__ = 'accident_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
@@ -911,7 +962,7 @@ class AccidentPlan(Plan, SupplementalMixin, PostTaxMixin):
     }
 
 
-class HospitalConfinementPlan(Plan, SupplementalMixin, PostTaxMixin):
+class HospitalConfinementPlan(Plan, SupplementalMixin, PostTaxMixin, ):
     __tablename__ = 'hospital_confinement_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
@@ -922,7 +973,7 @@ class HospitalConfinementPlan(Plan, SupplementalMixin, PostTaxMixin):
     }
 
 
-class ParkingTransitPlan(Plan, SupplementalMixin, PreTaxMixin):
+class ParkingTransitPlan(Plan, SupplementalMixin, PreTaxMixin, BooleanElectionMixin):
     __tablename__ = 'parking_transit_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
@@ -933,7 +984,7 @@ class ParkingTransitPlan(Plan, SupplementalMixin, PreTaxMixin):
     }
 
 
-class IdentityTheftPlan(Plan, SupplementalMixin, PostTaxMixin):
+class IdentityTheftPlan(Plan, SupplementalMixin, PostTaxMixin, TieredElectionMixin):
     __tablename__ = 'identity_theft_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
