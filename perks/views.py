@@ -397,6 +397,8 @@ class EnrollPlanAJAXView(MethodView):
             return template.render(ctx)
 
     def post(self):
+        import ipdb
+        ipdb.set_trace()
         employee = Employee.query.join(User).filter(User.id == g.user.id).first()
         election = Election()
         election.id = None

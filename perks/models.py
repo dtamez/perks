@@ -946,7 +946,7 @@ class LongTermCarePlan(Plan, GroupMixin, PreOrPostTaxMixin, TieredElectionMixin)
 
 
 # Supplemental Plans
-class CriticalIllnessPlan(Plan, SupplementalMixin, PostTaxMixin, AmountChosenElectionMixin):
+class CriticalIllnessPlan(Plan, SupplementalMixin, PostTaxMixin, TieredElectionMixin):
     __tablename__ = 'cricial_illness_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)

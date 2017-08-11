@@ -73,13 +73,26 @@ class BooleanElectionForm(Form):
         election.elected = self.selection.data == 'Enroll'
 
 
-class AmountNeededElectionForm(Form):
+class AmountChosenElectionForm(Form):
     id = IntegerField(widget=HiddenInput())
     plan_id = IntegerField(widget=HiddenInput())
     employee_id = IntegerField(widget=HiddenInput())
     enrollment_id = IntegerField(widget=HiddenInput())
     selection = RadioField('Election')
     amount = IntegerField(widget=HiddenInput())
+
+    def populate_election(self, election):
+        election.amount = int(self.selection.data)
+        election.premium_id = None   # not sure if this is needed
+
+
+class AmountInputElectionForm(Form):
+    id = IntegerField(widget=HiddenInput())
+    plan_id = IntegerField(widget=HiddenInput())
+    employee_id = IntegerField(widget=HiddenInput())
+    enrollment_id = IntegerField(widget=HiddenInput())
+    selection = IntegerField(widget=HiddenInput())
+    elected_amount = IntegerField(widget=HiddenInput())
 
     def populate_election(self, election):
         election.amount = int(self.selection.data)
