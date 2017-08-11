@@ -1,0 +1,30 @@
+Setup the virtualenv
+# install virtualenvwrapper
+mkvirtualenv perks
+pip install -r requirements.txt
+
+
+To setup the database
+
+psql -d postgres
+create user <your user> with password '<some passwors>';
+create database perks;
+grant all privileges on database perks to <your user>;
+\q
+
+workon perks
+./db_tasks.py db upgrade head
+./db_tasks.py create_admin <your_email_address>
+
+Start the server
+./run.py
+
+Log in to the site as an admin
+
+point browser to http://localhost:5000
+log in with admin/password
+
+import plans so employees may enroll
+click on the admin tab
+click on the import tab
+browse to ./docs/data_import_example.xlsx
