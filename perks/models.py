@@ -391,13 +391,15 @@ class PlanPremiumMetaValuesMixin(object):
 class AmountSuppliedElectionMixin(object):
 
     def get_election_form(self):
-            from perks.forms import AmountNeededElectionForm
-            return AmountNeededElectionForm
+            from perks.forms import AmountInputElectionForm
+            return AmountInputElectionForm
 
     def get_premium_choices(self, chosen_value, employee):
         min_election, max_election = self.get_min_max_elections()
         flat = self.er_flat_amount_contributed
         percent = self.er_percentage_contributed
+        if chosen_value:
+            chosen_value = int(chosen_value)
         total = chosen_value or 0
         if flat:
             er = flat
@@ -410,8 +412,8 @@ class AmountSuppliedElectionMixin(object):
 class AmountChosenElectionMixin(object):
 
     def get_election_form(self):
-            from perks.forms import AmountNeededElectionForm
-            return AmountNeededElectionForm
+            from perks.forms import AmountChosenElectionForm
+            return AmountChosenElectionForm
 
     def get_premium_choices(self, chosen_value, employee):
         choices = []
@@ -463,10 +465,30 @@ class TieredElectionMixin(object):
             return TieredElectionForm
 
     def get_premium_choices(self, chosen_value, employee):
+        filters = [Premium.plan_id == self.id]
+        today = date.today()
+        born = employee.dob
+        age = today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+        q = Premium.query
+        # just grab the first premium as it will have the same structure as all the others for this plan
+        prem = self.premiums[0]
+        if prem.age:
+            filters.append(Premium.age == age)
+        if prem.gender:
+            filters.append(Premium.gender == employee.gender)
+        if prem.smoker_status:
+            filters.append(Premium.smoker_status == employee.smoker_type)
+
+        q = q.filter(*filters)
+
+        if prem.age_banded_tier:
+            q = q.join(AgeBandedTier).filter(AgeBandedTier.plan_id == Premium.plan_id)
+            q = q.filter(and_(AgeBandedTier.low <= age, AgeBandedTier.high >= age))
+        # now get the one premium that applies to our employee
         flat = self.er_flat_amount_contributed
         percent = self.er_percentage_contributed
         choices = []
-        for premium in self.premiums:
+        for premium in q.all():
             total = premium.amount
             if flat:
                 er = flat
