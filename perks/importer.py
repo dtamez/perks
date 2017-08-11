@@ -16,13 +16,13 @@ import pandas
 
 from . import db, models
 from .models import (
-    # AccidentPlan,
+    AccidentPlan,
     Address,
     AgeBandedTier,
     AgeBasedReduction,
     BasicLifePlan,
     Beneficiary,
-    # CancerPlan,
+    CancerPlan,
     Carrier,
     ChildVoluntaryLifePlan,
     CriticalIllnessPlan,
@@ -37,10 +37,10 @@ from .models import (
     EnrollmentPeriod,
     FSADependentCarePlan,
     FSAMedicalPlan,
-    # HospitalConfinementPlan,
-    # HRAPlan,
+    HospitalConfinementPlan,
+    HRAPlan,
     HSAPlan,
-    # IdentityTheftPlan,
+    IdentityTheftPlan,
     LTDPlan,
     LTDVoluntaryPlan,
     Location,
@@ -49,7 +49,7 @@ from .models import (
     MedicalDentalVisionBundlePlan,
     MedicalPlan,
     MedicalVisionBundlePlan,
-    # ParkingTransitPlan,
+    ParkingTransitPlan,
     Plan,
     Premium,
     Role,
@@ -106,16 +106,16 @@ def do_bulk_load(stream):
         import_fsa_plan(xls, 'FSA Medical Spending Plan', FSAMedicalPlan)
         import_fsa_plan(xls, 'FSA Dependent Care Spending Plan', FSADependentCarePlan)
         import_hsa_plan(xls, 'HSA Plan', HSAPlan)
-        # import_hsa_plan(xls, 'HRA Plan', HRAPlan)
-        # import_employee_401k_plans(xls)
-        # import_eap_plans(xls)
+        import_hsa_plan(xls, 'HRA Plan', HRAPlan)
+        import_employee_401k_plans(xls)
+        import_eap_plans(xls)
         import_supplemental_plans(xls, 'Long Term Care Plans', LongTermCarePlan)
         import_supplemental_plans(xls, 'Critical Illness Plans', CriticalIllnessPlan)
-        # import_supplemental_plans(xls, 'Cancer Plans', CancerPlan)
-        # import_supplemental_plans(xls, 'Accident Plans', AccidentPlan)
-        # import_supplemental_plans(xls, 'Hospital Confinement Plans', HospitalConfinementPlan)
-        # import_supplemental_plans(xls, 'Parking and Transit Plans', ParkingTransitPlan)
-        # import_supplemental_plans(xls, 'Identity Theft Plans', IdentityTheftPlan)
+        import_supplemental_plans(xls, 'Cancer Plans', CancerPlan)
+        import_supplemental_plans(xls, 'Accident Plans', AccidentPlan)
+        import_supplemental_plans(xls, 'Hospital Confinement Plans', HospitalConfinementPlan)
+        import_supplemental_plans(xls, 'Parking and Transit Plans', ParkingTransitPlan)
+        import_supplemental_plans(xls, 'Identity Theft Plans', IdentityTheftPlan)
         # import_enrollments(xls)
         db.session.commit()
     except Exception as e:
@@ -618,7 +618,7 @@ def import_employee_401k_plans(xls):
     EMPLOYER_PERCENT_MATCH, EMPLOYER_MAX_CONTRIB, MIN_CONTRIBUTION = range(10, 13)
     converters = {n: strip for n in range(MIN_CONTRIBUTION)}
     converters.update({0: str, 3: str})
-    sheet = xls.parse('401K Plans', converters=converters, keep_default_na=False)
+    sheet = xls.parse('401K Plan', converters=converters, keep_default_na=False)
 
     for row in sheet.itertuples():
         plan = Employee401KPlan()
@@ -626,7 +626,7 @@ def import_employee_401k_plans(xls):
         db.session.add(plan)
         get_premium_related(row, plan)
         plan.employer_percent_matched = int(row[EMPLOYER_PERCENT_MATCH]) / 100
-        plan.min_contribution = Decimal(row[EMPLOYER_MAX_CONTRIB])
+        plan.employer_max_contribution = Decimal(row[EMPLOYER_MAX_CONTRIB])
         plan.min_contribution = Decimal(row[MIN_CONTRIBUTION])
         print plan.name
 
