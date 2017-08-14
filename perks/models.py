@@ -656,7 +656,7 @@ class DentalVisionBundlePlan(Plan, CoreMixin, PreOrPostTaxMixin, TieredElectionM
 # Group Plans
 # Life
 
-class BasicLifePlan(Plan, PostTaxMixin, BooleanElectionMixin):
+class BasicLifePlan(Plan, GroupMixin, PostTaxMixin, BooleanElectionMixin):
     # has a composite premium, 100% employer paid
     __tablename__ = 'life_add_plan'
     __table_args__ = {'extend_existing': True}
@@ -679,7 +679,7 @@ class BasicLifePlan(Plan, PostTaxMixin, BooleanElectionMixin):
     }
 
 
-class VoluntaryLifePlan(Plan, PostTaxMixin, AmountChosenElectionMixin):
+class VoluntaryLifePlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixin):
     __tablename__ = 'voluntary_life_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
@@ -729,7 +729,7 @@ class ChildVoluntaryLifePlan(VoluntaryLifePlan):
     }
 
 
-class StandaloneADDPlan(Plan, PostTaxMixin):
+class StandaloneADDPlan(Plan, GroupMixin, PostTaxMixin):
     __tablename__ = 'standalone_add_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
@@ -744,7 +744,7 @@ class StandaloneADDPlan(Plan, PostTaxMixin):
     }
 
 
-class WholeLifePlan(Plan, PostTaxMixin):
+class WholeLifePlan(Plan, GroupMixin, PostTaxMixin):
     __tablename__ = 'whole_life_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
@@ -759,7 +759,7 @@ class WholeLifePlan(Plan, PostTaxMixin):
     }
 
 
-class UniversalLifePlan(Plan, PostTaxMixin):
+class UniversalLifePlan(Plan, GroupMixin, PostTaxMixin):
     __tablename__ = 'universal_life_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)

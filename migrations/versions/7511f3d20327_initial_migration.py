@@ -1,18 +1,16 @@
 """initial migration
 
-Revision ID: 28763d0d098a
+Revision ID: 7511f3d20327
 Revises:
-Create Date: 2017-08-09 22:19:04.753378
+Create Date: 2017-08-14 17:38:25.968263
 
 """
 from alembic import op
 import sqlalchemy as sa
-
 from sqlalchemy_utils.types.choice import ChoiceType
 from sqlalchemy_utils.types.email import EmailType
 from sqlalchemy_utils.types.phone_number import PhoneNumberType
 from sqlalchemy_utils.types.url import URLType
-
 
 from perks.models import (
     BENEFICIARY_TYPES,
@@ -29,7 +27,7 @@ from perks.models import (
 
 
 # revision identifiers, used by Alembic.
-revision = '28763d0d098a'
+revision = '7511f3d20327'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -308,6 +306,9 @@ def upgrade():
     op.create_table(
         'employee_401k_plan',
         sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('employer_percent_matched', sa.Numeric(precision=3, scale=2), nullable=False),
+        sa.Column('employer_max_contribution', sa.Numeric(precision=9, scale=2), nullable=False),
+        sa.Column('min_contribution', sa.Numeric(precision=9, scale=2), nullable=False),
         sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
@@ -325,6 +326,7 @@ def upgrade():
     op.create_table(
         'fsa_dependent_care_plan',
         sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('min_contribution', sa.Numeric(precision=9, scale=2), nullable=False),
         sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
@@ -344,12 +346,14 @@ def upgrade():
     op.create_table(
         'hra_plan',
         sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('min_contribution', sa.Numeric(precision=9, scale=2), nullable=False),
         sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
         'hsa_plan',
         sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('min_contribution', sa.Numeric(precision=9, scale=2), nullable=False),
         sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
