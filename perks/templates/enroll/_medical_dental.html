@@ -1,0 +1,17 @@
+{% extends "enroll/_base.html" %}
+{% block ajax_methods %}
+  {{ render_ajax_methods('enroll', 'medical_dental') }}
+{% endblock %}
+
+{% block plan_wrapper %}medical_dental{% endblock %}
+{% block plan_header %}Medical, Dental Bundle{% endblock %}
+{% block form_id %}medical_dental{% endblock %}
+
+{% block save_update %}
+    {{ render_save_update(election_form.plan_id, 'medical_dental', None, election_form.id) }}
+{% endblock %}
+{% block enroll_table %}
+  {% if medical_dental_selections %}
+      {{ render_enroll_table(medical_dental_selections, 'medical_dental') }}
+  {% endif %}
+{% endblock %}

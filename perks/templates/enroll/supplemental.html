@@ -1,22 +1,29 @@
 {% extends 'enroll.html' %}
 {% block step_content %}
-  {% include "enroll/_fsa.html" %}
-  <br>
-  {% include "enroll/_parking.html" %}
-  <br>
-  {% include "enroll/_hsa.html" %}
-  <br>
-  {% include "enroll/_e401k.html" %}
-  <br>
-  {% include "enroll/_supplemental.html" %}
-  <br>
-  {% include "enroll/_ltc.html" %}
-  <br>
-  {% include "enroll/_cancer.html" %}
-  <br>
+{% if critical_selections %}
   {% include "enroll/_critical.html" %}
   <br>
-  {% include "enroll/_other.html" %}
+{% endif %}
+{% if cancer_selections %}
+  {% include "enroll/_cancer.html" %}
+  <br>
+{% endif %}
+{% if accident_selections %}
+  {% include "enroll/_accident.html" %}
+  <br>
+{% endif %}
+{% if hospital_confinement_selections %}
+  {% include "enroll/_hospital_confinement.html" %}
+  <br>
+{% endif %}
+{% if parking_transit_selections %}
+  {% include "enroll/_parking.html" %}
+  <br>
+{% endif %}
+{% if identity_theft_selections %}
+  {% include "enroll/_identity_theft.html" %}
+  <br>
+{% endif %}
 
 {% endblock step_content %}
 <!-- vi set ft=jinja -->

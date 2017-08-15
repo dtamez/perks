@@ -1,0 +1,17 @@
+{% extends "enroll/_base.html" %}
+{% block ajax_methods %}
+  {{ render_ajax_methods('enroll', 'std_voluntary') }}
+{% endblock %}
+
+{% block plan_wrapper %}std_voluntary{% endblock %}
+{% block plan_header %}Voluntary Short Term Disability{% endblock %}
+{% block form_id %}std_voluntary{% endblock %}
+
+{% block save_update %}
+    {{ render_save_update(election_form.plan_id, 'std_voluntary', None, election_form.id) }}
+{% endblock %}
+{% block enroll_table %}
+  {% if std_voluntary_selections %}
+      {{ render_enroll_table(std_voluntary_selections, 'std_voluntary') }}
+  {% endif %}
+{% endblock %}

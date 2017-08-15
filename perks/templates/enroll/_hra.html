@@ -1,0 +1,16 @@
+{% extends "enroll/_input_base.html" %}
+{% block ajax_methods %}
+  {{ render_ajax_methods('enroll', 'hra') }}
+{% endblock %}
+
+{% block plan_wrapper %}hra{% endblock %}
+{% block plan_header %}Health Reimbursement Arrangement{% endblock %}
+{% block form_id %}hra{% endblock %}
+{% block save_update %}
+    {{ render_save_update(election_form.plan_id, 'hra', None, election_form.id) }}
+{% endblock %}
+{% block enroll_table %}
+  {% if hra_selections %}
+      {{ render_enroll_table(hra_selections, 'hra') }}
+  {% endif %}
+{% endblock %}

@@ -12,8 +12,6 @@ from flask import g, flash, request, render_template, redirect, url_for
 from flask.views import MethodView
 from flask_login import current_user, login_required
 from jinja2 import Environment, PackageLoader
-# from sqlalchemy import desc
-#  from werkzeug import secure_filename
 from werkzeug.datastructures import CombinedMultiDict
 
 from . import app, db
@@ -45,10 +43,14 @@ from .forms import (
 )
 from .importer import do_bulk_load
 from .models import (
+    AccidentPlan,
     Address,
+    BasicLifePlan,
     CancerPlan,
     Carrier,
+    ChildVoluntaryLifePlan,
     Dependent,
+    DentalVisionBundlePlan,
     CriticalIllnessPlan,
     DentalPlan,
     EAPPlan,
@@ -58,22 +60,33 @@ from .models import (
     Enrollment,
     FAMILY_TIER_TYPES,
     FSAMedicalPlan,
+    HospitalConfinementPlan,
+    HRAPlan,
     HSAPlan,
-    BasicLifePlan,
+    IdentityTheftPlan,
     LIFE_EVENT_TYPES,
     LongTermCarePlan,
     LTDPlan,
+    LTDVoluntaryPlan,
     Location,
     MARITAL_STATUS_TYPES,
     MedicalPlan,
+    MedicalDentalBundlePlan,
+    MedicalDentalVisionBundlePlan,
+    MedicalVisionBundlePlan,
     ParkingTransitPlan,
     Plan,
     Premium,
     Role,
+    SpouseVoluntaryLifePlan,
+    StandaloneADDPlan,
     STDPlan,
+    STDVoluntaryPlan,
+    UniversalLifePlan,
     User,
     VisionPlan,
     VoluntaryLifePlan,
+    WholeLifePlan,
     user_manager,
 )
 
@@ -293,15 +306,28 @@ def enroll_core():
     enrollment = Enrollment.query.filter(
         Enrollment.employee_id == employee.id).one()
     # get all medical plans that are available
-    medical_plans = MedicalPlan.query.all()
+    medical_plans = MedicalPlan.query.filter(Plan.active == True).all()
     medical_selections = get_selections(medical_plans, enrollment.id)
-    dental_plans = DentalPlan.query.all()
+    dental_plans = DentalPlan.query.filter(Plan.active == True).all()
     dental_selections = get_selections(dental_plans, enrollment.id)
-    vision_plans = VisionPlan.query.all()
+    vision_plans = VisionPlan.query.filter(Plan.active == True).all()
     vision_selections = get_selections(vision_plans, enrollment.id)
+    medical_dental_plans = MedicalDentalBundlePlan.query.filter(Plan.active == True).all()
+    medical_dental_selections = get_selections(medical_dental_plans, enrollment.id)
+    medical_vision_plans = MedicalVisionBundlePlan.query.filter(Plan.active == True).all()
+    medical_vision_selections = get_selections(medical_vision_plans, enrollment.id)
+    medical_dental_vision_plans = MedicalDentalVisionBundlePlan.query.filter(Plan.active == True).all()
+    medical_dental_vision_selections = get_selections(medical_dental_vision_plans, enrollment.id)
+    dental_vision_plans = DentalVisionBundlePlan.query.filter(Plan.active == True).all()
+    dental_vision_selections = get_selections(dental_vision_plans, enrollment.id)
     ctx = {'medical_selections': medical_selections,
            'dental_selections': dental_selections,
-           'vision_selections': vision_selections, }
+           'vision_selections': vision_selections,
+           'medical_dental_selections': medical_dental_selections,
+           'medical_vision_selections': medical_vision_selections,
+           'medical_dental_vision_selections': medical_dental_vision_selections,
+           'dental_vision_selections': dental_vision_selections,
+           }
     return render_template('enroll/core.html', **ctx)
 
 
@@ -315,22 +341,64 @@ def enroll_group():
     # or enrollment periods
     enrollment = Enrollment.query.filter(Enrollment.employee_id == employee.id).one()
     # get all group plans that are available
-    # TODO: 2017-01-05 Generate this list of plans dynamically
-    eap_plans = EAPPlan.query.all()
-    eap_selections = get_selections(eap_plans, enrollment.id)
-    ltd_plans = LTDPlan.query.all()
-    ltd_selections = get_selections(ltd_plans, enrollment.id)
-    std_plans = STDPlan.query.all()
-    std_selections = get_selections(std_plans, enrollment.id)
-    life_add_plans = BasicLifePlan.query.all()
+    life_add_plans = BasicLifePlan.query.filter(Plan.active == True).all()
     life_add_selections = get_selections(life_add_plans, enrollment.id)
-    voluntary_life_plans = VoluntaryLifePlan.query.all()
+    voluntary_life_plans = VoluntaryLifePlan.query.filter(Plan.active == True).all()
     voluntary_life_selections = get_selections(voluntary_life_plans, enrollment.id)
-    ctx = {'eap_selections': eap_selections,
+    spouse_voluntary_life_plans = SpouseVoluntaryLifePlan.query.filter(Plan.active == True).all()
+    spouse_voluntary_life_selections = get_selections(spouse_voluntary_life_plans, enrollment.id)
+    child_voluntary_life_plans = ChildVoluntaryLifePlan.query.filter(Plan.active == True).all()
+    child_voluntary_life_selections = get_selections(child_voluntary_life_plans, enrollment.id)
+    whole_life_plans = WholeLifePlan.query.filter(Plan.active == True).all()
+    whole_life_selections = get_selections(whole_life_plans, enrollment.id)
+    universal_life_plans = UniversalLifePlan.query.filter(Plan.active == True).all()
+    universal_life_selections = get_selections(universal_life_plans, enrollment.id)
+    standalone_add_plans = StandaloneADDPlan.query.filter(Plan.active == True).all()
+    standalone_add_selections = get_selections(standalone_add_plans, enrollment.id)
+
+    ltd_plans = LTDPlan.query.filter(Plan.active == True).all()
+    ltd_selections = get_selections(ltd_plans, enrollment.id)
+    ltd_voluntary_plans = LTDVoluntaryPlan.query.filter(Plan.active == True).all()
+    ltd_voluntary_selections = get_selections(ltd_voluntary_plans, enrollment.id)
+    std_plans = STDPlan.query.filter(Plan.active == True).all()
+    std_selections = get_selections(std_plans, enrollment.id)
+    std_voluntary_plans = STDVoluntaryPlan.query.filter(Plan.active == True).all()
+    std_voluntary_selections = get_selections(std_voluntary_plans, enrollment.id)
+
+    fsa_plans = FSAMedicalPlan.query.filter(Plan.active == True).all()
+    fsa_selections = get_selections(fsa_plans, enrollment.id)
+    hsa_plans = HSAPlan.query.filter(Plan.active == True).all()
+    hsa_selections = get_selections(hsa_plans, enrollment.id)
+    hra_plans = HRAPlan.query.filter(Plan.active == True).all()
+    hra_selections = get_selections(hra_plans, enrollment.id)
+    e401k_plans = Employee401KPlan.query.filter(Plan.active == True).all()
+    e401k_selections = get_selections(e401k_plans, enrollment.id)
+
+    ltc_plans = LongTermCarePlan.query.filter(Plan.active == True).all()
+    ltc_selections = get_selections(ltc_plans, enrollment.id)
+    eap_plans = EAPPlan.query.filter(Plan.active == True).all()
+    eap_selections = get_selections(eap_plans, enrollment.id)
+    ctx = {'life_add_selections': life_add_selections,
+           'voluntary_life_selections': voluntary_life_selections,
+           'spouse_voluntary_life_selections': spouse_voluntary_life_selections,
+           'child_voluntary_life_selections': child_voluntary_life_selections,
+           'whole_life_selections': whole_life_selections,
+           'universal_life_selections': universal_life_selections,
+           'standalone_add_selections': standalone_add_selections,
+
            'ltd_selections': ltd_selections,
+           'ltd_voluntary_selections': ltd_voluntary_selections,
            'std_selections': std_selections,
-           'life_add_selections': life_add_selections,
-           'voluntary_life_selections': voluntary_life_selections, }
+           'std_voluntary_selections': std_voluntary_selections,
+
+           'fsa_selections': fsa_selections,
+           'hsa_selections': hsa_selections,
+           'hra_selections': hra_selections,
+           'e401k_selections': e401k_selections,
+
+           'ltc_selections': ltc_selections,
+           'eap_selections': eap_selections,
+           }
     return render_template('enroll/group.html', **ctx)
 
 
@@ -345,27 +413,25 @@ def enroll_supplemental():
     enrollment = Enrollment.query.filter(Enrollment.employee_id == employee.id).one()
     # get all group plans that are available
     # TODO: 2017-01-05 Figure out way to generate these dynamically
-    fsa_plans = FSAMedicalPlan.query.all()
-    fsa_selections = get_selections(fsa_plans, enrollment.id)
-    parking_transit_plans = ParkingTransitPlan.query.all()
-    parking_transit_selections = get_selections(parking_transit_plans, enrollment.id)
-    hsa_plans = HSAPlan.query.all()
-    hsa_selections = get_selections(hsa_plans, enrollment.id)
-    e401k_plans = Employee401KPlan.query.all()
-    e401k_selections = get_selections(e401k_plans, enrollment.id)
-    ltc_plans = LongTermCarePlan.query.all()
-    ltc_selections = get_selections(ltc_plans, enrollment.id)
-    cancer_plans = CancerPlan.query.all()
-    cancer_selections = get_selections(cancer_plans, enrollment.id)
-    critical_plans = CriticalIllnessPlan.query.all()
+    critical_plans = CriticalIllnessPlan.query.filter(Plan.active == True).all()
     critical_selections = get_selections(critical_plans, enrollment.id)
-    ctx = {'fsa_selections': fsa_selections,
-           'parking_transit_selections': parking_transit_selections,
-           'hsa_selections': hsa_selections,
-           'e401k_selections': e401k_selections,
-           'ltc_selections': ltc_selections,
+    cancer_plans = CancerPlan.query.filter(Plan.active == True).all()
+    cancer_selections = get_selections(cancer_plans, enrollment.id)
+    accident_plans = AccidentPlan.query.filter(Plan.active == True).all()
+    accident_selections = get_selections(accident_plans, enrollment.id)
+    hospital_confinement_plans = HospitalConfinementPlan.query.filter(Plan.active == True).all()
+    hospital_confinement_selections = get_selections(hospital_confinement_plans, enrollment.id)
+    parking_transit_plans = ParkingTransitPlan.query.filter(Plan.active == True).all()
+    parking_transit_selections = get_selections(parking_transit_plans, enrollment.id)
+    identity_theft_plans = IdentityTheftPlan.query.filter(Plan.active == True).all()
+    identity_theft_selections = get_selections(identity_theft_plans, enrollment.id)
+    ctx = {'critical_selections': critical_selections,
            'cancer_selections': cancer_selections,
-           'critical_selections': critical_selections, }  # NOQA
+           'accident_selections': accident_selections,
+           'hospital_confinement_selections': hospital_confinement_selections,
+           'parking_transit_selections': parking_transit_selections,
+           'identity_theft_selections': identity_theft_selections,
+    }  # NOQA
     return render_template('enroll/supplemental.html', **ctx)
 
 
@@ -598,7 +664,7 @@ def admin_supplemental():
         ltc_plan_form=ltc_plan_form,
         parking_transit_plans=parking_transit_plans,
         parking_transit_plan_form=parking_transit_plan_form,
-        )
+    )
 
 
 def get_remaining_tier_choices(plan_id):

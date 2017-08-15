@@ -1,14 +1,74 @@
 {% extends 'enroll.html' %}
 {% block step_content %}
-  {% include "enroll/_eap.html" %}
-  <br>
-  {% include "enroll/_ltd.html" %}
-  <br>
-  {% include "enroll/_std.html" %}
-  <br>
+{% if life_add_selections %}
   {% include "enroll/_life_add.html" %}
   <br>
+{% endif %}
+{% if voluntary_life_selections %}
   {% include "enroll/_voluntary_life.html" %}
+  <br>
+{% endif %}
+{% if spouse_voluntary_life_selections %}
+  {% include "enroll/_spouse_voluntary_life.html" %}
+  <br>
+{% endif %}
+{% if child_voluntary_life_selections %}
+  {% include "enroll/_child_voluntary_life.html" %}
+  <br>
+{% endif %}
+{% if whole_life_selections %}
+  {% include "enroll/_whole_life.html" %}
+  <br>
+{% endif %}
+{% if universal_life_selections %}
+  {% include "enroll/_universal_life.html" %}
+  <br>
+{% endif %}
+{% if standalone_add_selections %}
+  {% include "enroll/_standalone_add.html" %}
+  <br>
+{% endif %}
+{% if ltd_selections %}
+  {% include "enroll/_ltd.html" %}
+  <br>
+{% endif %}
+{% if ltd_voluntary_selections %}
+  {% include "enroll/_ltd_voluntary.html" %}
+  <br>
+{% endif %}
+{% if std_selections %}
+  {% include "enroll/_std.html" %}
+  <br>
+{% endif %}
+{% if std_voluntary_selections %}
+  {% include "enroll/_std_voluntary.html" %}
+  <br>
+{% endif %}
+{% if fsa_selections %}
+  {% include "enroll/_fsa.html" %}
+  <br>
+{% endif %}
+{% if hsa_selections %}
+  {% include "enroll/_hsa.html" %}
+  <br>
+{% endif %}
+{% if hra_selections %}
+  {% include "enroll/_hra.html" %}
+  <br>
+{% endif %}
+{% if e401k_selections %}
+  {% include "enroll/_e401k.html" %}
+  <br>
+{% endif %}
+
+{% if ltc_selections %}
+  {% include "enroll/_ltc.html" %}
+  <br>
+{% endif %}
+{% if eap_selections %}
+  {% include "enroll/_eap.html" %}
+  <br>
+{% endif %}
 
 {% endblock step_content %}
 <!-- vi set ft=jinja -->

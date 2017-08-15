@@ -1,0 +1,16 @@
+{% extends "enroll/_boolean_base.html" %}
+{% block ajax_methods %}
+  {{ render_ajax_methods('enroll', 'ltd_voluntary') }}
+{% endblock %}
+
+{% block plan_wrapper %}ltd_voluntary{% endblock %}
+{% block plan_header %}Voluntary Long Term Disability{% endblock %}
+{% block form_id %}ltd_voluntary{% endblock %}
+{% block save_update %}
+    {{ render_save_update(election_form.plan_id, 'ltd_voluntary', None, election_form.id) }}
+{% endblock %}
+{% block enroll_table %}
+  {% if ltd_voluntary_selections %}
+      {{ render_enroll_table(ltd_voluntary_selections, 'ltd_voluntary') }}
+  {% endif %}
+{% endblock %}

@@ -1,10 +1,33 @@
 {% extends 'enroll.html' %}
 {% block step_content %}
+{% if medical_selections %}
   {% include "enroll/_medical.html" %}
   <br>
+{% endif %}
+{% if dental_selections %}
   {% include "enroll/_dental.html" %}
   <br>
+{% endif %}
+{% if vision_selections %}
   {% include "enroll/_vision.html" %}
+  <br>
+{% endif %}
+{% if medical_dental_vision_selections %}
+  {% include "enroll/_medical_dental_vision.html" %}
+  <br>
+{% endif %}
+{% if medical_dental_selections %}
+  {% include "enroll/_medical_dental.html" %}
+  <br>
+{% endif %}
+{% if medical_vision_selections %}
+  {% include "enroll/_medical_vision.html" %}
+  <br>
+{% endif %}
+{% if dental_vision_selections %}
+  {% include "enroll/_dental_vision.html" %}
+  <br>
+{% endif %}
 
 {% endblock step_content %}
 <!-- vi set ft=jinja -->

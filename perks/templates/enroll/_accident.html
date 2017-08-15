@@ -1,0 +1,16 @@
+{% extends "enroll/_base.html" %}
+{% block ajax_methods %}
+  {{ render_ajax_methods('enroll', 'accident') }}
+{% endblock %}
+
+{% block plan_wrapper %}accident{% endblock %}
+{% block plan_header %}Accident{% endblock %}
+{% block form_id %}accident{% endblock %}
+{% block save_update %}
+    {{ render_save_update(election_form.plan_id, 'accident', None, election_form.id) }}
+{% endblock %}
+{% block enroll_table %}
+  {% if accident_selections %}
+      {{ render_enroll_table(accident_selections, 'accident') }}
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "enroll/_base.html" %}
+{% block ajax_methods %}
+  {{ render_ajax_methods('enroll', 'standalone_add') }}
+{% endblock %}
+
+{% block plan_wrapper %}standalone_add{% endblock %}
+{% block plan_header %}Standalone Accidental Death and Dismemberment{% endblock %}
+{% block form_id %}standalone_add{% endblock %}
+{% block save_update %}
+    {{ render_save_update(election_form.plan_id, 'standalone_add', None, election_form.id) }}
+{% endblock %}
+{% block enroll_table %}
+  {% if standalone_add_selections %}
+      {{ render_enroll_table(standalone_add_selections, 'standalone_add') }}
+  {% endif %}
+{% endblock %}

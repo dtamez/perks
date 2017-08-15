@@ -1,0 +1,16 @@
+{% extends "enroll/_base.html" %}
+{% block ajax_methods %}
+  {{ render_ajax_methods('enroll', 'hospital_confinement') }}
+{% endblock %}
+
+{% block plan_wrapper %}hospital_confinement{% endblock %}
+{% block plan_header %}Hospital Confinement{% endblock %}
+{% block form_id %}hospital_confinement{% endblock %}
+{% block save_update %}
+    {{ render_save_update(election_form.plan_id, 'hospital_confinement', None, election_form.id) }}
+{% endblock %}
+{% block enroll_table %}
+  {% if hospital_confinement_selections %}
+      {{ render_enroll_table(hospital_confinement_selections, 'hospital_confinement') }}
+  {% endif %}
+{% endblock %}

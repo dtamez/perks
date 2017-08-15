@@ -15,6 +15,7 @@ grant all privileges on database perks to <your user>;
 workon perks
 ./db_tasks.py db upgrade head
 ./db_tasks.py create_admin <your_email_address>
+./db_tasks.py seed_data
 
 Start the server
 ./run.py
