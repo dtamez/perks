@@ -1102,11 +1102,32 @@ class EnrollLifeADDView(EnrollPlanAJAXView):
     prefix = 'life_add'
 
 
+class EnrollStandaloneADDView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_standalone_add.html'
+    plan_class = StandaloneADDPlan
+    prefix = 'standalone_add'
+
+
 class EnrollVoluntaryLifeView(EnrollPlanAJAXView):
 
     template_name = '/enroll/_voluntary_life.html'
     plan_class = VoluntaryLifePlan
     prefix = 'voluntary_life'
+
+
+class EnrollSpouseVoluntaryLifeView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_spouse_voluntary_life.html'
+    plan_class = SpouseVoluntaryLifePlan
+    prefix = 'spouse_voluntary_life'
+
+
+class EnrollChildVoluntaryLifeView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_child_voluntary_life.html'
+    plan_class = ChildVoluntaryLifePlan
+    prefix = 'child_voluntary_life'
 
 
 class EnrollFSAPlanView(EnrollPlanAJAXView):
@@ -1208,7 +1229,12 @@ register_ajax_view(EnrollEAPView, 'enroll_eap_ajax', '/enroll/_eaps/')
 register_ajax_view(EnrollLTDView, 'enroll_ltd_ajax', '/enroll/_ltds/')
 register_ajax_view(EnrollSTDView, 'enroll_std_ajax', '/enroll/_stds/')
 register_ajax_view(EnrollLifeADDView, 'enroll_life_add_ajax', '/enroll/_life_adds/')
+register_ajax_view(EnrollStandaloneADDView, 'enroll_standalone_add_ajax', '/enroll/_standalone_adds/')
 register_ajax_view(EnrollVoluntaryLifeView, 'enroll_voluntary_life_ajax', '/enroll/_voluntary_lifes/')
+register_ajax_view(EnrollSpouseVoluntaryLifeView, 'enroll_spouse_voluntary_life_ajax',
+                   '/enroll/_spouse_voluntary_lifes/')
+register_ajax_view(EnrollChildVoluntaryLifeView, 'enroll_child_voluntary_life_ajax',
+                   '/enroll/_child_voluntary_lifes/')
 register_ajax_view(EnrollFSAPlanView, 'enroll_fsa_ajax', '/enroll/_fsas/')
 register_ajax_view(EnrollParkingTransitPlanView, 'enroll_parking_transit_ajax', '/enroll/_parking_transits/')
 register_ajax_view(EnrollHSAPlanView, 'enroll_hsa_ajax', '/enroll/_hsas/')

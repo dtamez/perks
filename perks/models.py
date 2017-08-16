@@ -729,7 +729,7 @@ class ChildVoluntaryLifePlan(VoluntaryLifePlan):
     }
 
 
-class StandaloneADDPlan(Plan, GroupMixin, PostTaxMixin):
+class StandaloneADDPlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixin):
     __tablename__ = 'standalone_add_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
@@ -738,13 +738,16 @@ class StandaloneADDPlan(Plan, GroupMixin, PostTaxMixin):
     salary_multiple_accidental_death = db.Column(db.Numeric(4, 2))
     salary_multiple_accidental_dismemberment = db.Column(db.Numeric(4, 2))
 
+    def _get_dob(self, employee):
+        return employee.dob
+
     __mapper_args__ = {
         'polymorphic_identity': 'standalone_add',
         'inherit_condition': (id == Plan.id),
     }
 
 
-class WholeLifePlan(Plan, GroupMixin, PostTaxMixin):
+class WholeLifePlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixin):
     __tablename__ = 'whole_life_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
@@ -759,7 +762,7 @@ class WholeLifePlan(Plan, GroupMixin, PostTaxMixin):
     }
 
 
-class UniversalLifePlan(Plan, GroupMixin, PostTaxMixin):
+class UniversalLifePlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixin):
     __tablename__ = 'universal_life_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
