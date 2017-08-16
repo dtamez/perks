@@ -288,6 +288,8 @@ def get_selections(plans, enrollment_id):
             Election.plan_id == plan.id).first()
         if election and election.premium:
             selection['election_label'] = (election.premium.family_tier.value)
+        elif election and election.elected:
+            selection['election_label'] = 'Enrolled'
         elif election and election.amount:
             selection['amount'] = election.amount
             selection['election_label'] = election.amount

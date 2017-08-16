@@ -4,16 +4,8 @@
   {% include "enroll/_life_add.html" %}
   <br>
 {% endif %}
-{% if voluntary_life_selections %}
+{% if voluntary_life_selections or spouse_voluntary_life_selections or child_voluntary_life_selections %}
   {% include "enroll/_voluntary_life.html" %}
-  <br>
-{% endif %}
-{% if spouse_voluntary_life_selections %}
-  {% include "enroll/_spouse_voluntary_life.html" %}
-  <br>
-{% endif %}
-{% if child_voluntary_life_selections %}
-  {% include "enroll/_child_voluntary_life.html" %}
   <br>
 {% endif %}
 {% if whole_life_selections %}
