@@ -106,7 +106,7 @@ def do_bulk_load(stream):
         import_fsa_plan(xls, 'FSA Medical Spending Plan', FSAMedicalPlan)
         import_fsa_plan(xls, 'FSA Dependent Care Spending Plan', FSADependentCarePlan)
         import_hsa_plan(xls, 'HSA Plan', HSAPlan)
-        import_hsa_plan(xls, 'HRA Plan', HRAPlan)
+        import_hra_plan(xls)
         import_employee_401k_plans(xls)
         import_eap_plans(xls)
         import_supplemental_plans(xls, 'Long Term Care Plans', LongTermCarePlan)
@@ -431,8 +431,7 @@ def import_voluntary_life_plans(xls, sheet_name, klass, spouse=False):
 
 def import_standalone_add_plans(xls):
     print 'importing Standalone ADD plans'
-    (
-     MINIMUM_BENEFIT, MAXIMUM_BENEFIT,
+    (MINIMUM_BENEFIT, MAXIMUM_BENEFIT,
      SALARY_MULTIPLES_ACCIDENTAL_DEATH, SALARY_MULTIPLES_ACCIDENTAL_DISMEMBERMENT) = range(10, 14)
     converters = {n: strip for n in range(SALARY_MULTIPLES_ACCIDENTAL_DISMEMBERMENT)}
     converters.update({0: str, 3: str})
@@ -610,6 +609,20 @@ def import_hsa_plan(xls, sheet_name, klass):
         db.session.add(plan)
         get_premium_related(row, plan)
         plan.min_contribution = Decimal(row[MIN_CONTRIBUTION])
+        print plan.name
+
+
+def import_hra_plan(xls):
+    print 'importing hra plans'
+    converters = {n: strip for n in range(9)}
+    converters.update({0: str, 3: str})
+    sheet = xls.parse('HRA Plan', converters=converters, keep_default_na=False)
+
+    for row in sheet.itertuples():
+        plan = HRAPlan()
+        get_common(row, plan)
+        db.session.add(plan)
+        get_premium_related(row, plan)
         print plan.name
 
 

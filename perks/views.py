@@ -27,6 +27,7 @@ from .forms import (
     EmployeeForm,
     EmployeeInfoForm,
     FSAMedicalPlanForm,
+    HRAPlanForm,
     HSAPlanForm,
     LongTermCarePlanForm,
     LTDPlanForm,
@@ -792,6 +793,15 @@ class HSAPlanView(AJAXCrudView):
     subs = []
 
 
+class HRAPlanView(AJAXCrudView):
+    main = {'model': HRAPlan, 'form': HRAPlanForm,
+            'class': 'HRAPlan', 'form_class': 'HRAPlanForm',
+            'single': 'hra_plan', 'plural': 'hra_plans',
+            'form_name': 'hra_plan_form',
+            'template': '/admin/_hra_plans.html'}
+    subs = []
+
+
 class Employee401kPlanView(AJAXCrudView):
     main = {'model': Employee401KPlan,
             'form': Employee401KPlanForm,
@@ -1153,10 +1163,17 @@ class EnrollHSAPlanView(EnrollPlanAJAXView):
     prefix = 'hsa'
 
 
+class EnrollHRAPlanView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_hra.html'
+    plan_class = HRAPlan
+    prefix = 'hra'
+
+
 class EnrollEmployee401KPlanView(EnrollPlanAJAXView):
 
     template_name = '/enroll/_e401k.html'
-    plan_class = HSAPlan
+    plan_class = Employee401KPlan
     prefix = 'e401k'
 
 
@@ -1213,6 +1230,7 @@ register_ajax_view(Employee401kPlanView, 'employee_401k_ajax', '/admin/_e401k_pl
 register_ajax_view(EmployeeView, 'employee_ajax', '/admin/_employees/')
 register_ajax_view(FSAMedicalPlanView, 'fsa_plan_ajax', '/admin/_fsa_plans/')
 register_ajax_view(HSAPlanView, 'hsa_plan_ajax', '/admin/_hsa_plans/')
+register_ajax_view(HRAPlanView, 'hra_plan_ajax', '/admin/_hra_plans/')
 register_ajax_view(LTCPlanView, 'ltc_plan_ajax', '/admin/_ltc_plans/')
 register_ajax_view(LTDPlanView, 'ltd_plan_ajax', '/admin/_ltd_plans/')
 register_ajax_view(STDPlanView, 'std_plan_ajax', '/admin/_std_plans/')
@@ -1239,6 +1257,7 @@ register_ajax_view(EnrollChildVoluntaryLifeView, 'enroll_child_voluntary_life_aj
                    '/enroll/_child_voluntary_lifes/')
 register_ajax_view(EnrollFSAPlanView, 'enroll_fsa_ajax', '/enroll/_fsas/')
 register_ajax_view(EnrollParkingTransitPlanView, 'enroll_parking_transit_ajax', '/enroll/_parking_transits/')
+register_ajax_view(EnrollHRAPlanView, 'enroll_hra_ajax', '/enroll/_hras/')
 register_ajax_view(EnrollHSAPlanView, 'enroll_hsa_ajax', '/enroll/_hsas/')
 register_ajax_view(EnrollEmployee401KPlanView, 'enroll_e401k_ajax', '/enroll/_e401ks/')
 register_ajax_view(EnrollLongTermCarePlanView, 'enroll_ltc_ajax', '/enroll/_ltcs/')

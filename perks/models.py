@@ -891,15 +891,10 @@ class HSAPlan(Plan, GroupMixin, PreTaxMixin, AmountSuppliedElectionMixin):
     }
 
 
-class HRAPlan(Plan, GroupMixin, PreTaxMixin, AmountSuppliedElectionMixin):
+class HRAPlan(Plan, GroupMixin, PreTaxMixin, BooleanElectionMixin):
     __tablename__ = 'hra_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
-    min_contribution = db.Column(db.Numeric(9, 2), nullable=False)
-
-    def get_min_max_elections(self):
-        limits = IRSLimits.query.first()
-        return self.min_contribution, limits.max_hra_contribution
 
     __mapper_args__ = {
         'polymorphic_identity': 'hra',

@@ -325,6 +325,17 @@ class ParkingTransitPlanForm(AdminPlanForm):
         include = ['id']
 
 
+class HRAPlanForm(AdminPlanForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.update({'prefix': 'hra_plan'})
+        super(HRAPlanForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = models.HRAPlan
+        date_format = '%m/%d/%Y'
+        include = ['id']
+
+
 class HSAPlanForm(AdminPlanForm):
     def __init__(self, *args, **kwargs):
         kwargs.update({'prefix': 'hsa_plan'})
