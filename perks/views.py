@@ -457,6 +457,8 @@ class EnrollPlanAJAXView(MethodView):
                 election.enrollment_id = enrollment.id
             form_class = plan.get_election_form()
             election_form = form_class(obj=election)
+            import ipdb
+            ipdb.set_trace()
             election_form.selection.choices = plan.get_premium_choices(
                 election.premium_id or election.amount or election.elected, employee)
             template = env.get_template(self.template_name)

@@ -511,26 +511,33 @@ class BooleanElectionMixin(object):
         today = date.today()
         born = employee.dob
         age = today.year - born.year - ((today.month, today.day) < (born.month, born.day))
-        q = Premium.query
-        # just grab the first premium as it will have the same structure as all the others for this plan
-        prem = self.premiums[0]
-        if prem.age:
-            filters.append(Premium.age == age)
-        if prem.gender:
-            filters.append(Premium.gender == employee.gender)
-        if prem.smoker_status:
-            filters.append(Premium.smoker_status == employee.smoker_type)
+        # only some plans will have premiums
+        # if we have premiums (typically BasicLife, LTD, STD) then determine the cost based on this employee
+        # if we don't have premiums, the ony choice is to enroll or not
+        if self.premiums:
+            q = Premium.query
+            # just grab the first premium as it will have the same structure as all the others for this plan
+            prem = self.premiums[0]
+            if prem.age:
+                filters.append(Premium.age == age)
+            if prem.gender:
+                filters.append(Premium.gender == employee.gender)
+            if prem.smoker_status:
+                filters.append(Premium.smoker_status == employee.smoker_type)
 
-        q = q.filter(*filters)
+            q = q.filter(*filters)
 
-        if prem.age_banded_tier:
-            q = q.join(AgeBandedTier).filter(AgeBandedTier.plan_id == Premium.plan_id)
-            q = q.filter(and_(AgeBandedTier.low <= age, AgeBandedTier.high >= age))
-        # now get the one premium that applies to our employee
-        prem = q.one()
+            if prem.age_banded_tier:
+                q = q.join(AgeBandedTier).filter(AgeBandedTier.plan_id == Premium.plan_id)
+                q = q.filter(and_(AgeBandedTier.low <= age, AgeBandedTier.high >= age))
+            # now get the one premium that applies to our employee
+            prem = q.one()
+            rate = prem.rate
+        else:
+            rate = 0
         flat = self.er_flat_amount_contributed
         percent = self.er_percentage_contributed
-        total = prem.rate * employee.get_monthly_salary()
+        total = rate * employee.get_monthly_salary()
         if flat:
             er = flat
         else:
