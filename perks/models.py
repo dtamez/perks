@@ -63,6 +63,7 @@ SMOKER_TYPES = [
 
 
 BENEFICIARY_TYPES = [
+    ('', '----'),
     ('primary', 'PRIMARY'),
     ('contingent', 'CONTINGENT'),
 ]
@@ -73,6 +74,7 @@ DEPENDENT_TYPES = [
     ('son', 'Son'),
     ('daughter', 'Daughter'),
     ('incapacitated', 'Incapacitated'),
+    ('charity', 'Charity'),
 ]
 
 SALARY_MODE_TYPES = [
@@ -267,9 +269,69 @@ class Dependent(PersonMixin, Base):
     address = db.relationship('Address', uselist=False)
 
 
-class Beneficiary(PersonMixin, Base):
+class Beneficiary(Base):
     beneficiary_type = db.Column(ChoiceType(BENEFICIARY_TYPES))
+    plan_id = db.Column(db.Integer, db.ForeignKey('plan.id'), index=True)
+    plan = db.relationship('Plan')
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'))
+    percentage = db.Column(db.Integer)
+    btype = db.Column(db.String(50))
+
+    def get_relation(self):
+        return ''
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'beneficiary',
+        'polymorphic_on': btype
+    }
+
+    def __repr__(self):
+        class_name = type(self).__name__
+        return '<{class_name}-{id}, {beneficiary_type}, plan-{plan_id}, employee-{employee_id}, {percentage}%>'.format(
+            id=self.id, beneficiary_type=self.beneficiary_type, employee_id=self.employee_id,
+            percentage=self.percentage, plan_id=self.plan_id, class_name=class_name)
+
+
+class DependentBeneficiary(Beneficiary):
+    id = db.Column(None, db.ForeignKey('beneficiary.id'), primary_key=True, info={'widget': widgets.HiddenInput()})
+    dependent_id = db.Column(db.Integer, db.ForeignKey('dependent.id'))
+    dependent = db.relationship('Dependent')
+
+    def get_name(self):
+        return '{} {}'.format(self.dependent.first_name, self.dependent.last_name)
+
+    def get_relation(self):
+        return self.dependent.dependent_type.value
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'dependent',
+    }
+
+    def __repr__(self):
+        return super(DependentBeneficiary, self).__repr__() + ' dependent-{dependent_id}'.format(
+            dependent_id=self.dependent_id)
+
+
+class EstateBeneficiary(Beneficiary):
+    id = db.Column(None, db.ForeignKey('beneficiary.id'), primary_key=True, info={'widget': widgets.HiddenInput()})
+
+    def get_name(self):
+        return 'Estate'
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'estate',
+    }
+
+
+class SuccessionOfHeirsBeneficiary(Beneficiary):
+    id = db.Column(None, db.ForeignKey('beneficiary.id'), primary_key=True, info={'widget': widgets.HiddenInput()})
+
+    def get_name(self):
+        return 'Succession of Heirs'
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'succession',
+    }
 
 
 class Location(Base):
@@ -662,8 +724,15 @@ class DentalVisionBundlePlan(Plan, CoreMixin, PreOrPostTaxMixin, TieredElectionM
 
 # Group Plans
 # Life
+class LifeMixin(object):
 
-class BasicLifePlan(Plan, GroupMixin, PostTaxMixin, BooleanElectionMixin):
+    @declared_attr
+    def beneficiaries(cls):
+        return db.relationship('Beneficiary', uselist=True, single_parent=True,
+                               back_populates='plan', cascade="all, delete-orphan")
+
+
+class BasicLifePlan(Plan, GroupMixin, PostTaxMixin, BooleanElectionMixin, LifeMixin):
     # has a composite premium, 100% employer paid
     __tablename__ = 'life_add_plan'
     __table_args__ = {'extend_existing': True}
@@ -686,7 +755,7 @@ class BasicLifePlan(Plan, GroupMixin, PostTaxMixin, BooleanElectionMixin):
     }
 
 
-class VoluntaryLifePlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixin):
+class VoluntaryLifePlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixin, LifeMixin):
     __tablename__ = 'voluntary_life_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
@@ -736,7 +805,7 @@ class ChildVoluntaryLifePlan(VoluntaryLifePlan):
     }
 
 
-class StandaloneADDPlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixin):
+class StandaloneADDPlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixin, LifeMixin):
     __tablename__ = 'standalone_add_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
@@ -754,7 +823,7 @@ class StandaloneADDPlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixi
     }
 
 
-class WholeLifePlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixin):
+class WholeLifePlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixin, LifeMixin):
     __tablename__ = 'whole_life_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
@@ -769,7 +838,7 @@ class WholeLifePlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixin):
     }
 
 
-class UniversalLifePlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixin):
+class UniversalLifePlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixin, LifeMixin):
     __tablename__ = 'universal_life_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)

@@ -1,0 +1,72 @@
+{% from "_macros.html" import render_select_field  %}
+<div id="beneficiaries_{{ plan_id }}" {% if not election.elected or summary %}class="hidden"{% endif %}>
+    <form class='ui form' action='' method='post' id='form_beneficiaries'>
+        <table class="ui table">
+            <thead>
+                <tr>
+                    <th>Beneficiary</th>
+                    <th>Relationship</th>
+                    <th>Type</th>
+                    <th>Percentage</th>
+                </tr>
+            </thead>
+        {% for ben in beneficiaries_form.dependent_beneficiaries %}
+          <input type='hidden' name='dependent_beneficiaries-{{ loop.index0 }}-id' id='dependent_beneficiaries-{{ loop.index0 }}-id' value='{{ ben.form.id.data }}'>
+          <input type='hidden' name='dependent_beneficiaries-{{ loop.index0 }}-dependent_id' id='dependent_beneficiaries-{{ loop.index0 }}-dependent_id' value='{{ ben.form.dependent.data.id }}'>
+          <input type='hidden' name='dependent_beneficiaries-{{ loop.index0 }}-employee_id' id='dependent_beneficiaries-{{ loop.index0 }}-employee_id' value='{{ ben.form.dependent.data.employee_id }}'>
+            <tr>
+                <td>{{ ben.form.dependent.data.first_name }} {{ ben.form.dependent.data.last_name }}</td>
+                <td>{{ ben.form.dependent.data.dependent_type }}</td>
+                <td>
+                  <select class="ui dropdown" name="dependent_beneficiaries-{{ loop.index0 }}-beneficiary_type" id="dependent_beneficiaries-{{ loop.index0 }}-beneficiary_type">
+                      <option value="">----</option>
+                      <option {% if ben.form.data.beneficiary_type == 'primary' %}selected{% endif %} value="primary">Primary</option>
+                      <option {% if ben.form.data.beneficiary_type == 'contingent' %}selected{% endif %} value="contingent">Contingent</option>
+                  </select>
+                </td>
+                <td>
+                    <div class="ui right labeled input">
+                      <input class="beneficiaryPercentage" id="dependent_beneficiaries-{{ loop.index0 }}-percentage" maxlength="3" name="dependent_beneficiaries-{{ loop.index0 }}-percentage" step="1" value="{{ ben.form.data.percentage }}" type="number">
+                        <div class="ui basic label">%</div>
+                    </div>
+                </td>
+            </tr>
+        {% endfor %}
+        {{ beneficiaries_form.estate_beneficiary.id }}
+        {{ beneficiaries_form.estate_beneficiary.employee_id }}
+            <tr>
+                <td>Estate</td>
+                <td></td>
+                <td>
+                  {{ beneficiaries_form.estate_beneficiary.beneficiary_type(class_='ui dropdown')}}
+                </td>
+                <td>
+                    <div class="ui right labeled input">
+                        {{ beneficiaries_form.estate_beneficiary.percentage(class_='beneficiaryPercentage', maxlength="3") }}
+                        <div class="ui basic label">%</div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+        {{ beneficiaries_form.succession_of_heirs_beneficiary.id }}
+        {{ beneficiaries_form.succession_of_heirs_beneficiary.employee_id }}
+                <td>Succession of Heirs</td>
+                <td></td>
+                <td>
+                  {{ beneficiaries_form.succession_of_heirs_beneficiary.beneficiary_type(class_='ui dropdown')}}
+                </td>
+                <td>
+                    <div class="ui right labeled input">
+                        {{ beneficiaries_form.succession_of_heirs_beneficiary.percentage(class_='beneficiaryPercentage', maxlength="3") }}
+                        <div class="ui basic label">%</div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan=3"></td>
+                <td>Total: <span id="total">0</span>%</td>
+            </tr>
+        </table>
+    </form>
+</div>
+<br>

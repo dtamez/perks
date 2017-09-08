@@ -5,12 +5,11 @@
 #
 # Distributed under terms of the MIT license.
 from flask_user.forms import RegisterForm
-from flask_wtf import Form
+from flask_wtf import FlaskForm
 from wtforms import (
     BooleanField,
     DecimalField,
     FileField,
-    HiddenField,
     IntegerField,
     RadioField,
     SelectField,
@@ -18,6 +17,7 @@ from wtforms import (
     SubmitField,
     validators,
 )
+from wtforms.fields import FieldList
 from wtforms.widgets import HiddenInput
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from wtforms_alchemy import ModelForm, ModelFormField
@@ -31,7 +31,7 @@ class RegistrationForm(RegisterForm):
     last_name = StringField('Last name', validators=[validators.DataRequired('Last name is required')])
 
 
-class UserProfileForm(Form):
+class UserProfileForm(FlaskForm):
     first_name = StringField('First name', validators=[validators.DataRequired('First name is required')])
     last_name = StringField('Last name', validators=[validators.DataRequired('Last name is required')])
     submit = SubmitField('Save')
@@ -42,8 +42,8 @@ class LifeEventsForm(ModelForm):
     class Meta:
         model = models.Enrollment
         include = ['id']
-    id = HiddenField()
-    employee_id = HiddenField()
+    id = IntegerField(widget=HiddenInput())
+    employee_id = IntegerField(widget=HiddenInput())
 
 
 class EmployeeInfoForm(ModelForm):
@@ -59,10 +59,10 @@ class EmployeeInfoForm(ModelForm):
             'employee_number', 'group_id', 'sub_group_id',
             'sub_group_effective_date', 'salary', 'salary_mode',
             'salary_effective_date', ]
-    id = HiddenField()
+    id = IntegerField(widget=HiddenInput())
 
 
-class BooleanElectionForm(Form):
+class BooleanElectionForm(FlaskForm):
     id = IntegerField(widget=HiddenInput())
     plan_id = IntegerField(widget=HiddenInput())
     employee_id = IntegerField(widget=HiddenInput())
@@ -73,7 +73,7 @@ class BooleanElectionForm(Form):
         election.elected = self.selection.data == 'Enroll'
 
 
-class AmountChosenElectionForm(Form):
+class AmountChosenElectionForm(FlaskForm):
     id = IntegerField(widget=HiddenInput())
     plan_id = IntegerField(widget=HiddenInput())
     employee_id = IntegerField(widget=HiddenInput())
@@ -86,7 +86,7 @@ class AmountChosenElectionForm(Form):
         election.premium_id = None   # not sure if this is needed
 
 
-class AmountInputElectionForm(Form):
+class AmountInputElectionForm(FlaskForm):
     id = IntegerField(widget=HiddenInput())
     plan_id = IntegerField(widget=HiddenInput())
     employee_id = IntegerField(widget=HiddenInput())
@@ -99,7 +99,7 @@ class AmountInputElectionForm(Form):
         election.premium_id = None   # not sure if this is needed
 
 
-class TieredElectionForm(Form):
+class TieredElectionForm(FlaskForm):
     id = IntegerField(widget=HiddenInput())
     plan_id = IntegerField(widget=HiddenInput())
     employee_id = IntegerField(widget=HiddenInput())
@@ -123,7 +123,7 @@ class UserForm(ModelForm):
     class Meta:
         model = models.User
         include = ['id']
-    id = HiddenField()
+    id = IntegerField(widget=HiddenInput())
 
 
 class AddressForm(ModelForm):
@@ -134,7 +134,7 @@ class AddressForm(ModelForm):
     class Meta:
         model = models.Address
         include = ['id']
-    id = HiddenField()
+    id = IntegerField(widget=HiddenInput())
 
 
 class LocationForm(ModelForm):
@@ -146,7 +146,7 @@ class LocationForm(ModelForm):
         model = models.Location
         date_format = '%m/%d/%Y'
         include = ['id']
-    id = HiddenField()
+    id = IntegerField(widget=HiddenInput())
 
 
 def locations():
@@ -162,7 +162,7 @@ class EmployeeForm(ModelForm):
         model = models.Employee
         date_format = '%m/%d/%Y'
         include = ['id']
-    id = HiddenField()
+    id = IntegerField(widget=HiddenInput())
     user = ModelFormField(UserForm)
     address = ModelFormField(AddressForm)
     location = QuerySelectField('Location', query_factory=locations, get_label='code')
@@ -177,7 +177,7 @@ class CarrierForm(ModelForm):
     class Meta:
         model = models.Carrier
         include = ['id']
-    id = HiddenField()
+    id = IntegerField(widget=HiddenInput())
 
 
 class DependentForm(ModelForm):
@@ -189,9 +189,61 @@ class DependentForm(ModelForm):
         model = models.Dependent
         date_format = '%m/%d/%Y'
         include = ['id']
-    id = HiddenField()
-    employee_id = HiddenField()
+    id = IntegerField(widget=HiddenInput())
+    employee_id = IntegerField(widget=HiddenInput())
     address = ModelFormField(AddressForm)
+
+
+class MiniDependentForm(ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.update({'prefix': 'dependent'})
+        super(MiniDependentForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = models.Dependent
+        only = ['id', 'first_name', 'last_name', 'dependent_type']
+
+
+class DependentBeneficiaryForm(ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(DependentBeneficiaryForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = models.DependentBeneficiary
+        include = ['id']
+    id = IntegerField(widget=HiddenInput())
+    dependent = ModelFormField(MiniDependentForm)
+    dependent_id = IntegerField(widget=HiddenInput())
+
+
+class EstateBeneficiaryForm(ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.update({'prefix': 'estate_beneficiary'})
+        super(EstateBeneficiaryForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = models.EstateBeneficiary
+        include = ['id']
+    id = IntegerField(widget=HiddenInput())
+    employee_id = IntegerField(widget=HiddenInput())
+
+
+class SuccessionOfHeirsBeneficiaryForm(ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.update({'prefix': 'heirs_beneficiary'})
+        super(SuccessionOfHeirsBeneficiaryForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = models.SuccessionOfHeirsBeneficiary
+        include = ['id']
+    id = IntegerField(widget=HiddenInput())
+    employee_id = IntegerField(widget=HiddenInput())
+
+
+class BeneficiariesForm(FlaskForm):
+    dependent_beneficiaries = FieldList(ModelFormField(DependentBeneficiaryForm))
+    estate_beneficiary = ModelFormField(EstateBeneficiaryForm)
+    succession_of_heirs_beneficiary = ModelFormField(SuccessionOfHeirsBeneficiaryForm)
 
 
 def carriers():
@@ -200,7 +252,7 @@ def carriers():
 
 class AdminPlanForm(ModelForm):
     active = BooleanField('Active?')
-    id = HiddenField()
+    id = IntegerField(widget=HiddenInput())
 
 
 class MedicalPlanForm(AdminPlanForm):
@@ -291,10 +343,10 @@ class STDPlanForm(AdminPlanForm):
     benefit_percentage = StringField('Benefit Percentage')
 
 
-class LifeADDPlanForm(AdminPlanForm):
+class BasicLifePlanForm(AdminPlanForm):
     def __init__(self, *args, **kwargs):
         kwargs.update({'prefix': 'add_plan'})
-        super(LifeADDPlanForm, self).__init__(*args, **kwargs)
+        super(BasicLifePlanForm, self).__init__(*args, **kwargs)
 
     class Meta:
         model = models.BasicLifePlan
@@ -391,12 +443,12 @@ class CriticalIllnessPlanForm(AdminPlanForm):
         include = ['id']
 
 
-class PremiumForm(Form):
+class PremiumForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         kwargs.update({'prefix': 'premium'})
         super(PremiumForm, self).__init__(*args, **kwargs)
-    id = HiddenField()
-    plan_id = HiddenField()
+    id = IntegerField(widget=HiddenInput())
+    plan_id = IntegerField(widget=HiddenInput())
     tier_type = SelectField('Tier', choices=models.FAMILY_TIER_TYPES)
     premium = DecimalField('Premium')
     employer_portion = DecimalField('Employer Portion')
@@ -406,22 +458,22 @@ class PremiumForm(Form):
 
 
 # Eligibility
-class EmployeeEligibility(Form):
-    id = HiddenField()
+class EmployeeEligibility(FlaskForm):
+    id = IntegerField(widget=HiddenInput())
     full_time_only = BooleanField('Full Time Only?')
     minimum_days_employed = IntegerField('Minimum Days Employed')
 
 
-class DependentEligibility(Form):
-    id = HiddenField()
+class DependentEligibility(FlaskForm):
+    id = IntegerField(widget=HiddenInput())
     eligible = BooleanField('Eligible?')
 
 
-class DomesticPartnerEligibility(Form):
-    id = HiddenField()
+class DomesticPartnerEligibility(FlaskForm):
+    id = IntegerField(widget=HiddenInput())
     eligible = BooleanField('Eligible?')
 
 
 # File import
-class UploadForm(Form):
+class UploadForm(FlaskForm):
     xl = FileField(u'Excel File', [validators.regexp(u'^[^/\\]\.xls[x]?$')])

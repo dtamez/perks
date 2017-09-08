@@ -6,7 +6,7 @@
 <div id="{% block plan_wrapper %}{% endblock %}s_wrapper">
   <h4 class="ui dividing header">{% block plan_header %}{% endblock %} Plan Elections</h4>
 
-  <form class="ui form {% if election is not defined %}hidden{% endif %}" action="" method="post" id="form_{% block form_id %}{% endblock %}s">
+  <form class="ui form {% if election is not defined or summary %}hidden{% endif %}" action="" method="post" id="form_{% block form_id %}{% endblock %}s">
     {% if election_form %}
       {{ election_form.id }}
       {{ election_form.employee_id }}
@@ -42,7 +42,9 @@
       </tbody>
     </table>
 
-    {% if election_form %}
+    {% if election_form and not summary %}
+    {% block beneficiaries %}
+    {% endblock %}
     {% block save_update %}
     {% endblock save_update %}
     {% endif %}

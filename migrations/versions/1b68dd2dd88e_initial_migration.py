@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: 7511f3d20327
+Revision ID: 1b68dd2dd88e
 Revises:
-Create Date: 2017-08-14 17:38:25.968263
+Create Date: 2017-09-06 17:41:34.141331
 
 """
 from alembic import op
@@ -27,7 +27,7 @@ from perks.models import (
 
 
 # revision identifiers, used by Alembic.
-revision = '7511f3d20327'
+revision = '1b68dd2dd88e'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -214,21 +214,16 @@ def upgrade():
     op.create_table(
         'beneficiary',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('first_name', sa.Unicode(length=50), server_default=u'', nullable=False),
-        sa.Column('middle_name', sa.Unicode(length=50), server_default=u'', nullable=True),
-        sa.Column('last_name', sa.Unicode(length=50), server_default=u'', nullable=False),
-        sa.Column('ssn', sa.Unicode(length=11), nullable=False),
-        sa.Column('dob', sa.Date(), nullable=False),
-        sa.Column('gender', ChoiceType(GENDER_TYPES), nullable=True),
-        sa.Column('marital_status', ChoiceType(MARITAL_STATUS_TYPES), nullable=True),
-        sa.Column('smoker_type', ChoiceType(SMOKER_TYPES), nullable=True),
         sa.Column('beneficiary_type', ChoiceType(BENEFICIARY_TYPES), nullable=True),
+        sa.Column('plan_id', sa.Integer(), nullable=True),
         sa.Column('employee_id', sa.Integer(), nullable=True),
-        sa.Column('address_id', sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(['address_id'], ['address.id'], ),
+        sa.Column('percentage', sa.Integer(), nullable=True),
+        sa.Column('btype', sa.String(length=50), nullable=True),
         sa.ForeignKeyConstraint(['employee_id'], ['employee.id'], ),
+        sa.ForeignKeyConstraint(['plan_id'], ['plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_beneficiary_plan_id'), 'beneficiary', ['plan_id'], unique=False)
     op.create_table(
         'cancer_plan',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -346,7 +341,6 @@ def upgrade():
     op.create_table(
         'hra_plan',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('min_contribution', sa.Numeric(precision=9, scale=2), nullable=False),
         sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
@@ -534,6 +528,20 @@ def upgrade():
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
+        'dependent_beneficiary',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('dependent_id', sa.Integer(), nullable=True),
+        sa.ForeignKeyConstraint(['dependent_id'], ['dependent.id'], ),
+        sa.ForeignKeyConstraint(['id'], ['beneficiary.id'], ),
+        sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table(
+        'estate_beneficiary',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(['id'], ['beneficiary.id'], ),
+        sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table(
         'premium',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('plan_id', sa.Integer(), nullable=True),
@@ -549,6 +557,12 @@ def upgrade():
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_premium_plan_id'), 'premium', ['plan_id'], unique=False)
+    op.create_table(
+        'succession_of_heirs_beneficiary',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(['id'], ['beneficiary.id'], ),
+        sa.PrimaryKeyConstraint('id')
+    )
     op.create_table(
         'election',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -568,8 +582,11 @@ def upgrade():
 def downgrade():
     op.drop_index(op.f('ix_election_plan_id'), table_name='election')
     op.drop_table('election')
+    op.drop_table('succession_of_heirs_beneficiary')
     op.drop_index(op.f('ix_premium_plan_id'), table_name='premium')
     op.drop_table('premium')
+    op.drop_table('estate_beneficiary')
+    op.drop_table('dependent_beneficiary')
     op.drop_table('whole_life_plan')
     op.drop_table('voluntary_life_plan')
     op.drop_table('vision_plan')
@@ -603,6 +620,7 @@ def downgrade():
     op.drop_table('cricial_illness_plan')
     op.drop_table('child_voluntary_life_plan')
     op.drop_table('cancer_plan')
+    op.drop_index(op.f('ix_beneficiary_plan_id'), table_name='beneficiary')
     op.drop_table('beneficiary')
     op.drop_index(op.f('ix_age_based_reduction_plan_id'), table_name='age_based_reduction')
     op.drop_table('age_based_reduction')

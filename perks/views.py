@@ -13,10 +13,12 @@ from flask.views import MethodView
 from flask_login import current_user, login_required
 from jinja2 import Environment, PackageLoader
 from werkzeug.datastructures import CombinedMultiDict
+from werkzeug.datastructures import MultiDict
 
 from . import app, db
 from .forms import (
     AddressForm,
+    BeneficiariesForm,
     CancerPlanForm,
     CarrierForm,
     CriticalIllnessPlanForm,
@@ -26,18 +28,20 @@ from .forms import (
     Employee401KPlanForm,
     EmployeeForm,
     EmployeeInfoForm,
+    EstateBeneficiaryForm,
     FSAMedicalPlanForm,
     HRAPlanForm,
     HSAPlanForm,
     LongTermCarePlanForm,
     LTDPlanForm,
-    LifeADDPlanForm,
+    BasicLifePlanForm,
     LifeEventsForm,
     LocationForm,
     MedicalPlanForm,
     ParkingTransitPlanForm,
     PremiumForm,
     STDPlanForm,
+    SuccessionOfHeirsBeneficiaryForm,
     UploadForm,
     UserForm,
     VisionPlanForm,
@@ -50,39 +54,43 @@ from .models import (
     CancerPlan,
     Carrier,
     ChildVoluntaryLifePlan,
-    Dependent,
-    DentalVisionBundlePlan,
     CriticalIllnessPlan,
     DentalPlan,
+    DentalVisionBundlePlan,
+    Dependent,
+    DependentBeneficiary,
     EAPPlan,
     Election,
     Employee,
     Employee401KPlan,
     Enrollment,
+    EstateBeneficiary,
     FAMILY_TIER_TYPES,
     FSAMedicalPlan,
-    HospitalConfinementPlan,
     HRAPlan,
     HSAPlan,
+    HospitalConfinementPlan,
     IdentityTheftPlan,
     LIFE_EVENT_TYPES,
-    LongTermCarePlan,
     LTDPlan,
     LTDVoluntaryPlan,
+    LifeMixin,
     Location,
+    LongTermCarePlan,
     MARITAL_STATUS_TYPES,
-    MedicalPlan,
     MedicalDentalBundlePlan,
     MedicalDentalVisionBundlePlan,
+    MedicalPlan,
     MedicalVisionBundlePlan,
     ParkingTransitPlan,
     Plan,
     Premium,
     Role,
-    SpouseVoluntaryLifePlan,
-    StandaloneADDPlan,
     STDPlan,
     STDVoluntaryPlan,
+    SpouseVoluntaryLifePlan,
+    StandaloneADDPlan,
+    SuccessionOfHeirsBeneficiary,
     UniversalLifePlan,
     User,
     VisionPlan,
@@ -446,7 +454,7 @@ class EnrollPlanAJAXView(MethodView):
         if id is None:
             return self.display_all()
         else:
-            # displaying a form to edit the election
+            # displaying a form to edit the election for this plan (id)
             plan = Plan.query.get(id)
             enrollment = Enrollment.query.filter(Enrollment.employee_id == employee.id).first()
             election = Election.query.filter(Election.enrollment_id == enrollment.id,
@@ -457,13 +465,23 @@ class EnrollPlanAJAXView(MethodView):
                 election.enrollment_id = enrollment.id
             form_class = plan.get_election_form()
             election_form = form_class(obj=election)
-            import ipdb
-            ipdb.set_trace()
             election_form.selection.choices = plan.get_premium_choices(
                 election.premium_id or election.amount or election.elected, employee)
             template = env.get_template(self.template_name)
             ctx = {'election': election,
+                   'employee': employee,
+                   'plan_id': id,
+                   'summary': False,
                    'election_form': election_form}
+
+            if isinstance(plan, LifeMixin):
+                dep_options, estate_option, heirs_option = get_beneficiary_options(plan, employee)
+                deps_dict = {'dependent_beneficiaries': dep_options}
+                beneficiaries_form = BeneficiariesForm(data=MultiDict(deps_dict))
+                beneficiaries_form.estate_beneficiary = EstateBeneficiaryForm(obj=estate_option)
+                beneficiaries_form.succession_of_heirs_beneficiary = SuccessionOfHeirsBeneficiaryForm(obj=heirs_option)
+
+                ctx.update({'beneficiaries_form': beneficiaries_form})
 
             return template.render(ctx)
 
@@ -480,10 +498,34 @@ class EnrollPlanAJAXView(MethodView):
         form.populate_election(election)
         db.session.add(election)
         db.session.commit()
+        if isinstance(plan, LifeMixin):
+            beneficiaries_form = BeneficiariesForm(request.form)
+            estate_beneficiary = EstateBeneficiary(plan_id=plan_id)
+            beneficiaries_form.estate_beneficiary.form.populate_obj(estate_beneficiary)
+            estate_beneficiary.id = None
+            heirs_beneficiary = SuccessionOfHeirsBeneficiary(plan_id=plan_id, )
+            beneficiaries_form.succession_of_heirs_beneficiary.form.populate_obj(heirs_beneficiary)
+            heirs_beneficiary.id = None
+            if estate_beneficiary.percentage > 0:
+                db.session.add(estate_beneficiary)
+            if heirs_beneficiary.percentage > 0:
+                db.session.add(heirs_beneficiary)
+
+            deps_map = {dep.id: dep for dep in employee.dependents}
+            for entry in beneficiaries_form.dependent_beneficiaries.entries:
+                dependent_beneficiary = DependentBeneficiary(plan_id=plan_id, employee_id=employee.id)
+                entry.form.populate_obj(dependent_beneficiary)
+                dependent_beneficiary.id = None
+                if dependent_beneficiary.percentage > 0:
+                    dependent_beneficiary.dependent = deps_map[dependent_beneficiary.dependent_id]
+                    db.session.add(dependent_beneficiary)
+            db.session.commit()
+        self.do_extra_persistence(employee, request, None)
 
         return self.display_all()
 
-    def put(self, id):
+    def put(self, id):  # NOQA
+        beneficiaries_form = BeneficiariesForm(request.form)
         employee = Employee.query.join(User).filter(User.id == g.user.id).first()
         plan = Plan.query.get(id)
         form_class = plan.get_election_form()
@@ -496,7 +538,84 @@ class EnrollPlanAJAXView(MethodView):
         form.populate_election(election)
         db.session.add(election)
         db.session.commit()
+
+        if isinstance(plan, LifeMixin):
+            beneficiaries_form = BeneficiariesForm(request.form)
+            # for each beneficiary returned ther are 4 possibilities:
+            #   no original = add new
+            #   values are the same = do nothing
+            #   new value == 0 = delete
+            #   values have changed = update
+            estate_id = beneficiaries_form.estate_beneficiary.data['id']
+            if estate_id:
+                estate_beneficiary = EstateBeneficiary.query.get(estate_id)
+                original_type = estate_beneficiary.beneficiary_type
+                original_percentage = estate_beneficiary.percentage
+            else:
+                estate_beneficiary = EstateBeneficiary(plan_id=plan.id)
+            beneficiaries_form.estate_beneficiary.form.populate_obj(estate_beneficiary)
+            if not estate_id:
+                if estate_beneficiary.percentage > 0:
+                    db.session.add(estate_beneficiary)
+            else:
+                if ((original_percentage != estate_beneficiary.percentage) or
+                        (original_type != estate_beneficiary.beneficiary_type)):
+                    if estate_beneficiary.percentage == 0:
+                        db.session.delete(estate_beneficiary)
+                    else:
+                        db.session.add(estate_beneficiary)
+
+            heirs_id = beneficiaries_form.succession_of_heirs_beneficiary.data['id']
+            if heirs_id:
+                heirs_beneficiary = SuccessionOfHeirsBeneficiary.query.get(heirs_id)
+                original_type = heirs_beneficiary.beneficiary_type
+                original_percentage = heirs_beneficiary.percentage
+            else:
+                heirs_beneficiary = SuccessionOfHeirsBeneficiary(plan_id=plan.id)
+            beneficiaries_form.succession_of_heirs_beneficiary.form.populate_obj(heirs_beneficiary)
+            if not heirs_id:
+                if heirs_beneficiary.percentage > 0:
+                    db.session.add(heirs_beneficiary)
+            else:
+                if ((original_percentage != heirs_beneficiary.percentage) or
+                        (original_type != heirs_beneficiary.beneficiary_type)):
+                    if heirs_beneficiary.percentage == 0:
+                        db.session.delete(heirs_beneficiary)
+                    else:
+                        db.session.add(heirs_beneficiary)
+
+            deps_map = {dep.id: dep for dep in employee.dependents}
+            for entry in beneficiaries_form.dependent_beneficiaries.entries:
+                ben_id = entry.data['id']
+                if ben_id:
+                    dependent_beneficiary = DependentBeneficiary.query.get(ben_id)
+                    original_type = dependent_beneficiary.beneficiary_type
+                    original_percentage = dependent_beneficiary.percentage
+                else:
+                    dependent_beneficiary = DependentBeneficiary(plan_id=plan.id, employee_id=employee.id)
+
+                dependent_beneficiary.dependent = deps_map[entry.data['dependent_id']]
+                dependent_beneficiary.percentage = entry.data['percentage']
+                dependent_beneficiary.beneficiary_type = entry.data['beneficiary_type']
+                if not ben_id:
+                    if dependent_beneficiary.percentage > 0:
+                        db.session.add(dependent_beneficiary)
+                else:
+                    if ((original_type != dependent_beneficiary.beneficiary_type) or
+                            (original_percentage != dependent_beneficiary.percentage)):
+                        if dependent_beneficiary.percentage == 0:
+                            del dependent_beneficiary
+                            #  db.session.delete(dependent_beneficiary)
+                        else:
+                            db.session.add(dependent_beneficiary)
+            db.session.commit()
+
+        self.do_extra_persistence(employee, request, enrollment)
+
         return self.display_all()
+
+    def do_extra_persistence(self, employee, request, enrollment=None):
+        pass
 
     def display_all(self):
         employee = Employee.query.join(User).filter(User.id == g.user.id).first()
@@ -523,8 +642,35 @@ class EnrollPlanAJAXView(MethodView):
             election_form = form_class()
             election_form.selection.choices = plan.get_premium_choices(election_form.data['selection'], employee)
         ctx = {'election_form': election_form,
+               'election': election,
+               'employee': employee,
+               'summary': True,
                '{}_selections'.format(self.prefix): selections}
         return render_template(self.template_name, **ctx)
+
+
+def get_beneficiary_options(plan, employee):
+    # get all beneficiaries from the plan plus missing dependents, estate or heir options
+    designated = plan.beneficiaries
+    blank_estate = EstateBeneficiary(plan=plan, employee_id=employee.id)
+    blank_heirs = SuccessionOfHeirsBeneficiary(plan=plan, employee_id=employee.id)
+
+    estate_designated = [b for b in designated if isinstance(b, EstateBeneficiary)]
+    heirs_designated = [b for b in designated if isinstance(b, SuccessionOfHeirsBeneficiary)]
+    if estate_designated:
+        estate_designated = estate_designated[0]
+    if heirs_designated:
+        heirs_designated = heirs_designated[0]
+    deps_designated = [b for b in designated if isinstance(b, DependentBeneficiary)]
+    dep_options = deps_designated[:]
+    dep_ids_designated = [dep.dependent_id for dep in deps_designated]
+
+    for dep in employee.dependents:
+        if dep.id not in dep_ids_designated:
+            dep_options.append(DependentBeneficiary(plan=plan, employee=employee, employee_id=employee.id,
+                                                    dependent_id=dep.id, dependent=dep, percentage=0))
+
+    return dep_options, estate_designated or blank_estate, heirs_designated or blank_heirs
 
 
 @app.route('/enroll/finalize', methods=['GET', 'POST'])
@@ -623,7 +769,7 @@ def admin_group():
     ltd_plans = LTDPlan.query.all()
     ltd_plan_form = LTDPlanForm()
     add_plans = BasicLifePlan.query.all()
-    add_plan_form = LifeADDPlanForm()
+    add_plan_form = BasicLifePlanForm()
     return render_template('admin/group.html', eap_plans=eap_plans,
                            eap_plan_form=eap_plan_form,
                            ltd_plans=ltd_plans,
@@ -760,8 +906,8 @@ class STDPlanView(AJAXCrudView):
 
 
 class ADDPlanView(AJAXCrudView):
-    main = {'model': BasicLifePlan, 'form': LifeADDPlanForm,
-            'class': 'BasicLifePlan', 'form_class': 'LifeADDPlanForm',
+    main = {'model': BasicLifePlan, 'form': BasicLifePlanForm,
+            'class': 'BasicLifePlan', 'form_class': 'BasicLifePlanForm',
             'single': 'add_plan', 'plural': 'add_plans',
             'form_name': 'add_plan_form',
             'template': '/admin/_add_plans.html'}
@@ -1114,6 +1260,9 @@ class EnrollLifeADDView(EnrollPlanAJAXView):
     template_name = '/enroll/_life_add.html'
     plan_class = BasicLifePlan
     prefix = 'life_add'
+
+    def do_extra_persistence(self, employee, request, enrollment=None):
+        pass
 
 
 class EnrollStandaloneADDView(EnrollPlanAJAXView):

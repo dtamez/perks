@@ -20,6 +20,27 @@
     </div>
 {%- endmacro %}
 
+{% macro render_beneficiary_javascript(plan, plan_id) -%}
+  <script>
+    $('input[name=selection]').on('change', function() {
+      val = $('input[name=selection]:checked', '#form_{{ plan }}s').val();
+        if (val == 'DE') {
+            $('#beneficiaries_{{ plan_id }}').hide();
+        } else {
+            $('#beneficiaries_{{ plan_id }}').show();
+        }
+    });
+    $('input[name=percentage]').on('change', function() {
+        var total = 0;
+        $('input[name=percentage]')
+            .each(function() {
+                total += parseInt(this.value);
+            });
+        $('#total').html(total);
+    });
+  </script>
+{%- endmacro %}
+
 {% macro render_checkbox_field(field, label=None) -%}
     {% if not label %}{% set label=field.label.text %}{% endif %}
     <div class="inline field {% if field.errors %}error{% endif %}">
@@ -42,8 +63,10 @@
       {% endfor %}
 {%- endmacro %}
 
-{% macro render_select_field(field) -%}
-      {{ field.label }}
+{% macro render_select_field(field, with_label=True) -%}
+      {% if with_label %}
+        {{ field.label }}
+      {% endif %}
       <select class="ui fluid dropdown {% if field.errors %}error{% endif %}" name="{{ field.id }}">
       {% for k, v in field.choices %}
 
