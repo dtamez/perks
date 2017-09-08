@@ -30,13 +30,27 @@
             $('#beneficiaries_{{ plan_id }}').show();
         }
     });
-    $('input[name=percentage]').on('change', function() {
-        var total = 0;
-        $('input[name=percentage]')
+    $('.beneficiaryType, .beneficiaryPercentage').on('change', function() {
+        var primaryTotal = 0;
+        var contingentTotal = 0;
+        $('.beneficiaryType')
             .each(function() {
-                total += parseInt(this.value);
+              typeId = this.id;
+              percentId = '#' + typeId.replace('beneficiary_type', 'percentage');
+              percent = $(percentId);
+              if (this.value == 'primary') {
+                primaryTotal += parseInt(percent.val());
+              } else if (this.value == 'contingent') {
+                contingentTotal += parseInt(percent.val());
+              }
             });
-        $('#total').html(total);
+        $('#primaryTotal').html(primaryTotal);
+        $('#contingentTotal').html(contingentTotal);
+      if (primaryTotal == 100 && contingentTotal == 100) {
+        $('#' + 'save_update_{{ plan }}' ).show();
+      } else {
+        $('#' + 'save_update_{{ plan }}').hide();
+      }
     });
   </script>
 {%- endmacro %}
@@ -139,13 +153,24 @@
 {% else %}
   {% set suffix='' %}
 {% endif %}
+<table class="ui">
+  <tr>
+    <td>
 <div class="field">
   {% if (test_id and test_id.data) or (not test_id and field.data) %}
-    <a class='ui violet button button-primary' tabindex="0" href="#" onclick="javascript: update_{{ model_name}}{{ suffix }}({{ field.data }});">Update</a>
+  <a id="save_update_{{ model_name }}" class='ui violet button button-primary' tabindex="0" href="#" onclick="javascript: update_{{ model_name}}{{ suffix }}({{ field.data }});">Update</a>
   {% else %}
-    <a class='ui violet button button-primary' tabindex="0" href="#" onclick="javascript: new_{{ model_name }}{{ suffix }}();">Save</a>
+    <a id="save_update_{{ model_name }}" class='ui violet button button-primary' tabindex="0" href="#" onclick="javascript: new_{{ model_name }}{{ suffix }}();">Save</a>
   {% endif %}
 </div>
+</td>
+<td>
+<div class="field">
+  <a id="cancel_{{ model_name }}" class='ui violet button button-secondary' tabindex="0" href="#" onclick="javascript: cancel_edit_{{ model_name}}{{ suffix }}({{ field.data }});">Cancel</a>
+</div>
+</td>
+</tr>
+</table>
 {%- endmacro %}
 
 {% macro render_submit(label=None, tabindex=None) %}
@@ -226,6 +251,15 @@
     var edit_{{ model_name }}{{ suffix }} = function(id) {
       $.ajax({
         url: '/{{ section }}/_{{ model_name }}s/' + id,
+        dataType: 'html',
+        method: 'GET'
+        }).done(function(html) {
+          $('#{{ model_name }}s_wrapper{{ suffix }}').replaceWith(html);
+       });
+    };
+    var cancel_edit_{{ model_name }}{{ suffix }} = function(id) {
+      $.ajax({
+        url: '/{{ section }}/_{{ model_name }}s/',
         dataType: 'html',
         method: 'GET'
         }).done(function(html) {

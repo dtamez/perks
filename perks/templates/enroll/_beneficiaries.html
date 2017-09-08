@@ -18,7 +18,7 @@
                 <td>{{ ben.form.dependent.data.first_name }} {{ ben.form.dependent.data.last_name }}</td>
                 <td>{{ ben.form.dependent.data.dependent_type }}</td>
                 <td>
-                  <select class="ui dropdown" name="dependent_beneficiaries-{{ loop.index0 }}-beneficiary_type" id="dependent_beneficiaries-{{ loop.index0 }}-beneficiary_type">
+                  <select class="ui dropdown beneficiaryType" name="dependent_beneficiaries-{{ loop.index0 }}-beneficiary_type" id="dependent_beneficiaries-{{ loop.index0 }}-beneficiary_type">
                       <option value="">----</option>
                       <option {% if ben.form.data.beneficiary_type == 'primary' %}selected{% endif %} value="primary">Primary</option>
                       <option {% if ben.form.data.beneficiary_type == 'contingent' %}selected{% endif %} value="contingent">Contingent</option>
@@ -26,7 +26,7 @@
                 </td>
                 <td>
                     <div class="ui right labeled input">
-                      <input class="beneficiaryPercentage" id="dependent_beneficiaries-{{ loop.index0 }}-percentage" maxlength="3" name="dependent_beneficiaries-{{ loop.index0 }}-percentage" step="1" value="{{ ben.form.data.percentage }}" type="number">
+                      <input class="beneficiaryPercentage" id="dependent_beneficiaries-{{ loop.index0 }}-percentage" min="0" max="100" maxlength="3" name="dependent_beneficiaries-{{ loop.index0 }}-percentage" step="1" value="{{ ben.form.data.percentage }}" type="number">
                         <div class="ui basic label">%</div>
                     </div>
                 </td>
@@ -38,11 +38,11 @@
                 <td>Estate</td>
                 <td></td>
                 <td>
-                  {{ beneficiaries_form.estate_beneficiary.beneficiary_type(class_='ui dropdown')}}
+                  {{ beneficiaries_form.estate_beneficiary.beneficiary_type(class_='ui dropdown beneficiaryType')}}
                 </td>
                 <td>
                     <div class="ui right labeled input">
-                        {{ beneficiaries_form.estate_beneficiary.percentage(class_='beneficiaryPercentage', maxlength="3") }}
+                        {{ beneficiaries_form.estate_beneficiary.percentage(class_='beneficiaryPercentage', maxlength="3", min="0", max="100") }}
                         <div class="ui basic label">%</div>
                     </div>
                 </td>
@@ -53,18 +53,20 @@
                 <td>Succession of Heirs</td>
                 <td></td>
                 <td>
-                  {{ beneficiaries_form.succession_of_heirs_beneficiary.beneficiary_type(class_='ui dropdown')}}
+                  {{ beneficiaries_form.succession_of_heirs_beneficiary.beneficiary_type(class_='ui dropdown beneficiaryType')}}
                 </td>
                 <td>
                     <div class="ui right labeled input">
-                        {{ beneficiaries_form.succession_of_heirs_beneficiary.percentage(class_='beneficiaryPercentage', maxlength="3") }}
+                        {{ beneficiaries_form.succession_of_heirs_beneficiary.percentage(class_='beneficiaryPercentage', maxlength="3", min="0", max="100") }}
                         <div class="ui basic label">%</div>
                     </div>
                 </td>
             </tr>
             <tr>
-                <td colspan=3"></td>
-                <td>Total: <span id="total">0</span>%</td>
+                <td></td>
+                <td>Contingent Total: <span id="contingentTotal">0</span>%</td>
+                <td></td>
+                <td>Primary Total: <span id="primaryTotal">0</span>%</td>
             </tr>
         </table>
     </form>

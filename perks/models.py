@@ -64,8 +64,8 @@ SMOKER_TYPES = [
 
 BENEFICIARY_TYPES = [
     ('', '----'),
-    ('primary', 'PRIMARY'),
-    ('contingent', 'CONTINGENT'),
+    ('primary', 'Primary'),
+    ('contingent', 'Contingent'),
 ]
 
 DEPENDENT_TYPES = [
