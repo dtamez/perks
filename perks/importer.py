@@ -431,19 +431,17 @@ def import_voluntary_life_plans(xls, sheet_name, klass, spouse=False):
 
 def import_standalone_add_plans(xls):
     print 'importing Standalone ADD plans'
-    (MINIMUM_BENEFIT, MAXIMUM_BENEFIT,
-     SALARY_MULTIPLES_ACCIDENTAL_DEATH, SALARY_MULTIPLES_ACCIDENTAL_DISMEMBERMENT) = range(10, 14)
-    converters = {n: strip for n in range(SALARY_MULTIPLES_ACCIDENTAL_DISMEMBERMENT)}
+    (INCREMENTS, MINIMUM_ELECTION, MAXIMUM_ELECTION) = range(10, 13)
+    converters = {n: strip for n in range(MAXIMUM_ELECTION)}
     converters.update({0: str, 3: str})
     sheet = xls.parse('Standalone ADD Plans', converters=converters, keep_default_na=False)
 
     for row in sheet.itertuples():
         plan = StandaloneADDPlan()
         get_common(row, plan)
-        plan.minimum_benefit = Decimal(row[MINIMUM_BENEFIT])
-        plan.maximum_benefit = Decimal(row[MAXIMUM_BENEFIT])
-        plan.salary_multiple_accidental_death = Decimal(row[SALARY_MULTIPLES_ACCIDENTAL_DEATH])
-        plan.salary_multiple_accidental_dismemberment = Decimal(row[SALARY_MULTIPLES_ACCIDENTAL_DISMEMBERMENT])
+        plan.increments = int(row[INCREMENTS])
+        plan.min_election = Decimal(row[MINIMUM_ELECTION])
+        plan.max_election = Decimal(row[MAXIMUM_ELECTION])
         db.session.add(plan)
         get_premium_related(row, plan)
         print plan.name

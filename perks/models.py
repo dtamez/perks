@@ -810,9 +810,10 @@ class StandaloneADDPlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixi
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
     # rates
+    increments = db.Column(db.Integer)
+    min_election = db.Column(db.Numeric(9, 2))
+    max_election = db.Column(db.Numeric(9, 2))
     # benefits
-    salary_multiple_accidental_death = db.Column(db.Numeric(4, 2))
-    salary_multiple_accidental_dismemberment = db.Column(db.Numeric(4, 2))
 
     def _get_dob(self, employee):
         return employee.dob

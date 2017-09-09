@@ -605,7 +605,6 @@ class EnrollPlanAJAXView(MethodView):
                             (original_percentage != dependent_beneficiary.percentage)):
                         if dependent_beneficiary.percentage == 0:
                             del dependent_beneficiary
-                            #  db.session.delete(dependent_beneficiary)
                         else:
                             db.session.add(dependent_beneficiary)
             db.session.commit()

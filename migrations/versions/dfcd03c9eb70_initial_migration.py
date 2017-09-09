@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: 1b68dd2dd88e
+Revision ID: dfcd03c9eb70
 Revises:
-Create Date: 2017-09-06 17:41:34.141331
+Create Date: 2017-09-08 20:49:14.098111
 
 """
 from alembic import op
@@ -27,7 +27,7 @@ from perks.models import (
 
 
 # revision identifiers, used by Alembic.
-revision = '1b68dd2dd88e'
+revision = 'dfcd03c9eb70'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -465,8 +465,9 @@ def upgrade():
     op.create_table(
         'standalone_add_plan',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('salary_multiple_accidental_death', sa.Numeric(precision=4, scale=2), nullable=True),
-        sa.Column('salary_multiple_accidental_dismemberment', sa.Numeric(precision=4, scale=2), nullable=True),
+        sa.Column('increments', sa.Integer(), nullable=True),
+        sa.Column('min_election', sa.Numeric(precision=9, scale=2), nullable=True),
+        sa.Column('max_election', sa.Numeric(precision=9, scale=2), nullable=True),
         sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )

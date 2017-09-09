@@ -1,11 +1,14 @@
-{% from "_macros.html" import render_save_update, render_enroll_table, render_ajax_methods %}
+{% from "_macros.html" import render_save_update, render_enroll_table, render_ajax_methods, render_beneficiary_javascript %}
 
 {{ render_ajax_methods('enroll', 'voluntary_life') }}
+{% if election_form %}
+  {{ render_beneficiary_javascript('voluntary_life', election_form.plan_id.data ) }}
+{% endif %}
 
 <div id="voluntary_lifes_wrapper">
   <h4 class="ui dividing header">Voluntary Life Plan Elections</h4>
 
-  <form class="ui form {% if election is not defined %}hidden{% endif %}" action="" method="post" id="form_voluntary_lifes">
+  <form class="ui form {% if election is not defined or summary %}hidden{% endif %}" action="" method="post" id="form_voluntary_lifes">
     {% if election_form %}
       {{ election_form.id }}
       {{ election_form.employee_id }}
@@ -45,7 +48,8 @@
       </tbody>
     </table>
 
-      {% if election_form %}
+      {% if election_form and not summary %}
+      {% include "enroll/_beneficiaries.html" %}
       {{ render_save_update(election_form.plan_id, 'voluntary_life', None, election_form.id) }}
       {% endif %}
   </form>
