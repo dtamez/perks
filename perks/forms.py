@@ -14,6 +14,7 @@ from wtforms import (
     RadioField,
     SelectField,
     StringField,
+    TextAreaField,
     SubmitField,
     validators,
 )
@@ -253,6 +254,7 @@ def carriers():
 class AdminPlanForm(ModelForm):
     active = BooleanField('Active?')
     id = IntegerField(widget=HiddenInput())
+    premium_matrix = TextAreaField()
 
 
 class MedicalPlanForm(AdminPlanForm):

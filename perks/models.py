@@ -599,7 +599,12 @@ class BooleanElectionMixin(object):
             rate = 0
         flat = self.er_flat_amount_contributed
         percent = self.er_percentage_contributed
-        total = rate * employee.get_monthly_salary()
+        # TODO: Better way to deal with single premium
+        if rate:
+            total = rate * employee.get_monthly_salary()
+        else:
+            total = prem.amount
+
         if flat:
             er = flat
         else:
@@ -641,6 +646,7 @@ class Plan(Base, EmployerContributionMixin, PlanPremiumMetaValuesMixin):
     website = db.Column(URLType, info={'label': 'Website'})
     cust_service_phone = db.Column(PhoneNumberType, info={'label': 'Customer Service Phone'})
     premiums = db.relationship('Premium', back_populates="plan")
+    premium_matrix = db.Column(db.String(5000), info={'label': "Premium Matrix"})
 
     __mapper_args__ = {
         'polymorphic_on': plantype,
@@ -935,11 +941,10 @@ class FSAMedicalPlan(Plan, GroupMixin, PreTaxMixin, AmountSuppliedElectionMixin)
     }
 
 
-class FSADependentCarePlan(Plan, GroupMixin, PreTaxMixin, AmountSuppliedElectionMixin):
+class FSADependentCarePlan(FSAMedicalPlan):
     __tablename__ = 'fsa_dependent_care_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
-    min_contribution = db.Column(db.Numeric(9, 2), nullable=False)
 
     def get_min_max_elections(self):
         limits = IRSLimits.query.first()

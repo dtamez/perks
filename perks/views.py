@@ -66,6 +66,7 @@ from .models import (
     Enrollment,
     EstateBeneficiary,
     FAMILY_TIER_TYPES,
+    FSADependentCarePlan,
     FSAMedicalPlan,
     HRAPlan,
     HSAPlan,
@@ -378,6 +379,9 @@ def enroll_group():
 
     fsa_plans = FSAMedicalPlan.query.filter(Plan.active == True).all()
     fsa_selections = get_selections(fsa_plans, enrollment.id)
+    #  fsa_dependent_plans = FSADependentCarePlan.query.filter(Plan.active == True).all()
+    #  fsa_dependent_selections = get_selections(fsa_dependent_plans, enrollment.id)
+
     hsa_plans = HSAPlan.query.filter(Plan.active == True).all()
     hsa_selections = get_selections(hsa_plans, enrollment.id)
     hra_plans = HRAPlan.query.filter(Plan.active == True).all()
@@ -403,6 +407,7 @@ def enroll_group():
            'std_voluntary_selections': std_voluntary_selections,
 
            'fsa_selections': fsa_selections,
+           #  'fsa_dependent_selections': fsa_dependent_selections,
            'hsa_selections': hsa_selections,
            'hra_selections': hra_selections,
            'e401k_selections': e401k_selections,
@@ -1299,6 +1304,13 @@ class EnrollFSAPlanView(EnrollPlanAJAXView):
     prefix = 'fsa'
 
 
+class EnrollFSADependentPlanView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_fsa_dependent.html'
+    plan_class = FSADependentCarePlan
+    prefix = 'fsa_dependent'
+
+
 class EnrollParkingTransitPlanView(EnrollPlanAJAXView):
 
     template_name = '/enroll/_parking.html'
@@ -1366,7 +1378,7 @@ class EnrollIdentityTheftPlanView(EnrollPlanAJAXView):
 
     template_name = '/enroll/_identity_theft.html'
     plan_class = IdentityTheftPlan
-    prefix = 'identity'
+    prefix = 'identity_theft'
 
 
 class BulkLoadView(MethodView):
@@ -1427,6 +1439,7 @@ register_ajax_view(EnrollSpouseVoluntaryLifeView, 'enroll_spouse_voluntary_life_
 register_ajax_view(EnrollChildVoluntaryLifeView, 'enroll_child_voluntary_life_ajax',
                    '/enroll/_child_voluntary_lifes/')
 register_ajax_view(EnrollFSAPlanView, 'enroll_fsa_ajax', '/enroll/_fsas/')
+register_ajax_view(EnrollFSADependentPlanView, 'enroll_fsa_dependent_ajax', '/enroll/_fsa_dependents/')
 register_ajax_view(EnrollParkingTransitPlanView, 'enroll_parking_transit_ajax', '/enroll/_parking_transits/')
 register_ajax_view(EnrollHRAPlanView, 'enroll_hra_ajax', '/enroll/_hras/')
 register_ajax_view(EnrollHSAPlanView, 'enroll_hsa_ajax', '/enroll/_hsas/')

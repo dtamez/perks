@@ -130,6 +130,15 @@
 </div>
 {%- endmacro %}
 
+{% macro render_single_row(field1) -%}
+<div class="two fields">
+  <div class="two field {% if field1.errors %}error{% endif %}">
+    {{ field1.label }}
+    {{ field1(**kwargs)|safe }}
+  </div>
+</div>
+{%- endmacro %}
+
 {% macro render_3row(field1, field2, field3) -%}
 <div class="three fields">
   <div class="field {% if field1.errors %}error{% endif %}">

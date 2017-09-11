@@ -1,4 +1,4 @@
-{% from "_macros.html" import render_formatters, render_row, render_3row, render_save_update, render_table, render_ajax_methods %}
+{% from "_macros.html" import render_formatters, render_row, render_single_row, render_3row, render_save_update, render_table, render_ajax_methods %}
 {{ render_formatters([
     ('cust_service_phone', 'phone'),
     ('original_effective_date', 'date'),
@@ -12,14 +12,17 @@
 
   <form class="ui form {% if vision_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_vision_plans">
     {{ vision_plan_form.id }}
-    {{ render_row(vision_plan_form.name, vision_plan_form.active) }}
-    {{ render_row(vision_plan_form.code, vision_plan_form.website) }}
-    {{ render_row(vision_plan_form.cust_service_phone, vision_plan_form.not_available_in) }}
+    {{ render_row(vision_plan_form.name, vision_plan_form.code) }}
+    {{ render_row(vision_plan_form.carrier, vision_plan_form.cust_service_phone) }}
+    {{ render_row(vision_plan_form.website, vision_plan_form.active) }}
+
+    {{ render_row(vision_plan_form.er_flat_amount_contributed, vision_plan_form.er_percentage_contributed) }}
+    {{ render_single_row(vision_plan_form.premium_matrix) }}
+
     {{ render_row(vision_plan_form.group_number, vision_plan_form.original_effective_date) }}
-    {{ render_row(vision_plan_form.renewal_date, vision_plan_form.existing) }}
-    {{ render_row(vision_plan_form.list_billed, vision_plan_form.doctor_selection_required) }}
-    {{ render_row(vision_plan_form.account_rep_name, vision_plan_form.cobra_eligible) }}
-    {{ render_row(vision_plan_form.pre_tax, vision_plan_form.carrier) }}
+    {{ render_row(vision_plan_form.renewal_date, vision_plan_form.list_billed) }}
+    {{ render_row(vision_plan_form.doctor_selection_required, vision_plan_form.cobra_eligible) }}
+    {{ render_row(vision_plan_form.pre_tax, vision_plan_form.plan_termination_timing_type_id) }}
 
     {{ render_save_update(vision_plan_form.id, 'vision_plan') }}
   </form>
