@@ -1301,7 +1301,7 @@ class EnrollFSAPlanView(EnrollPlanAJAXView):
 
 class EnrollParkingTransitPlanView(EnrollPlanAJAXView):
 
-    template_name = '/enroll/_parking_transit.html'
+    template_name = '/enroll/_parking.html'
     plan_class = ParkingTransitPlan
     prefix = 'parking_transit'
 
@@ -1346,6 +1346,27 @@ class EnrollCriticalIllnessPlanView(EnrollPlanAJAXView):
     template_name = '/enroll/_critical.html'
     plan_class = CriticalIllnessPlan
     prefix = 'critical'
+
+
+class EnrollAccidentPlanView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_accident.html'
+    plan_class = AccidentPlan
+    prefix = 'accident'
+
+
+class EnrollHospitalConfinementPlanView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_hospital_confinement.html'
+    plan_class = HospitalConfinementPlan
+    prefix = 'hospital_confinement'
+
+
+class EnrollIdentityTheftPlanView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_identity_theft.html'
+    plan_class = IdentityTheftPlan
+    prefix = 'identity'
 
 
 class BulkLoadView(MethodView):
@@ -1413,5 +1434,8 @@ register_ajax_view(EnrollEmployee401KPlanView, 'enroll_e401k_ajax', '/enroll/_e4
 register_ajax_view(EnrollLongTermCarePlanView, 'enroll_ltc_ajax', '/enroll/_ltcs/')
 register_ajax_view(EnrollCancerPlanView, 'enroll_cancer_ajax', '/enroll/_cancers/')
 register_ajax_view(EnrollCriticalIllnessPlanView, 'enroll_critical_ajax', '/enroll/_criticals/')
+register_ajax_view(EnrollAccidentPlanView, 'enroll_accident_ajax', '/enroll/_accidents/')
+register_ajax_view(EnrollHospitalConfinementPlanView, 'enroll_hospital_ajax', '/enroll/_hospital_confinements/')
+register_ajax_view(EnrollIdentityTheftPlanView, 'enroll_identity_theft_ajax', '/enroll/_identity_thefts/')
 register_ajax_view(EnrollLifeEventAJAXView, 'enroll_life_events_ajax', '/enroll/_life_events/')
 register_ajax_view(EnrollInfoAJAXView, 'enroll_info_ajax', '/enroll/_infos/')

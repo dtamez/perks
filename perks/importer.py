@@ -12,6 +12,7 @@ from datetime import date
 from decimal import Decimal
 
 from flask import flash
+import numpy as np
 import pandas
 
 from . import db, models
@@ -504,6 +505,12 @@ def get_age_bands_from_matrix(s):
 
 
 def create_plan_premiums(plan, pr_matrix):  # NOQA
+    # single premium
+    if isinstance(pr_matrix, np.int64):
+        premium = Premium(plan=plan, amount=pr_matrix)
+        db.session.add(premium)
+        return
+    # many premiums
     pr_matrix = pr_matrix.replace(' ', '')
     matrix = pr_matrix.split('\n')
     for idx, line in enumerate(matrix):

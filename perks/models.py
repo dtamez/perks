@@ -1059,7 +1059,7 @@ class AccidentPlan(Plan, SupplementalMixin, PostTaxMixin, TieredElectionMixin):
     }
 
 
-class HospitalConfinementPlan(Plan, SupplementalMixin, PostTaxMixin, ):
+class HospitalConfinementPlan(Plan, SupplementalMixin, PostTaxMixin, TieredElectionMixin):
     __tablename__ = 'hospital_confinement_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
