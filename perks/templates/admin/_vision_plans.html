@@ -9,15 +9,15 @@
 
 <div id="vision_plans_wrapper">
   <h4 class="ui dividing header">Vision Plans</h4>
+  {% include "admin/errors.html" %}
 
   <form class="ui form {% if vision_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_vision_plans">
-    {{ vision_plan_form.id }}
     {{ render_row(vision_plan_form.name, vision_plan_form.code) }}
     {{ render_row(vision_plan_form.carrier, vision_plan_form.cust_service_phone) }}
     {{ render_row(vision_plan_form.website, vision_plan_form.active) }}
 
     {{ render_row(vision_plan_form.er_flat_amount_contributed, vision_plan_form.er_percentage_contributed) }}
-    {{ render_single_row(vision_plan_form.premium_matrix) }}
+    {{ render_row(vision_plan_form.premium_matrix, vision_plan_form.description) }}
 
     {{ render_row(vision_plan_form.group_number, vision_plan_form.original_effective_date) }}
     {{ render_row(vision_plan_form.renewal_date, vision_plan_form.list_billed) }}

@@ -1,0 +1,30 @@
+{% from "_macros.html" import render_formatters, render_row, render_single_row, render_3row, render_save_update, render_table, render_ajax_methods %}
+{{ render_formatters([
+    ('cust_service_phone', 'phone'),
+    ('original_effective_date', 'date'),
+    ('renewal_date', 'date'),
+    ('website', 'url'),
+    ], 'child_standalone_add_plan-')}}
+ {{ render_ajax_methods('admin', 'child_standalone_add_plan') }}
+
+<div id="child_standalone_add_plans_wrapper">
+  <h4 class="ui dividing header">Child Standalone Accidental Death and Dismemberment Plans</h4>
+  {% include "admin/errors.html" %}
+
+  <form class="ui form {% if child_standalone_add_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_child_standalone_add_plans">
+    {{ render_row(child_standalone_add_plan_form.name, child_standalone_add_plan_form.code) }}
+    {{ render_row(child_standalone_add_plan_form.carrier, child_standalone_add_plan_form.cust_service_phone) }}
+    {{ render_row(child_standalone_add_plan_form.website, child_standalone_add_plan_form.active) }}
+
+    {{ render_row(child_standalone_add_plan_form.er_flat_amount_contributed, child_standalone_add_plan_form.er_percentage_contributed) }}
+    {{ render_single_row(child_standalone_add_plan_form.premium_matrix) }}
+
+    {{ render_3row(child_standalone_add_plan_form.increments, child_standalone_add_plan_form.min_election, child_standalone_add_plan_form.max_election) }}
+
+    {{ render_save_update(child_standalone_add_plan_form.id, 'child_standalone_add_plan') }}
+  </form>
+
+  {% if not child_standalone_add_plan_form.id.data %}
+    {{ render_table('child_standalone_add_plan', [child_standalone_add_plan_form.name, child_standalone_add_plan_form.code, child_standalone_add_plan_form.website ], child_standalone_add_plans )}}
+  {% endif %}
+</div>

@@ -1,6 +1,7 @@
 {% from "_macros.html" import render_submit %}
 <div id="upload_wrapper">
   <h4 class="ui dividing header">Bulk Upload</h4>
+  {% include "admin/errors.html" %}
   <form class="ui form" action="" enctype="multipart/form-data" method="post" id="upload_form">
     {{ form.xl }}
     <br>

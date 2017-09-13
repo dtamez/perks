@@ -1,0 +1,33 @@
+{% from "_macros.html" import render_formatters, render_row, render_single_row, render_3row, render_save_update, render_table, render_ajax_methods %}
+{{ render_formatters([
+    ('cust_service_phone', 'phone'),
+    ('original_effective_date', 'date'),
+    ('renewal_date', 'date'),
+    ('website', 'url'),
+    ], 'basic_life_plan-')}}
+ {{ render_ajax_methods('admin', 'basic_life_plan') }}
+
+<div id="basic_life_plans_wrapper">
+  <h4 class="ui dividing header">Basic Life Plans</h4>
+  {% include "admin/errors.html" %}
+
+  <form class="ui form {% if basic_life_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_basic_life_plans">
+    {{ render_row(basic_life_plan_form.name, basic_life_plan_form.code) }}
+    {{ render_row(basic_life_plan_form.carrier, basic_life_plan_form.cust_service_phone) }}
+    {{ render_row(basic_life_plan_form.website, basic_life_plan_form.active) }}
+
+    {{ render_row(basic_life_plan_form.er_flat_amount_contributed, basic_life_plan_form.er_percentage_contributed) }}
+    {{ render_row(basic_life_plan_form.premium_matrix, basic_life_plan_form.age_based_reduction_matrix) }}
+
+    {{ render_row(basic_life_plan_form.multiple_of_salary_paid, basic_life_plan_form.guarantee_issue) }}
+    {{ render_row(basic_life_plan_form.spouse_benefit, basic_life_plan_form.child_benefit) }}
+
+    {{ render_row(basic_life_plan_form.addl_salary_multiple_accidental_death, basic_life_plan_form.addl_salary_multiple_accidental_dismemberment) }}
+
+    {{ render_save_update(basic_life_plan_form.id, 'basic_life_plan') }}
+  </form>
+
+  {% if not basic_life_plan_form.id.data %}
+    {{ render_table('basic_life_plan', [basic_life_plan_form.name, basic_life_plan_form.code, basic_life_plan_form.website ], basic_life_plans )}}
+  {% endif %}
+</div>

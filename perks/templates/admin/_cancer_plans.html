@@ -10,9 +10,9 @@
 
 <div id="cancer_plans_wrapper">
   <h4 class="ui dividing header">Cancer Insurance Plans</h4>
+  {% include "admin/errors.html" %}
 
   <form class="ui form {% if cancer_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_cancer_plans">
-    {{ cancer_plan_form.id }}
     {{ render_row(cancer_plan_form.name, cancer_plan_form.active) }}
     {{ render_row(cancer_plan_form.code, cancer_plan_form.website) }}
     {{ render_row(cancer_plan_form.cust_service_phone, cancer_plan_form.not_available_in) }}

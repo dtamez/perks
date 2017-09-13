@@ -1,4 +1,4 @@
-{% from "_macros.html" import render_formatters, render_row, render_3row, render_save_update, render_table, render_ajax_methods %}
+{% from "_macros.html" import render_formatters, render_row, render_single_row, render_3row, render_save_update, render_table, render_ajax_methods %}
 {{ render_formatters([
     ('cust_service_phone', 'phone'),
     ('original_effective_date', 'date'),
@@ -12,13 +12,15 @@
 
 <div id="eap_plans_wrapper">
   <h4 class="ui dividing header">Employee Assistance Programs</h4>
+  {% include "admin/errors.html" %}
 
   <form class="ui form {% if eap_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_eap_plans">
-    {{ eap_plan_form.id }}
-    {{ render_row(eap_plan_form.name, eap_plan_form.active) }}
-    {{ render_row(eap_plan_form.code, eap_plan_form.website) }}
-    {{ render_row(eap_plan_form.cust_service_phone, eap_plan_form.not_available_in) }}
-    {{ render_row(eap_plan_form.minimum_benefit, eap_plan_form.maximum_benefit) }}
+    {{ render_row(eap_plan_form.name, eap_plan_form.code) }}
+    {{ render_row(eap_plan_form.carrier, eap_plan_form.cust_service_phone) }}
+    {{ render_row(eap_plan_form.website, eap_plan_form.active) }}
+
+    {{ render_row(eap_plan_form.er_flat_amount_contributed, eap_plan_form.er_percentage_contributed) }}
+    {{ render_single_row(eap_plan_form.premium_matrix) }}
 
     {{ render_save_update(eap_plan_form.id, 'eap_plan') }}
   </form>

@@ -10,9 +10,9 @@
 
 <div id="critical_illness_plans_wrapper">
   <h4 class="ui dividing header">Critical Illness Plans</h4>
+  {% include "admin/errors.html" %}
 
   <form class="ui form {% if critical_illness_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_critical_illness_plans">
-    {{ critical_illness_plan_form.id }}
     {{ render_row(critical_illness_plan_form.name, critical_illness_plan_form.active) }}
     {{ render_row(critical_illness_plan_form.code, critical_illness_plan_form.website) }}
     {{ render_row(critical_illness_plan_form.cust_service_phone, critical_illness_plan_form.not_available_in) }}

@@ -1,20 +1,16 @@
 {% extends 'admin.html' %}
 {% block step_content %}
-    {% include "admin/_fsa_plans.html" %}
-    <br>
-    {% include "admin/_hsa_plans.html" %}
-    <br>
-    {% include "admin/_supp_life_plans.html" %}
-    <br>
-    {% include "admin/_e401k_plans.html" %}
-    <br>
-    {% include "admin/_ltc_plans.html" %}
+    {% include "admin/_critical_illness_plans.html" %}
     <br>
     {% include "admin/_cancer_plans.html" %}
     <br>
-    {% include "admin/_critical_illness_plans.html" %}
+    {% include "admin/_accident_plans.html" %}
+    <br>
+    {% include "admin/_hospital_plans.html" %}
     <br>
     {% include "admin/_parking_transit_plans.html" %}
+    <br>
+    {% include "admin/_identity_theft_plans.html" %}
     <br>
     {% include "admin/_other_plans.html" %}
 {% endblock step_content %}

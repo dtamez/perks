@@ -1,0 +1,30 @@
+{% from "_macros.html" import render_formatters, render_row, render_single_row, render_3row, render_save_update, render_table, render_ajax_methods %}
+{{ render_formatters([
+    ('cust_service_phone', 'phone'),
+    ('original_effective_date', 'date'),
+    ('renewal_date', 'date'),
+    ('website', 'url'),
+    ], 'spouse_standalone_add_plan-')}}
+ {{ render_ajax_methods('admin', 'spouse_standalone_add_plan') }}
+
+<div id="spouse_standalone_add_plans_wrapper">
+  <h4 class="ui dividing header">Spouse Standalone Accidental Death and Dismemberment Plans</h4>
+  {% include "admin/errors.html" %}
+
+  <form class="ui form {% if spouse_standalone_add_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_spouse_standalone_add_plans">
+    {{ render_row(spouse_standalone_add_plan_form.name, spouse_standalone_add_plan_form.code) }}
+    {{ render_row(spouse_standalone_add_plan_form.carrier, spouse_standalone_add_plan_form.cust_service_phone) }}
+    {{ render_row(spouse_standalone_add_plan_form.website, spouse_standalone_add_plan_form.active) }}
+
+    {{ render_row(spouse_standalone_add_plan_form.er_flat_amount_contributed, spouse_standalone_add_plan_form.er_percentage_contributed) }}
+    {{ render_single_row(spouse_standalone_add_plan_form.premium_matrix) }}
+
+    {{ render_3row(spouse_standalone_add_plan_form.increments, spouse_standalone_add_plan_form.min_election, spouse_standalone_add_plan_form.max_election) }}
+
+    {{ render_save_update(spouse_standalone_add_plan_form.id, 'spouse_standalone_add_plan') }}
+  </form>
+
+  {% if not spouse_standalone_add_plan_form.id.data %}
+    {{ render_table('spouse_standalone_add_plan', [spouse_standalone_add_plan_form.name, spouse_standalone_add_plan_form.code, spouse_standalone_add_plan_form.website ], spouse_standalone_add_plans )}}
+  {% endif %}
+</div>

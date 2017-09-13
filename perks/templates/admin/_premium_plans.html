@@ -3,6 +3,7 @@
 {% for plan in plans %}
   <div id='plan_{{ plan.id }}_wrapper'>
     <h4 class="ui dividing header">{{ plan.name }} Premiums</h4>
+  {% include "admin/errors.html" %}
     {% set tiered_premiums = plan.tiered_premiums %}
     {% include 'admin/_tiered_premiums.html' %}
   </div>

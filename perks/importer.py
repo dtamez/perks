@@ -464,6 +464,7 @@ def import_whole_life_plans(xls):
         plan.minimum_benefit = Decimal(row[MINIMUM_BENEFIT])
         plan.maximum_benefit = Decimal(row[MAXIMUM_BENEFIT])
         plan.max_multiple_of_salary_paid = Decimal(row[MAXIMUM_BENEFIT])
+        create_age_based_reductions(plan, row[BENEFIT_REDUCTIONS_BY_AGE])
         db.session.add(plan)
         get_premium_related(row, plan)
         print plan.name
@@ -485,6 +486,7 @@ def import_universal_life_plans(xls):
         plan.minimum_benefit = Decimal(row[MINIMUM_BENEFIT])
         plan.maximum_benefit = Decimal(row[MAXIMUM_BENEFIT])
         plan.max_multiple_of_salary_paid = Decimal(row[MAXIMUM_BENEFIT])
+        create_age_based_reductions(plan, row[BENEFIT_REDUCTIONS_BY_AGE])
         db.session.add(plan)
         get_premium_related(row, plan)
         print plan.name

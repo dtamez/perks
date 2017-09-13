@@ -1,0 +1,33 @@
+{% from "_macros.html" import render_formatters, render_row, render_single_row, render_3row, render_save_update, render_table, render_ajax_methods %}
+{{ render_formatters([
+    ('cust_service_phone', 'phone'),
+    ('original_effective_date', 'date'),
+    ('renewal_date', 'date'),
+    ('website', 'url'),
+    ], 'dental_vision_plan-')}}
+ {{ render_ajax_methods('admin', 'dental_vision_plan') }}
+
+<div id="dental_vision_plans_wrapper">
+  <h4 class="ui dividing header">Dental Vision Bundle Plans</h4>
+  {% include "admin/errors.html" %}
+
+  <form class="ui form {% if dental_vision_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_dental_vision_plans">
+    {{ render_row(dental_vision_plan_form.name, dental_vision_plan_form.code) }}
+    {{ render_row(dental_vision_plan_form.carrier, dental_vision_plan_form.cust_service_phone) }}
+    {{ render_row(dental_vision_plan_form.website, dental_vision_plan_form.active) }}
+
+    {{ render_row(dental_vision_plan_form.er_flat_amount_contributed, dental_vision_plan_form.er_percentage_contributed) }}
+    {{ render_single_row(dental_vision_plan_form.premium_matrix) }}
+
+    {{ render_row(dental_vision_plan_form.group_number, dental_vision_plan_form.original_effective_date) }}
+    {{ render_row(dental_vision_plan_form.renewal_date, dental_vision_plan_form.list_billed) }}
+    {{ render_row(dental_vision_plan_form.doctor_selection_required, dental_vision_plan_form.cobra_eligible) }}
+    {{ render_row(dental_vision_plan_form.pre_tax, dental_vision_plan_form.plan_termination_timing_type_id) }}
+
+    {{ render_save_update(dental_vision_plan_form.id, 'dental_vision_plan') }}
+  </form>
+
+  {% if not dental_vision_plan_form.id.data %}
+    {{ render_table('dental_vision_plan', [dental_vision_plan_form.name, dental_vision_plan_form.code, dental_vision_plan_form.website ], dental_vision_plans )}}
+  {% endif %}
+</div>

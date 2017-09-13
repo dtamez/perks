@@ -145,9 +145,10 @@ class LocationForm(ModelForm):
 
     class Meta:
         model = models.Location
-        date_format = '%m/%d/%Y'
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
         include = ['id']
-    id = IntegerField(widget=HiddenInput())
+    id = IntegerField([validators.optional()], widget=HiddenInput())
 
 
 def locations():
@@ -161,7 +162,8 @@ class EmployeeForm(ModelForm):
 
     class Meta:
         model = models.Employee
-        date_format = '%m/%d/%Y'
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
         include = ['id']
     id = IntegerField(widget=HiddenInput())
     user = ModelFormField(UserForm)
@@ -188,7 +190,8 @@ class DependentForm(ModelForm):
 
     class Meta:
         model = models.Dependent
-        date_format = '%m/%d/%Y'
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
         include = ['id']
     id = IntegerField(widget=HiddenInput())
     employee_id = IntegerField(widget=HiddenInput())
@@ -254,7 +257,10 @@ def carriers():
 class AdminPlanForm(ModelForm):
     active = BooleanField('Active?')
     id = IntegerField(widget=HiddenInput())
+    #  id = IntegerField()
     premium_matrix = TextAreaField()
+    description = TextAreaField()
+    carrier = QuerySelectField('Carrier', query_factory=carriers, get_label='name')
 
 
 class MedicalPlanForm(AdminPlanForm):
@@ -264,9 +270,9 @@ class MedicalPlanForm(AdminPlanForm):
 
     class Meta:
         model = models.MedicalPlan
-        date_format = '%m/%d/%Y'
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
         include = ['id']
-    carrier = QuerySelectField('Carrier', query_factory=carriers, get_label='name')
 
 
 def bundle_plans():
@@ -280,7 +286,8 @@ class DentalPlanForm(AdminPlanForm):
 
     class Meta:
         model = models.DentalPlan
-        date_format = '%m/%d/%Y'
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
         include = ['id']
     carrier = QuerySelectField('Carrier', query_factory=carriers, get_label='name')
 
@@ -292,9 +299,58 @@ class VisionPlanForm(AdminPlanForm):
 
     class Meta:
         model = models.VisionPlan
-        date_format = '%m/%d/%Y'
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
         include = ['id']
     carrier = QuerySelectField('Carrier', query_factory=carriers, get_label='name')
+
+
+class MedicalDentalVisionPlanForm(AdminPlanForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.update({'prefix': 'medical_dental_vision_plan'})
+        super(MedicalDentalVisionPlanForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = models.MedicalDentalVisionBundlePlan
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
+        include = ['id']
+
+
+class MedicalDentalPlanForm(AdminPlanForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.update({'prefix': 'medical_dental_plan'})
+        super(MedicalDentalPlanForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = models.MedicalDentalBundlePlan
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
+        include = ['id']
+
+
+class MedicalVisionPlanForm(AdminPlanForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.update({'prefix': 'medical_vision_plan'})
+        super(MedicalVisionPlanForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = models.MedicalVisionBundlePlan
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
+        include = ['id']
+
+
+class DentalVisionPlanForm(AdminPlanForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.update({'prefix': 'dental_vision_plan'})
+        super(DentalVisionPlanForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = models.DentalVisionBundlePlan
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
+        include = ['id']
 
 
 class EAPPlanForm(AdminPlanForm):
@@ -304,7 +360,8 @@ class EAPPlanForm(AdminPlanForm):
 
     class Meta:
         model = models.EAPPlan
-        date_format = '%m/%d/%Y'
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
         include = ['id']
 
 
@@ -315,7 +372,8 @@ class LTDPlanForm(AdminPlanForm):
 
     class Meta:
         model = models.LTDPlan
-        date_format = '%m/%d/%Y'
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
         include = ['id']
 
 
@@ -326,7 +384,8 @@ class LTDVoluntaryPlanForm(AdminPlanForm):
 
     class Meta:
         model = models.LTDVoluntaryPlan
-        date_format = '%m/%d/%Y'
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
         include = ['id']
 
 
@@ -337,7 +396,8 @@ class STDPlanForm(AdminPlanForm):
 
     class Meta:
         model = models.STDPlan
-        date_format = '%m/%d/%Y'
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
         include = ['id']
     payout_interval = IntegerField('Payout Interval')
     max_weekly_benefit = StringField('Maximum Weekly Benefit')
@@ -347,12 +407,89 @@ class STDPlanForm(AdminPlanForm):
 
 class BasicLifePlanForm(AdminPlanForm):
     def __init__(self, *args, **kwargs):
-        kwargs.update({'prefix': 'add_plan'})
+        kwargs.update({'prefix': 'basic_life_plan'})
         super(BasicLifePlanForm, self).__init__(*args, **kwargs)
 
     class Meta:
         model = models.BasicLifePlan
-        date_format = '%m/%d/%Y'
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
+        include = ['id']
+    age_based_reduction_matrix = TextAreaField()
+
+
+class VoluntaryLifePlanForm(AdminPlanForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.update({'prefix': 'voluntary_life_plan'})
+        super(VoluntaryLifePlanForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = models.VoluntaryLifePlan
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
+        include = ['id']
+    age_based_reduction_matrix = TextAreaField()
+
+
+class SpouseVoluntaryLifePlanForm(AdminPlanForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.update({'prefix': 'spouse_voluntary_life_plan'})
+        super(SpouseVoluntaryLifePlanForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = models.SpouseVoluntaryLifePlan
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
+        include = ['id']
+    age_based_reduction_matrix = TextAreaField()
+
+
+class ChildVoluntaryLifePlanForm(AdminPlanForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.update({'prefix': 'child_voluntary_life_plan'})
+        super(ChildVoluntaryLifePlanForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = models.ChildVoluntaryLifePlan
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
+        include = ['id']
+    age_based_reduction_matrix = TextAreaField()
+
+
+class StandaloneADDPlanForm(AdminPlanForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.update({'prefix': 'standalone_add_plan'})
+        super(StandaloneADDPlanForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = models.StandaloneADDPlan
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
+        include = ['id']
+
+
+class SpouseStandaloneADDPlanForm(AdminPlanForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.update({'prefix': 'spouse_standalone_add_plan'})
+        super(SpouseStandaloneADDPlanForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = models.SpouseStandaloneADDPlan
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
+        include = ['id']
+
+
+class ChildStandaloneADDPlanForm(AdminPlanForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.update({'prefix': 'child_standalone_add_plan'})
+        super(ChildStandaloneADDPlanForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = models.ChildStandaloneADDPlan
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
         include = ['id']
 
 
@@ -363,7 +500,20 @@ class FSAMedicalPlanForm(AdminPlanForm):
 
     class Meta:
         model = models.FSAMedicalPlan
-        date_format = '%m/%d/%Y'
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
+        include = ['id']
+
+
+class FSADependentCarePlanForm(AdminPlanForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.update({'prefix': 'fsa_dependent_care_plan'})
+        super(FSADependentCarePlanForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = models.FSADependentCarePlan
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
         include = ['id']
 
 
@@ -375,7 +525,8 @@ class ParkingTransitPlanForm(AdminPlanForm):
 
     class Meta:
         model = models.ParkingTransitPlan
-        date_format = '%m/%d/%Y'
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
         include = ['id']
 
 
@@ -386,7 +537,8 @@ class HRAPlanForm(AdminPlanForm):
 
     class Meta:
         model = models.HRAPlan
-        date_format = '%m/%d/%Y'
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
         include = ['id']
 
 
@@ -397,7 +549,8 @@ class HSAPlanForm(AdminPlanForm):
 
     class Meta:
         model = models.HSAPlan
-        date_format = '%m/%d/%Y'
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
         include = ['id']
 
 
@@ -408,7 +561,8 @@ class Employee401KPlanForm(AdminPlanForm):
 
     class Meta:
         model = models.Employee401KPlan
-        date_format = '%m/%d/%Y'
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
         include = ['id']
 
 
@@ -419,7 +573,8 @@ class LongTermCarePlanForm(AdminPlanForm):
 
     class Meta:
         model = models.LongTermCarePlan
-        date_format = '%m/%d/%Y'
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
         include = ['id']
 
 
@@ -430,7 +585,8 @@ class CancerPlanForm(AdminPlanForm):
 
     class Meta:
         model = models.CancerPlan
-        date_format = '%m/%d/%Y'
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
         include = ['id']
 
 
@@ -441,7 +597,44 @@ class CriticalIllnessPlanForm(AdminPlanForm):
 
     class Meta:
         model = models.CriticalIllnessPlan
-        date_format = '%m/%d/%Y'
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
+        include = ['id']
+
+
+class AccidentPlanForm(AdminPlanForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.update({'prefix': 'accident_plan'})
+        super(AccidentPlanForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = models.AccidentPlan
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
+        include = ['id']
+
+
+class HospitalConfinementPlanForm(AdminPlanForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.update({'prefix': 'hospital_plan'})
+        super(HospitalConfinementPlanForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = models.HospitalConfinementPlan
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
+        include = ['id']
+
+
+class IdentityTheftPlanForm(AdminPlanForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.update({'prefix': 'identity_theft_plan'})
+        super(IdentityTheftPlanForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = models.IdentityTheftPlan
+        #  date_format = '%m/%d/%Y'
+        date_format = '%Y-%m-%d'
         include = ['id']
 
 

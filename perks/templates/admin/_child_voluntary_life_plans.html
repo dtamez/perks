@@ -1,0 +1,32 @@
+{% from "_macros.html" import render_formatters, render_row, render_single_row, render_3row, render_save_update, render_table, render_ajax_methods %}
+{{ render_formatters([
+    ('cust_service_phone', 'phone'),
+    ('original_effective_date', 'date'),
+    ('renewal_date', 'date'),
+    ('website', 'url'),
+    ], 'child_voluntary_life_plan-')}}
+ {{ render_ajax_methods('admin', 'child_voluntary_life_plan') }}
+
+<div id="child_voluntary_life_plans_wrapper">
+  <h4 class="ui dividing header">Child Voluntary Life Plans</h4>
+  {% include "admin/errors.html" %}
+
+  <form class="ui form {% if child_voluntary_life_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_voluntary_life_plans">
+    {{ render_row(child_voluntary_life_plan_form.name, child_voluntary_life_plan_form.code) }}
+    {{ render_row(child_voluntary_life_plan_form.carrier, child_voluntary_life_plan_form.cust_service_phone) }}
+    {{ render_row(child_voluntary_life_plan_form.website, child_voluntary_life_plan_form.active) }}
+
+    {{ render_row(child_voluntary_life_plan_form.er_flat_amount_contributed, child_voluntary_life_plan_form.er_percentage_contributed) }}
+    {{ render_single_row(child_voluntary_life_plan_form.premium_matrix) }}
+
+    {{ render_row(child_voluntary_life_plan_form.min_election, child_voluntary_life_plan_form.max_election) }}
+    {{ render_row(child_voluntary_life_plan_form.increments, child_voluntary_life_plan_form.guarantee_issue) }}
+    {{ render_row(child_voluntary_life_plan_form.addl_salary_multiple_accidental_death, child_voluntary_life_plan_form.addl_salary_multiple_accidental_dismemberment) }}
+
+    {{ render_save_update(child_voluntary_life_plan_form.id, 'child_voluntary_life_plan') }}
+  </form>
+
+  {% if not child_voluntary_life_plan_form.id.data %}
+    {{ render_table('child_voluntary_life_plan', [child_voluntary_life_plan_form.name, child_voluntary_life_plan_form.code, child_voluntary_life_plan_form.website ], child_voluntary_life_plans )}}
+  {% endif %}
+</div>

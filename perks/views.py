@@ -5,8 +5,9 @@
 #
 # Distributed under terms of the MIT license.
 from datetime import date
+from decimal import Decimal
 import locale
-
+import numpy as np
 
 from flask import g, flash, request, render_template, redirect, url_for
 from flask.views import MethodView
@@ -17,42 +18,59 @@ from werkzeug.datastructures import MultiDict
 
 from . import app, db
 from .forms import (
+    AccidentPlanForm,
     AddressForm,
     BeneficiariesForm,
     CancerPlanForm,
     CarrierForm,
+    ChildStandaloneADDPlanForm,
+    ChildVoluntaryLifePlanForm,
     CriticalIllnessPlanForm,
     DentalPlanForm,
+    DentalVisionPlanForm,
     DependentForm,
     EAPPlanForm,
     Employee401KPlanForm,
     EmployeeForm,
     EmployeeInfoForm,
     EstateBeneficiaryForm,
+    FSADependentCarePlanForm,
     FSAMedicalPlanForm,
+    HospitalConfinementPlanForm,
     HRAPlanForm,
     HSAPlanForm,
+    IdentityTheftPlanForm,
     LongTermCarePlanForm,
     LTDPlanForm,
     BasicLifePlanForm,
     LifeEventsForm,
     LocationForm,
     MedicalPlanForm,
+    MedicalDentalVisionPlanForm,
+    MedicalDentalPlanForm,
+    MedicalVisionPlanForm,
     ParkingTransitPlanForm,
     PremiumForm,
     STDPlanForm,
+    StandaloneADDPlanForm,
+    SpouseStandaloneADDPlanForm,
+    SpouseVoluntaryLifePlanForm,
     SuccessionOfHeirsBeneficiaryForm,
     UploadForm,
     UserForm,
     VisionPlanForm,
+    VoluntaryLifePlanForm,
 )
 from .importer import do_bulk_load
 from .models import (
     AccidentPlan,
+    AgeBandedTier,
+    AgeBasedReduction,
     Address,
     BasicLifePlan,
     CancerPlan,
     Carrier,
+    ChildStandaloneADDPlan,
     ChildVoluntaryLifePlan,
     CriticalIllnessPlan,
     DentalPlan,
@@ -68,6 +86,7 @@ from .models import (
     FAMILY_TIER_TYPES,
     FSADependentCarePlan,
     FSAMedicalPlan,
+    GENDER_TYPES,
     HRAPlan,
     HSAPlan,
     HospitalConfinementPlan,
@@ -87,9 +106,11 @@ from .models import (
     Plan,
     Premium,
     Role,
+    SMOKER_TYPES,
     STDPlan,
     STDVoluntaryPlan,
     SpouseVoluntaryLifePlan,
+    SpouseStandaloneADDPlan,
     StandaloneADDPlan,
     SuccessionOfHeirsBeneficiary,
     UniversalLifePlan,
@@ -99,10 +120,14 @@ from .models import (
     WholeLifePlan,
     user_manager,
 )
+from .util.orm import get_or_create
 
 
 env = Environment(loader=PackageLoader('perks', 'templates'))
 locale.setlocale(locale.LC_ALL, '')
+gender_keys = [k for k, v in GENDER_TYPES]
+smoker_keys = [k for k, v in SMOKER_TYPES]
+family_tier_keys = [k for k, v in FAMILY_TIER_TYPES]
 
 
 @app.login_manager.user_loader
@@ -155,9 +180,12 @@ class AJAXCrudView(MethodView):
 
     def post(self):
         forms = {}
+        errors = []
         valid = True
         main = self.main['model']()
         form = self.main['form'](request.form)
+        import ipdb
+        ipdb.set_trace()
         if not form.validate():
             valid = False
         forms[self.main['form_name']] = form
@@ -181,21 +209,28 @@ class AJAXCrudView(MethodView):
 
         self.on_save(main)
 
-        db.session.add(main)
-        db.session.commit()
+        try:
+            db.session.add(main)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            errors.append(e.message)
 
         objects = self.main['model'].query.all()
         ctx = {self.main['plural']: objects, self.main['form_name']: self.main['form'](None)}
         for sub in self.subs:
             ctx[sub['form_name']] = sub['form'](None)
+        ctx['errors'] = errors
         return template.render(ctx)
 
     def put(self, id):
+        import ipdb
+        ipdb.set_trace()
         forms = {}
         valid = True
         main = self.main['model'].query.get(id)
         form = self.main['form'](request.form, obj=main)
-        if not form.validate:
+        if not form.validate():
             valid = False
         forms[self.main['form_name']] = form
         form.populate_obj(main)
@@ -229,13 +264,79 @@ class AJAXCrudView(MethodView):
         template = env.get_template(self.main['template'])
         return template.render(ctx)
 
+    def discard_subclasses(self, objects):
+        pass
+
     def display_all(self):
         objects = self.main['model'].query.all()
+        self.discard_subclasses(objects)
         template = env.get_template(self.main['template'])
         ctx = {self.main['plural']: objects, self.main['form_name']: self.main['form'](None)}
         for sub in self.subs:
             ctx[sub['form_name']] = sub['form'](None)
         return template.render(ctx)
+
+
+def get_age_bands_from_matrix(s):
+    s = s.replace(' ', '')
+    if '-' in s:
+        vals = s.split('-')
+        if len(vals) == 2 and vals[0].strip().isdigit() and vals[1].strip().isdigit():
+            return int(vals[0].strip()), int(vals[1].strip())
+    elif '+' in s:
+        vals = s.split('+')
+        if len(vals) == 2 and vals[0].strip().isdigit():
+            return int(vals[0].strip()), None
+
+    return None
+
+
+def create_plan_premiums(plan, pr_matrix):  # NOQA
+    # single premium
+    if isinstance(pr_matrix, np.int64):
+        premium = Premium(plan=plan, amount=pr_matrix)
+        db.session.add(premium)
+        return
+    # many premiums
+    pr_matrix = pr_matrix.replace(' ', '')
+    matrix = pr_matrix.split('\n')
+    for idx, line in enumerate(matrix):
+        matrix[idx] = line.split(',')
+    # Gender, Age, Age bands, Smoker, Family Tier, rate%, $amount
+    for line in matrix:
+        premium = Premium(plan=plan)
+        print 'creating {} dimensional premium'.format(len(line))
+        for dimension in line:
+            age_bands = get_age_bands_from_matrix(dimension)
+            print 'age_bands: ', age_bands
+            if dimension in gender_keys:
+                premium.gender = dimension
+            elif dimension in smoker_keys:
+                premium.smoker_status = dimension
+            elif dimension in family_tier_keys:
+                premium.family_tier = dimension
+            elif dimension.isdigit():
+                premium.age = int(dimension)
+            elif age_bands:
+                tier = get_or_create(db.session, AgeBandedTier, plan=plan, low=age_bands[0], high=age_bands[1])
+                premium.age_banded_tier = tier
+            elif dimension.startswith('$'):
+                premium.amount = Decimal(dimension[1:])
+            elif dimension.endswith('%'):
+                premium.rate = Decimal(dimension[:-1]) / 100
+            else:
+                raise Exception("Invalid premium matrix dimension value: .".format(dimension))
+        db.session.add(premium)
+
+
+def create_age_based_reductions(plan, data):
+    lines = data.split('\n')
+    for idx, line in enumerate(lines):
+        lines[idx] = line.split(',')
+
+    for line in lines:
+        abr = AgeBasedReduction(plan=plan, age=line[0], percentage=Decimal(line[1]))
+        db.session.add(abr)
 
 
 # ENROLL
@@ -379,8 +480,6 @@ def enroll_group():
 
     fsa_plans = FSAMedicalPlan.query.filter(Plan.active == True).all()
     fsa_selections = get_selections(fsa_plans, enrollment.id)
-    #  fsa_dependent_plans = FSADependentCarePlan.query.filter(Plan.active == True).all()
-    #  fsa_dependent_selections = get_selections(fsa_dependent_plans, enrollment.id)
 
     hsa_plans = HSAPlan.query.filter(Plan.active == True).all()
     hsa_selections = get_selections(hsa_plans, enrollment.id)
@@ -407,7 +506,6 @@ def enroll_group():
            'std_voluntary_selections': std_voluntary_selections,
 
            'fsa_selections': fsa_selections,
-           #  'fsa_dependent_selections': fsa_dependent_selections,
            'hsa_selections': hsa_selections,
            'hra_selections': hra_selections,
            'e401k_selections': e401k_selections,
@@ -753,12 +851,30 @@ def admin_core():
     dental_plan_form = DentalPlanForm()
     vision_plans = VisionPlan.query.all()
     vision_plan_form = VisionPlanForm()
-    return render_template('admin/core.html', medical_plans=medical_plans,
+    medical_dental_vision_plans = MedicalDentalVisionBundlePlan.query.all()
+    medical_dental_vision_plan_form = MedicalDentalVisionPlanForm()
+    medical_dental_plans = MedicalDentalBundlePlan.query.all()
+    medical_dental_plan_form = MedicalDentalPlanForm()
+    medical_vision_plans = MedicalVisionBundlePlan.query.all()
+    medical_vision_plan_form = MedicalVisionPlanForm()
+    dental_vision_plans = DentalVisionBundlePlan.query.all()
+    dental_vision_plan_form = DentalVisionPlanForm()
+    return render_template('admin/core.html',
+                           medical_plans=medical_plans,
                            medical_plan_form=medical_plan_form,
                            dental_plans=dental_plans,
                            dental_plan_form=dental_plan_form,
                            vision_plans=vision_plans,
-                           vision_plan_form=vision_plan_form)
+                           vision_plan_form=vision_plan_form,
+                           medical_dental_vision_plan_form=medical_dental_vision_plan_form,
+                           medical_dental_vision_plans=medical_dental_vision_plans,
+                           medical_dental_plan_form=medical_dental_plan_form,
+                           medical_dental_plans=medical_dental_plans,
+                           medical_vision_plan_form=medical_vision_plan_form,
+                           medical_vision_plans=medical_vision_plans,
+                           dental_vision_plan_form=dental_vision_plan_form,
+                           dental_vision_plans=dental_vision_plans,
+                           )
 
 
 @app.route('/admin/group', methods=['GET', 'POST'])
@@ -766,22 +882,86 @@ def admin_core():
 def admin_group():
     g.active_tab = 'admin'
     g.active_step = 'group'
-    eap_plans = EAPPlan.query.all()
-    eap_plan_form = EAPPlanForm()
-    std_plans = STDPlan.query.all()
-    std_plan_form = STDPlanForm()
+    basic_life_plans = BasicLifePlan.query.all()
+    basic_life_plan_form = BasicLifePlanForm()
+    voluntary_life_plans = VoluntaryLifePlan.query.all()
+    voluntary_life_plan_form = VoluntaryLifePlanForm()
+    for idx, plan in enumerate(voluntary_life_plans):
+        if isinstance(plan, SpouseVoluntaryLifePlan) or isinstance(plan, ChildVoluntaryLifePlan):
+            voluntary_life_plans.pop(idx)
+    spouse_voluntary_life_plans = SpouseVoluntaryLifePlan.query.all()
+    spouse_voluntary_life_plan_form = SpouseVoluntaryLifePlanForm()
+    child_voluntary_life_plans = ChildVoluntaryLifePlan.query.all()
+    child_voluntary_life_plan_form = ChildVoluntaryLifePlanForm()
+    standalone_add_plans = StandaloneADDPlan.query.all()
+    standalone_add_plan_form = StandaloneADDPlanForm()
+    spouse_standalone_add_plans = SpouseStandaloneADDPlan.query.all()
+    spouse_standalone_add_plan_form = SpouseStandaloneADDPlanForm()
+    child_standalone_add_plans = ChildStandaloneADDPlan.query.all()
+    child_standalone_add_plan_form = ChildStandaloneADDPlanForm()
+
     ltd_plans = LTDPlan.query.all()
     ltd_plan_form = LTDPlanForm()
-    add_plans = BasicLifePlan.query.all()
-    add_plan_form = BasicLifePlanForm()
-    return render_template('admin/group.html', eap_plans=eap_plans,
-                           eap_plan_form=eap_plan_form,
+    std_plans = STDPlan.query.all()
+    std_plan_form = STDPlanForm()
+
+    fsa_medical_plans = FSAMedicalPlan.query.all()
+    for idx, plan in enumerate(fsa_medical_plans):
+        if isinstance(plan, FSADependentCarePlan):
+            fsa_medical_plans.pop(idx)
+    fsa_medical_plan_form = FSAMedicalPlanForm()
+    fsa_dependent_care_plans = FSADependentCarePlan.query.all()
+    fsa_dependent_care_plan_form = FSADependentCarePlanForm()
+    hsa_plans = HSAPlan.query.all()
+    hsa_plan_form = HSAPlanForm()
+    hra_plans = HRAPlan.query.all()
+    hra_plan_form = HRAPlanForm()
+
+    e401k_plans = Employee401KPlan.query.all()
+    e401k_plan_form = Employee401KPlanForm()
+    ltc_plans = LongTermCarePlan.query.all()
+    ltc_plan_form = LongTermCarePlanForm()
+
+    eap_plans = EAPPlan.query.all()
+    eap_plan_form = EAPPlanForm()
+    return render_template('admin/group.html',
+                           basic_life_plans=basic_life_plans,
+                           basic_life_plan_form=basic_life_plan_form,
+                           voluntary_life_plans=voluntary_life_plans,
+                           voluntary_life_plan_form=voluntary_life_plan_form,
+                           spouse_voluntary_life_plans=spouse_voluntary_life_plans,
+                           spouse_voluntary_life_plan_form=spouse_voluntary_life_plan_form,
+                           child_voluntary_life_plans=child_voluntary_life_plans,
+                           child_voluntary_life_plan_form=child_voluntary_life_plan_form,
+                           standalone_add_plans=standalone_add_plans,
+                           standalone_add_plan_form=standalone_add_plan_form,
+                           spouse_standalone_add_plans=spouse_standalone_add_plans,
+                           spouse_standalone_add_plan_form=spouse_standalone_add_plan_form,
+                           child_standalone_add_plans=child_standalone_add_plans,
+                           child_standalone_add_plan_form=child_standalone_add_plan_form,
+
                            ltd_plans=ltd_plans,
                            ltd_plan_form=ltd_plan_form,
                            std_plans=std_plans,
                            std_plan_form=std_plan_form,
-                           add_plans=add_plans,
-                           add_plan_form=add_plan_form)
+
+                           fsa_medical_plans=fsa_medical_plans,
+                           fsa_medical_plan_form=fsa_medical_plan_form,
+                           fsa_dependent_care_plans=fsa_dependent_care_plans,
+                           fsa_dependent_care_plan_form=fsa_dependent_care_plan_form,
+                           hsa_plans=hsa_plans,
+                           hsa_plan_form=hsa_plan_form,
+                           hra_plans=hra_plans,
+                           hra_plan_form=hra_plan_form,
+
+                           e401k_plans=e401k_plans,
+                           e401k_plan_form=e401k_plan_form,
+                           ltc_plans=ltc_plans,
+                           ltc_plan_form=ltc_plan_form,
+
+                           eap_plans=eap_plans,
+                           eap_plan_form=eap_plan_form,
+                           )
 
 
 @app.route('/admin/supplemental', methods=['GET', 'POST'])
@@ -789,36 +969,32 @@ def admin_group():
 def admin_supplemental():
     g.active_tab = 'admin'
     g.active_step = 'supplemental'
-    fsa_plans = FSAMedicalPlan.query.all()
-    fsa_plan_form = FSAMedicalPlanForm()
-    hsa_plans = HSAPlan.query.all()
-    hsa_plan_form = HSAPlanForm()
-    e401k_plans = Employee401KPlan.query.all()
-    e401k_plan_form = Employee401KPlanForm()
-    cancer_plans = CancerPlan.query.all()
-    cancer_plan_form = CancerPlanForm()
-    ltc_plans = LongTermCarePlan.query.all()
-    ltc_plan_form = LongTermCarePlanForm()
     critical_illness_plans = CriticalIllnessPlan.query.all()
     critical_illness_plan_form = CriticalIllnessPlanForm()
+    cancer_plans = CancerPlan.query.all()
+    cancer_plan_form = CancerPlanForm()
+    accident_plans = AccidentPlan.query.all()
+    accident_plan_form = AccidentPlanForm()
+    hospital_confinement_plans = HospitalConfinementPlan.query.all()
+    hospital_confinement_plan_form = HospitalConfinementPlanForm()
     parking_transit_plans = ParkingTransitPlan.query.all()
     parking_transit_plan_form = ParkingTransitPlanForm()
+    identity_theft_plans = IdentityTheftPlan.query.all()
+    identity_theft_plan_form = IdentityTheftPlanForm()
     return render_template(
         'admin/supplemental.html',
-        fsa_plans=fsa_plans,
-        fsa_plan_form=fsa_plan_form,
-        hsa_plans=hsa_plans,
-        hsa_plan_form=hsa_plan_form,
-        e401k_plans=e401k_plans,
-        e401k_plan_form=e401k_plan_form,
-        cancer_plans=cancer_plans,
-        cancer_plan_form=cancer_plan_form,
         cricial_illness_plans=critical_illness_plans,
         critical_illness_plan_form=critical_illness_plan_form,
-        ltc_plans=ltc_plans,
-        ltc_plan_form=ltc_plan_form,
+        cancer_plans=cancer_plans,
+        cancer_plan_form=cancer_plan_form,
+        accident_plans=accident_plans,
+        accident_plan_form=accident_plan_form,
+        hospital_confinement_plans=hospital_confinement_plans,
+        hospital_confinement_plan_form=hospital_confinement_plan_form,
         parking_transit_plans=parking_transit_plans,
         parking_transit_plan_form=parking_transit_plan_form,
+        identity_theft_plans=identity_theft_plans,
+        identity_theft_plan_form=identity_theft_plan_form,
     )
 
 
@@ -882,6 +1058,42 @@ class VisionPlanView(AJAXCrudView):
     subs = []
 
 
+class MedicalDentalVisionPlanView(AJAXCrudView):
+    main = {'model': MedicalDentalVisionBundlePlan, 'form': MedicalDentalVisionPlanForm,
+            'class': 'MedicalDentalVisionBundlePlan', 'form_class': 'MedicalDentalVisionPlanForm',
+            'single': 'medical_dental_vision_plan', 'plural': 'medical_dental_vision_plans',
+            'form_name': 'medical_dental_vision_plan_form',
+            'template': '/admin/_medical_dental_vision_plans.html'}
+    subs = []
+
+
+class MedicalDentalPlanView(AJAXCrudView):
+    main = {'model': MedicalDentalBundlePlan, 'form': MedicalDentalPlanForm,
+            'class': 'MedicalDentalBundlePlan', 'form_class': 'MedicalDentalPlanForm',
+            'single': 'medical_dental_plan', 'plural': 'medical_dental_plans',
+            'form_name': 'medical_dental_plan_form',
+            'template': '/admin/_medical_dental_plans.html'}
+    subs = []
+
+
+class MedicalVisionPlanView(AJAXCrudView):
+    main = {'model': MedicalVisionBundlePlan, 'form': MedicalVisionPlanForm,
+            'class': 'MedicalVisionBundlePlan', 'form_class': 'MedicalVisionPlanForm',
+            'single': 'medical_vision_plan', 'plural': 'medical_vision_plans',
+            'form_name': 'medical_vision_plan_form',
+            'template': '/admin/_medical_vision_plans.html'}
+    subs = []
+
+
+class DentalVisionPlanView(AJAXCrudView):
+    main = {'model': DentalVisionBundlePlan, 'form': DentalVisionPlanForm,
+            'class': 'DentalVisionBundlePlan', 'form_class': 'DentalVisionPlanForm',
+            'single': 'dental_vision_plan', 'plural': 'dental_vision_plans',
+            'form_name': 'dental_vision_plan_form',
+            'template': '/admin/_dental_vision_plans.html'}
+    subs = []
+
+
 class EAPPlanView(AJAXCrudView):
     main = {'model': EAPPlan, 'form': EAPPlanForm,
             'class': 'EAPPlan', 'form_class': 'EAPPlanForm',
@@ -909,12 +1121,76 @@ class STDPlanView(AJAXCrudView):
     subs = []
 
 
-class ADDPlanView(AJAXCrudView):
+class BasicLifePlanView(AJAXCrudView):
     main = {'model': BasicLifePlan, 'form': BasicLifePlanForm,
             'class': 'BasicLifePlan', 'form_class': 'BasicLifePlanForm',
-            'single': 'add_plan', 'plural': 'add_plans',
-            'form_name': 'add_plan_form',
-            'template': '/admin/_add_plans.html'}
+            'single': 'basic_life_plan', 'plural': 'basic_life_plans',
+            'form_name': 'basic_life_plan_form',
+            'template': '/admin/_basic_life_plans.html'}
+    subs = []
+
+
+class VoluntaryLifePlanView(AJAXCrudView):
+    main = {'model': VoluntaryLifePlan, 'form': VoluntaryLifePlanForm,
+            'class': 'VoluntaryLifePlan', 'form_class': 'VoluntaryLifePlanForm',
+            'single': 'voluntary_life_plan', 'plural': 'voluntary_life_plans',
+            'form_name': 'voluntary_life_plan_form',
+            'template': '/admin/_voluntary_life_plans.html'}
+    subs = []
+
+    def discard_subclasses(self, objects):
+        for idx, obj in enumerate(objects):
+            if isinstance(obj, SpouseVoluntaryLifePlan) or isinstance(obj, ChildVoluntaryLifePlan):
+                objects.pop(idx)
+
+
+class SpouseVoluntaryLifePlanView(AJAXCrudView):
+    main = {'model': SpouseVoluntaryLifePlan, 'form': SpouseVoluntaryLifePlanForm,
+            'class': 'SpouseVoluntaryLifePlan', 'form_class': 'SpouseVoluntaryLifePlanForm',
+            'single': 'spouse_voluntary_life_plan', 'plural': 'spouse_voluntary_life_plans',
+            'form_name': 'spouse_voluntary_life_plan_form',
+            'template': '/admin/_spouse_voluntary_life_plans.html'}
+    subs = []
+
+
+class ChildVoluntaryLifePlanView(AJAXCrudView):
+    main = {'model': ChildVoluntaryLifePlan, 'form': ChildVoluntaryLifePlanForm,
+            'class': 'ChildVoluntaryLifePlan', 'form_class': 'ChildVoluntaryLifePlanForm',
+            'single': 'child_voluntary_life_plan', 'plural': 'child_voluntary_life_plans',
+            'form_name': 'child_voluntary_life_plan_form',
+            'template': '/admin/_child_voluntary_life_plans.html'}
+    subs = []
+
+
+class StandaloneADDPlanView(AJAXCrudView):
+    main = {'model': StandaloneADDPlan, 'form': StandaloneADDPlanForm,
+            'class': 'StandaloneADDPlan', 'form_class': 'StandaloneADDPlanForm',
+            'single': 'standalone_add_plan', 'plural': 'standalone_add_plans',
+            'form_name': 'standalone_add_plan_form',
+            'template': '/admin/_standalone_add_plans.html'}
+    subs = []
+
+    def discard_subclasses(self, objects):
+        for idx, obj in enumerate(objects):
+            if isinstance(obj, SpouseStandaloneADDPlan) or isinstance(obj, ChildStandaloneADDPlan):
+                objects.pop(idx)
+
+
+class SpouseStandaloneADDPlanView(AJAXCrudView):
+    main = {'model': SpouseStandaloneADDPlan, 'form': SpouseStandaloneADDPlanForm,
+            'class': 'SpouseStandaloneADDPlan', 'form_class': 'SpouseStandaloneADDPlanForm',
+            'single': 'spouse_standalone_add_plan', 'plural': 'spouse_standalone_add_plans',
+            'form_name': 'spouse_standalone_add_plan_form',
+            'template': '/admin/_spouse_standalone_add_plans.html'}
+    subs = []
+
+
+class ChildStandaloneADDPlanView(AJAXCrudView):
+    main = {'model': ChildStandaloneADDPlan, 'form': ChildStandaloneADDPlanForm,
+            'class': 'ChildStandaloneADDPlan', 'form_class': 'ChildStandaloneADDPlanForm',
+            'single': 'child_standalone_add_plan', 'plural': 'child_standalone_add_plans',
+            'form_name': 'child_standalone_add_plan_form',
+            'template': '/admin/_child_standalone_add_plans.html'}
     subs = []
 
 
@@ -933,6 +1209,20 @@ class FSAMedicalPlanView(AJAXCrudView):
             'single': 'fsa_medical_plan', 'plural': 'fsa_medical_plans',
             'form_name': 'fsa_medical_plan_form',
             'template': '/admin/_fsa_medical_plans.html'}
+    subs = []
+
+    def discard_subclasses(self, objects):
+        for idx, obj in enumerate(objects):
+            if isinstance(obj, FSADependentCarePlan):
+                objects.pop(idx)
+
+
+class FSADependentPlanView(AJAXCrudView):
+    main = {'model': FSADependentCarePlan, 'form': FSADependentCarePlanForm,
+            'class': 'FSADependentCarePlan', 'form_class': 'FSADependentPlanForm',
+            'single': 'fsa_dependent_care_plan', 'plural': 'fsa_dependent_care_plans',
+            'form_name': 'fsa_dependent_care_plan_form',
+            'template': '/admin/_fsa_dependent_care_plans.html'}
     subs = []
 
 
@@ -1403,7 +1693,7 @@ def register_ajax_view(view, endpoint, url, pk='id', pk_type='int'):
     app.add_url_rule('%s<%s:%s>' % (url, pk_type, pk), view_func=view_func, methods=['GET', 'PUT', 'DELETE'])
 
 # admin
-register_ajax_view(ADDPlanView, 'add_plan_ajax', '/admin/_add_plans/')
+register_ajax_view(BasicLifePlanView, 'basic_life_plan_ajax', '/admin/_basic_life_plans/')
 register_ajax_view(CancerPlanView, 'cancer_plan_ajax', '/admin/_cancer_plans/')
 register_ajax_view(CarrierView, 'carrier_ajax', '/admin/_carriers/')
 register_ajax_view(CriticalPlanView, 'critical_plan_ajax', '/admin/_critical_illness_plans/')
@@ -1411,7 +1701,8 @@ register_ajax_view(DentalPlanView, 'dental_plan_ajax', '/admin/_dental_plans/')
 register_ajax_view(EAPPlanView, 'eap_plan_ajax', '/admin/_eap_plans/')
 register_ajax_view(Employee401kPlanView, 'employee_401k_ajax', '/admin/_e401k_plans/')
 register_ajax_view(EmployeeView, 'employee_ajax', '/admin/_employees/')
-register_ajax_view(FSAMedicalPlanView, 'fsa_plan_ajax', '/admin/_fsa_plans/')
+register_ajax_view(FSAMedicalPlanView, 'fsa_medical_plan_ajax', '/admin/_fsa_medical_plans/')
+register_ajax_view(FSADependentPlanView, 'fsa_depndent_plan_ajax', '/admin/_fsa_dependent_care_plans/')
 register_ajax_view(HSAPlanView, 'hsa_plan_ajax', '/admin/_hsa_plans/')
 register_ajax_view(HRAPlanView, 'hra_plan_ajax', '/admin/_hra_plans/')
 register_ajax_view(LTCPlanView, 'ltc_plan_ajax', '/admin/_ltc_plans/')
@@ -1419,8 +1710,22 @@ register_ajax_view(LTDPlanView, 'ltd_plan_ajax', '/admin/_ltd_plans/')
 register_ajax_view(STDPlanView, 'std_plan_ajax', '/admin/_std_plans/')
 register_ajax_view(LocationView, 'location_ajax', '/admin/_locations/')
 register_ajax_view(MedicalPlanView, 'medical_plan_ajax', '/admin/_medical_plans/')
+register_ajax_view(MedicalDentalVisionPlanView, 'medical_dental_vision_plan_ajax',
+                   '/admin/_medical_dental_vision_plans/')
+register_ajax_view(MedicalDentalPlanView, 'medical_dental_plan_ajax', '/admin/_medical_dental_plans/')
+register_ajax_view(MedicalVisionPlanView, 'medical_vision_plan_ajax', '/admin/_medical_vision_plans/')
+register_ajax_view(DentalVisionPlanView, 'dental_vision_plan_ajax', '/admin/_dental_vision_plans/')
 register_ajax_view(ParkingTransitPlanView, 'parking_transit_plan_ajax', '/admin/_parking_transit_plans/')
+register_ajax_view(StandaloneADDPlanView, 'standalone_add_plan_ajax', '/admin/_standalone_add_plans/')
+register_ajax_view(SpouseStandaloneADDPlanView, 'spouse_standalone_add_plan_ajax',
+                   '/admin/_spouse_standalone_add_plans/')
+register_ajax_view(ChildStandaloneADDPlanView, 'child_standalone_add_plan_ajax',
+                   '/admin/_child_standalone_add_plans/')
 register_ajax_view(VisionPlanView, 'vision_plan_ajax', '/admin/_vision_plans/')
+register_ajax_view(VoluntaryLifePlanView, 'voluntary_life_plan_ajax', '/admin/_voluntary_life_plans/')
+register_ajax_view(SpouseVoluntaryLifePlanView, 'spouse_voluntary_life_plan_ajax',
+                   '/admin/_spouse_voluntary_life_plans/')
+register_ajax_view(ChildVoluntaryLifePlanView, 'child_voluntary_life_plan_ajax', '/admin/_child_voluntary_life_plans/')
 register_ajax_view(PremiumView, 'tiered_premium_ajax', '/admin/_tiered_premiums/')
 
 # enroll

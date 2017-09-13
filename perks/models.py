@@ -636,8 +636,8 @@ class IRSLimits(Base):
 class Plan(Base, EmployerContributionMixin, PlanPremiumMetaValuesMixin):
     plantype = db.Column(db.String(50), info={'label': 'Plan Type'})
     code = db.Column(db.String(10), info={'label': 'Code'})
-    name = db.Column(db.Unicode(70), info={'label': 'Name'})
-    description = db.Column(db.String(250), info={'label': ''})
+    name = db.Column(db.Unicode(70), nullable=False, info={'label': 'Name'})
+    description = db.Column(db.String(250), nullable=False, info={'label': ''})
     special_instructions = db.Column(db.String(250), info={'label': ''})
     active = db.Column('is_active', db.Boolean, nullable=False, index=True, server_default='1',
                        info={'label': 'Plan is active?'})
@@ -738,7 +738,11 @@ class LifeMixin(object):
                                back_populates='plan', cascade="all, delete-orphan")
 
 
-class BasicLifePlan(Plan, GroupMixin, PostTaxMixin, BooleanElectionMixin, LifeMixin):
+class AgeBasedMixin(object):
+    age_based_reduction_matrix = db.Column(db.String(5000), info={'label': "Age Based Reduction Matrix"})
+
+
+class BasicLifePlan(Plan, GroupMixin, PostTaxMixin, BooleanElectionMixin, LifeMixin, AgeBasedMixin):
     # has a composite premium, 100% employer paid
     __tablename__ = 'life_add_plan'
     __table_args__ = {'extend_existing': True}
@@ -773,6 +777,7 @@ class VoluntaryLifePlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixi
     age_based_reductions = db.relationship('AgeBasedReduction', back_populates="plan")
     guarantee_issue = db.Column(db.Numeric(9, 2))
     # optional ADD
+    addl_salary_multiple_accidental_death = db.Column(db.Numeric(4, 2))
     addl_salary_multiple_accidental_dismemberment = db.Column(db.Numeric(4, 2))
     age_based_reductions = db.relationship('AgeBasedReduction', back_populates="plan")
 
@@ -830,7 +835,29 @@ class StandaloneADDPlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixi
     }
 
 
-class WholeLifePlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixin, LifeMixin):
+class SpouseStandaloneADDPlan(StandaloneADDPlan):
+    __tablename__ = 'spouse_standalone_add_plan'
+    __table_args__ = {'extend_existing': True}
+    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'spouse_standalone_add',
+        'inherit_condition': (id == Plan.id),
+    }
+
+
+class ChildStandaloneADDPlan(StandaloneADDPlan):
+    __tablename__ = 'child_standalone_add_plan'
+    __table_args__ = {'extend_existing': True}
+    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'child_standalone_add',
+        'inherit_condition': (id == Plan.id),
+    }
+
+
+class WholeLifePlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixin, LifeMixin, AgeBasedMixin):
     __tablename__ = 'whole_life_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
@@ -845,7 +872,7 @@ class WholeLifePlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixin, L
     }
 
 
-class UniversalLifePlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixin, LifeMixin):
+class UniversalLifePlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixin, LifeMixin, AgeBasedMixin):
     __tablename__ = 'universal_life_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)

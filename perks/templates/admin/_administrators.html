@@ -6,9 +6,9 @@
 
 <div id="users_wrapper">
   <h4 class="ui dividing header">Administrators</h4>
+  {% include "admin/errors.html" %}
 
   <form class="ui form {% if user is not defined %}hidden{% endif %}" action="" method="post" id="form_users">
-    {{ user_form.id }}
     {{ render_row(user_form.first_name, user_form.last_name) }}
     {{ render_row(user_form.email, user_form.active) }}
     {{ render_row(user_form.username, user_form.password) }}

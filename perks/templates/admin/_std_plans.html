@@ -1,4 +1,4 @@
-{% from "_macros.html" import render_formatters, render_row, render_3row, render_save_update, render_table, render_ajax_methods %}
+{% from "_macros.html" import render_formatters, render_row, render_single_row, render_3row, render_save_update, render_table, render_ajax_methods %}
 {{ render_formatters([
     ('cust_service_phone', 'phone'),
     ('original_effective_date', 'date'),
@@ -12,15 +12,15 @@
 
 <div id="std_plans_wrapper">
   <h4 class="ui dividing header">Short Term Disability</h4>
+  {% include "admin/errors.html" %}
 
   <form class="ui form {% if std_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_std_plans">
-    {{ std_plan_form.id }}
-    {{ render_row(std_plan_form.name, std_plan_form.active) }}
-    {{ render_row(std_plan_form.code, std_plan_form.website) }}
-    {{ render_row(std_plan_form.cust_service_phone, std_plan_form.not_available_in) }}
-    {{ render_row(std_plan_form.minimum_benefit, std_plan_form.maximum_benefit) }}
-    {{ render_row(std_plan_form.max_weekly_benefit, std_plan_form.max_monthly_benefit) }}
-    {{ render_row(std_plan_form.benefit_percentage, None) }}
+    {{ render_row(std_plan_form.name, std_plan_form.code) }}
+    {{ render_row(std_plan_form.carrier, std_plan_form.cust_service_phone) }}
+    {{ render_row(std_plan_form.website, std_plan_form.active) }}
+
+    {{ render_row(std_plan_form.er_flat_amount_contributed, std_plan_form.er_percentage_contributed) }}
+    {{ render_single_row(std_plan_form.premium_matrix) }}
 
     {{ render_save_update(std_plan_form.id, 'std_plan') }}
   </form>

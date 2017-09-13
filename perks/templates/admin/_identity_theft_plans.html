@@ -1,0 +1,26 @@
+{% from "_macros.html" import render_formatters, render_row, render_3row, render_save_update, render_table, render_ajax_methods %}
+{{ render_formatters([
+    ('cust_service_phone', 'phone'),
+    ('original_effective_date', 'date'),
+    ('renewal_date', 'date'),
+    ('website', 'url'),
+
+    ], 'identity_theft_plan-') }}
+{{ render_ajax_methods('admin', 'identity_theft_plan') }}
+
+<div id="identity_theft_plans_wrapper">
+  <h4 class="ui dividing header">identity_theft Insurance Plans</h4>
+  {% include "admin/errors.html" %}
+
+  <form class="ui form {% if identity_theft_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_identity_theft_plans">
+    {{ render_row(identity_theft_plan_form.name, identity_theft_plan_form.active) }}
+    {{ render_row(identity_theft_plan_form.code, identity_theft_plan_form.website) }}
+    {{ render_row(identity_theft_plan_form.cust_service_phone, identity_theft_plan_form.not_available_in) }}
+
+    {{ render_save_update(identity_theft_plan_form.id, 'identity_theft_plan') }}
+  </form>
+
+  {% if not identity_theft_plan_form.id.data %}
+    {{ render_table('identity_theft_plan', [identity_theft_plan_form.name, identity_theft_plan_form.code, identity_theft_plan_form.website ], identity_theft_plans )}}
+  {% endif %}
+</div>

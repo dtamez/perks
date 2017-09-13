@@ -1,0 +1,27 @@
+{% from "_macros.html" import render_formatters, render_row, render_single_row, render_save_update, render_table, render_ajax_methods %}
+{{ render_formatters([
+    ('cust_service_phone', 'phone'),
+    ('original_effective_date', 'date'),
+    ('renewal_date', 'date'),
+    ('website', 'url'),
+
+    ], 'fsa_dependent_care_plan-') }}
+{{ render_ajax_methods('admin', 'fsa_dependent_care_plan') }}
+
+<div id="fsa_dependent_care_plans_wrapper">
+  <h4 class="ui dividing header">Dependent Care Flexible Spending Account Plans</h4>
+  {% include "admin/errors.html" %}
+
+  <form class="ui form {% if fsa_dependent_care_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_fsa_dependent_care_plans">
+    {{ render_row(fsa_dependent_care_plan_form.name, fsa_dependent_care_plan_form.active) }}
+    {{ render_row(fsa_dependent_care_plan_form.code, fsa_dependent_care_plan_form.website) }}
+    {{ render_row(fsa_dependent_care_plan_form.cust_service_phone, fsa_dependent_care_plan_form.not_available_in) }}
+    {{ render_single_row(fsa_dependent_care_plan_form.min_contribution) }}
+
+    {{ render_save_update(fsa_dependent_care_plan_form.id, 'fsa_dependent_care_plan') }}
+  </form>
+
+  {% if not fsa_dependent_care_plan_form.id.data %}
+    {{ render_table('fsa_dependent_care_plan', [fsa_dependent_care_plan_form.name, fsa_dependent_care_plan_form.code, fsa_dependent_care_plan_form.website ], fsa_dependent_care_plans )}}
+  {% endif %}
+</div>
