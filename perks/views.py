@@ -49,6 +49,7 @@ from .forms import (
     MedicalDentalVisionPlanForm,
     MedicalDentalPlanForm,
     MedicalVisionPlanForm,
+    OtherPlanForm,
     ParkingTransitPlanForm,
     PremiumForm,
     STDPlanForm,
@@ -102,6 +103,7 @@ from .models import (
     MedicalDentalVisionBundlePlan,
     MedicalPlan,
     MedicalVisionBundlePlan,
+    OtherPlan,
     ParkingTransitPlan,
     Plan,
     Premium,
@@ -184,8 +186,6 @@ class AJAXCrudView(MethodView):
         valid = True
         main = self.main['model']()
         form = self.main['form'](request.form)
-        import ipdb
-        ipdb.set_trace()
         if not form.validate():
             valid = False
         forms[self.main['form_name']] = form
@@ -224,8 +224,6 @@ class AJAXCrudView(MethodView):
         return template.render(ctx)
 
     def put(self, id):
-        import ipdb
-        ipdb.set_trace()
         forms = {}
         valid = True
         main = self.main['model'].query.get(id)
@@ -981,9 +979,11 @@ def admin_supplemental():
     parking_transit_plan_form = ParkingTransitPlanForm()
     identity_theft_plans = IdentityTheftPlan.query.all()
     identity_theft_plan_form = IdentityTheftPlanForm()
+    other_plans = OtherPlan.query.all()
+    other_plan_form = OtherPlanForm()
     return render_template(
         'admin/supplemental.html',
-        cricial_illness_plans=critical_illness_plans,
+        critical_illness_plans=critical_illness_plans,
         critical_illness_plan_form=critical_illness_plan_form,
         cancer_plans=cancer_plans,
         cancer_plan_form=cancer_plan_form,
@@ -995,6 +995,8 @@ def admin_supplemental():
         parking_transit_plan_form=parking_transit_plan_form,
         identity_theft_plans=identity_theft_plans,
         identity_theft_plan_form=identity_theft_plan_form,
+        other_plans=other_plans,
+        other_plan_form=other_plan_form,
     )
 
 
@@ -1283,6 +1285,46 @@ class ParkingTransitPlanView(AJAXCrudView):
             'plural': 'parking_transit_plans',
             'form_name': 'parking_transit_plan_form',
             'template': '/admin/_parking_transit_plans.html'}
+    subs = []
+
+
+class AccidentPlanView(AJAXCrudView):
+    main = {'model': AccidentPlan, 'form': AccidentPlanForm,
+            'class': 'AccidentPlan', 'form_class': 'AccidentPlanForm',
+            'single': 'accident_plan', 'plural': 'accident_plans',
+            'form_name': 'accident_plan_form',
+            'template': '/admin/_accident_plans.html'}
+    subs = []
+
+
+class HospitalConfinementPlanView(AJAXCrudView):
+    main = {'model': HospitalConfinementPlan, 'form': HospitalConfinementPlanForm,
+            'class': 'HospitalConfinementPlan', 'form_class': 'HospitalConfinementPlanForm',
+            'single': 'hospital_confinement_plan', 'plural': 'hospital_confinement_plans',
+            'form_name': 'hospital_confinement_plan_form',
+            'template': '/admin/_hospital_confinement_plans.html'}
+    subs = []
+
+
+class IdentityTheftPlanView(AJAXCrudView):
+    main = {'model': IdentityTheftPlan, 'form': IdentityTheftPlanForm,
+            'class': 'IdentityTheftPlan',
+            'form_class': 'IdentityTheftPlanForm',
+            'single': 'identity_theft_plan',
+            'plural': 'identity_theft_plans',
+            'form_name': 'identity_theft_plan_form',
+            'template': '/admin/_identity_theft_plans.html'}
+    subs = []
+
+
+class OtherPlanView(AJAXCrudView):
+    main = {'model': OtherPlan, 'form': OtherPlanForm,
+            'class': 'OtherPlan',
+            'form_class': 'OtherPlanForm',
+            'single': 'other_plan',
+            'plural': 'other_plans',
+            'form_name': 'other_plan_form',
+            'template': '/admin/_other_plans.html'}
     subs = []
 
 
@@ -1693,6 +1735,7 @@ def register_ajax_view(view, endpoint, url, pk='id', pk_type='int'):
     app.add_url_rule('%s<%s:%s>' % (url, pk_type, pk), view_func=view_func, methods=['GET', 'PUT', 'DELETE'])
 
 # admin
+register_ajax_view(AccidentPlanView, 'accident_plan_ajax', '/admin/_accident_plans/')
 register_ajax_view(BasicLifePlanView, 'basic_life_plan_ajax', '/admin/_basic_life_plans/')
 register_ajax_view(CancerPlanView, 'cancer_plan_ajax', '/admin/_cancer_plans/')
 register_ajax_view(CarrierView, 'carrier_ajax', '/admin/_carriers/')
@@ -1703,6 +1746,8 @@ register_ajax_view(Employee401kPlanView, 'employee_401k_ajax', '/admin/_e401k_pl
 register_ajax_view(EmployeeView, 'employee_ajax', '/admin/_employees/')
 register_ajax_view(FSAMedicalPlanView, 'fsa_medical_plan_ajax', '/admin/_fsa_medical_plans/')
 register_ajax_view(FSADependentPlanView, 'fsa_depndent_plan_ajax', '/admin/_fsa_dependent_care_plans/')
+register_ajax_view(HospitalConfinementPlanView, 'hospital_confinement_plan_ajax', '/admin/_hospital_confinement_plans/')
+register_ajax_view(IdentityTheftPlanView, 'identity_theft_plan_ajax', '/admin/_identity_theft_plans/')
 register_ajax_view(HSAPlanView, 'hsa_plan_ajax', '/admin/_hsa_plans/')
 register_ajax_view(HRAPlanView, 'hra_plan_ajax', '/admin/_hra_plans/')
 register_ajax_view(LTCPlanView, 'ltc_plan_ajax', '/admin/_ltc_plans/')
@@ -1727,6 +1772,7 @@ register_ajax_view(SpouseVoluntaryLifePlanView, 'spouse_voluntary_life_plan_ajax
                    '/admin/_spouse_voluntary_life_plans/')
 register_ajax_view(ChildVoluntaryLifePlanView, 'child_voluntary_life_plan_ajax', '/admin/_child_voluntary_life_plans/')
 register_ajax_view(PremiumView, 'tiered_premium_ajax', '/admin/_tiered_premiums/')
+register_ajax_view(OtherPlanView, 'other_plan_ajax', '/admin/_other_plans/')
 
 # enroll
 register_ajax_view(EnrollDependentsView, 'dependent_ajax', '/enroll/_dependents/')

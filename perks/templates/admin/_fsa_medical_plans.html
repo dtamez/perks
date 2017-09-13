@@ -1,8 +1,6 @@
 {% from "_macros.html" import render_formatters, render_row, render_single_row, render_save_update, render_table, render_ajax_methods %}
 {{ render_formatters([
     ('cust_service_phone', 'phone'),
-    ('original_effective_date', 'date'),
-    ('renewal_date', 'date'),
     ('website', 'url'),
 
     ], 'fsa_medical_plan-') }}
@@ -13,9 +11,9 @@
   {% include "admin/errors.html" %}
 
   <form class="ui form {% if fsa_medical_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_fsa_medical_plans">
-    {{ render_row(fsa_medical_plan_form.name, fsa_medical_plan_form.active) }}
-    {{ render_row(fsa_medical_plan_form.code, fsa_medical_plan_form.website) }}
-    {{ render_row(fsa_medical_plan_form.cust_service_phone, fsa_medical_plan_form.not_available_in) }}
+    {{ render_row(fsa_medical_plan_form.name, fsa_medical_plan_form.code) }}
+    {{ render_row(fsa_medical_plan_form.carrier, fsa_medical_plan_form.cust_service_phone) }}
+    {{ render_row(fsa_medical_plan_form.website, fsa_medical_plan_form.active) }}
     {{ render_single_row(fsa_medical_plan_form.min_contribution) }}
 
     {{ render_save_update(fsa_medical_plan_form.id, 'fsa_medical_plan') }}

@@ -1,8 +1,6 @@
-{% from "_macros.html" import render_formatters, render_row, render_3row, render_save_update, render_table, render_ajax_methods %}
+{% from "_macros.html" import render_formatters, render_row, render_single_row, render_3row, render_save_update, render_table, render_ajax_methods %}
 {{ render_formatters([
     ('cust_service_phone', 'phone'),
-    ('original_effective_date', 'date'),
-    ('renewal_date', 'date'),
     ('website', 'url'),
 
     ], 'ltc_plan-') }}
@@ -13,9 +11,12 @@
   {% include "admin/errors.html" %}
 
   <form class="ui form {% if ltc_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_ltc_plans">
-    {{ render_row(ltc_plan_form.name, ltc_plan_form.active) }}
-    {{ render_row(ltc_plan_form.code, ltc_plan_form.website) }}
-    {{ render_row(ltc_plan_form.cust_service_phone, ltc_plan_form.not_available_in) }}
+    {{ render_row(ltc_plan_form.name, ltc_plan_form.code) }}
+    {{ render_row(ltc_plan_form.carrier, ltc_plan_form.cust_service_phone) }}
+    {{ render_row(ltc_plan_form.website, ltc_plan_form.active) }}
+
+    {{ render_row(ltc_plan_form.er_flat_amount_contributed, ltc_plan_form.er_percentage_contributed) }}
+    {{ render_single_row(ltc_plan_form.premium_matrix) }}
 
     {{ render_save_update(ltc_plan_form.id, 'ltc_plan') }}
   </form>

@@ -1,8 +1,6 @@
-{% from "_macros.html" import render_formatters, render_row, render_3row, render_save_update, render_table, render_ajax_methods %}
+{% from "_macros.html" import render_formatters, render_row, render_single_row, render_3row, render_save_update, render_table, render_ajax_methods %}
 {{ render_formatters([
     ('cust_service_phone', 'phone'),
-    ('original_effective_date', 'date'),
-    ('renewal_date', 'date'),
     ('website', 'url'),
 
     ], 'critical_illness_plan-') }}
@@ -13,9 +11,12 @@
   {% include "admin/errors.html" %}
 
   <form class="ui form {% if critical_illness_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_critical_illness_plans">
-    {{ render_row(critical_illness_plan_form.name, critical_illness_plan_form.active) }}
-    {{ render_row(critical_illness_plan_form.code, critical_illness_plan_form.website) }}
-    {{ render_row(critical_illness_plan_form.cust_service_phone, critical_illness_plan_form.not_available_in) }}
+    {{ render_row(critical_illness_plan_form.name, critical_illness_plan_form.code) }}
+    {{ render_row(critical_illness_plan_form.carrier, critical_illness_plan_form.cust_service_phone) }}
+    {{ render_row(critical_illness_plan_form.website, critical_illness_plan_form.active) }}
+
+    {{ render_row(critical_illness_plan_form.er_flat_amount_contributed, critical_illness_plan_form.er_percentage_contributed) }}
+    {{ render_single_row(critical_illness_plan_form.premium_matrix) }}
 
     {{ render_save_update(critical_illness_plan_form.id, 'critical_illness_plan') }}
   </form>

@@ -175,7 +175,7 @@
 </td>
 <td>
 <div class="field">
-  <a id="cancel_{{ model_name }}" class='ui violet button button-secondary' tabindex="0" href="#" onclick="javascript: cancel_edit_{{ model_name}}{{ suffix }}({{ field.data }});">Cancel</a>
+  <a id="cancel_{{ model_name }}" class='ui violet button button-secondary' tabindex="0" href="#" onclick="javascript: cancel_edit_{{ model_name}}{{ suffix }}();">Cancel</a>
 </div>
 </td>
 </tr>
@@ -266,7 +266,7 @@
           $('#{{ model_name }}s_wrapper{{ suffix }}').replaceWith(html);
        });
     };
-    var cancel_edit_{{ model_name }}{{ suffix }} = function(id) {
+    var cancel_edit_{{ model_name }}{{ suffix }} = function() {
       $.ajax({
         url: '/{{ section }}/_{{ model_name }}s/',
         dataType: 'html',

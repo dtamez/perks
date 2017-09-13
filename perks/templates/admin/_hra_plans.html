@@ -1,8 +1,6 @@
-{% from "_macros.html" import render_formatters, render_row, render_3row, render_save_update, render_table, render_ajax_methods %}
+{% from "_macros.html" import render_formatters, render_row, render_save_update, render_table, render_ajax_methods %}
 {{ render_formatters([
     ('cust_service_phone', 'phone'),
-    ('original_effective_date', 'date'),
-    ('renewal_date', 'date'),
     ('website', 'url'),
 
     ], 'hra_plan-') }}
@@ -13,9 +11,9 @@
   {% include "admin/errors.html" %}
 
   <form class="ui form {% if hra_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_hra_plans">
-    {{ render_row(hra_plan_form.name, hra_plan_form.active) }}
-    {{ render_row(hra_plan_form.code, hra_plan_form.website) }}
-    {{ render_row(hra_plan_form.cust_service_phone, hra_plan_form.not_available_in) }}
+    {{ render_row(hra_plan_form.name, hra_plan_form.code) }}
+    {{ render_row(hra_plan_form.carrier, hra_plan_form.cust_service_phone) }}
+    {{ render_row(hra_plan_form.website, hra_plan_form.active) }}
 
     {{ render_save_update(hra_plan_form.id, 'hra_plan') }}
   </form>

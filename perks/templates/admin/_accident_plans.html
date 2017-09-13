@@ -1,4 +1,4 @@
-{% from "_macros.html" import render_formatters, render_row, render_3row, render_save_update, render_table, render_ajax_methods %}
+{% from "_macros.html" import render_formatters, render_row, render_single_row, render_3row, render_save_update, render_table, render_ajax_methods %}
 {{ render_formatters([
     ('cust_service_phone', 'phone'),
     ('original_effective_date', 'date'),
@@ -9,14 +9,16 @@
 {{ render_ajax_methods('admin', 'accident_plan') }}
 
 <div id="accident_plans_wrapper">
-  <h4 class="ui dividing header">accident Insurance Plans</h4>
+  <h4 class="ui dividing header">Accident Insurance Plans</h4>
   {% include "admin/errors.html" %}
 
   <form class="ui form {% if accident_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_accident_plans">
-    {{ accident_plan_form.id }}
-    {{ render_row(accident_plan_form.name, accident_plan_form.active) }}
-    {{ render_row(accident_plan_form.code, accident_plan_form.website) }}
-    {{ render_row(accident_plan_form.cust_service_phone, accident_plan_form.not_available_in) }}
+    {{ render_row(accident_plan_form.name, accident_plan_form.code) }}
+    {{ render_row(accident_plan_form.carrier, accident_plan_form.cust_service_phone) }}
+    {{ render_row(accident_plan_form.website, accident_plan_form.active) }}
+
+    {{ render_row(accident_plan_form.er_flat_amount_contributed, accident_plan_form.er_percentage_contributed) }}
+    {{ render_single_row(accident_plan_form.premium_matrix) }}
 
     {{ render_save_update(accident_plan_form.id, 'accident_plan') }}
   </form>

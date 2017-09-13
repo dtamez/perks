@@ -1,8 +1,6 @@
-{% from "_macros.html" import render_formatters, render_row, render_3row, render_save_update, render_table, render_ajax_methods %}
+{% from "_macros.html" import render_formatters, render_row, render_single_row, render_3row, render_save_update, render_table, render_ajax_methods %}
 {{ render_formatters([
     ('cust_service_phone', 'phone'),
-    ('original_effective_date', 'date'),
-    ('renewal_date', 'date'),
     ('website', 'url'),
 
     ], 'parking_transit_plan-') }}
@@ -13,9 +11,12 @@
   {% include "admin/errors.html" %}
 
   <form class="ui form {% if parking_transit_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_parking_transit_plans">
-    {{ render_row(parking_transit_plan_form.name, parking_transit_plan_form.active) }}
-    {{ render_row(parking_transit_plan_form.code, parking_transit_plan_form.website) }}
-    {{ render_row(parking_transit_plan_form.cust_service_phone, parking_transit_plan_form.not_available_in) }}
+    {{ render_row(parking_transit_plan_form.name, parking_transit_plan_form.code) }}
+    {{ render_row(parking_transit_plan_form.carrier, parking_transit_plan_form.cust_service_phone) }}
+    {{ render_row(parking_transit_plan_form.website, parking_transit_plan_form.active) }}
+
+    {{ render_row(parking_transit_plan_form.er_flat_amount_contributed, parking_transit_plan_form.er_percentage_contributed) }}
+    {{ render_single_row(parking_transit_plan_form.premium_matrix) }}
 
     {{ render_save_update(parking_transit_plan_form.id, 'parking_transit_plan') }}
   </form>

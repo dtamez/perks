@@ -1,8 +1,6 @@
-{% from "_macros.html" import render_formatters, render_row, render_3row, render_save_update, render_table, render_ajax_methods %}
+{% from "_macros.html" import render_formatters, render_row, render_single_row, render_3row, render_save_update, render_table, render_ajax_methods %}
 {{ render_formatters([
     ('cust_service_phone', 'phone'),
-    ('original_effective_date', 'date'),
-    ('renewal_date', 'date'),
     ('website', 'url'),
 
     ], 'e401k_plan-') }}
@@ -13,9 +11,11 @@
   {% include "admin/errors.html" %}
 
   <form class="ui form {% if e401k_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_e401k_plans">
-    {{ render_row(e401k_plan_form.name, e401k_plan_form.active) }}
-    {{ render_row(e401k_plan_form.code, e401k_plan_form.website) }}
-    {{ render_row(e401k_plan_form.cust_service_phone, e401k_plan_form.not_available_in) }}
+    {{ render_row(e401k_plan_form.name, e401k_plan_form.code) }}
+    {{ render_row(e401k_plan_form.carrier, e401k_plan_form.cust_service_phone) }}
+    {{ render_row(e401k_plan_form.website, e401k_plan_form.active) }}
+    {{ render_row(e401k_plan_form.employer_percent_matched, e401k_plan_form.employer_max_contribution) }}
+    {{ render_single_row(e401k_plan_form.min_contribution) }}
 
     {{ render_save_update(e401k_plan_form.id, 'e401k_plan') }}
   </form>

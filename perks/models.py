@@ -1124,6 +1124,17 @@ class IdentityTheftPlan(Plan, SupplementalMixin, PostTaxMixin, TieredElectionMix
     }
 
 
+class OtherPlan(Plan, SupplementalMixin, PostTaxMixin, TieredElectionMixin):
+    __tablename__ = 'other_plan'
+    __table_args__ = {'extend_existing': True}
+    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'identity_theft',
+        'inherit_condition': (id == Plan.id),
+    }
+
+
 # Plan Premiums
 class Premium(Base):
     plan_id = db.Column(db.Integer, db.ForeignKey('plan.id'), index=True)
