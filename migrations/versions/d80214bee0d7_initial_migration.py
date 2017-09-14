@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: e18c993d93c6
+Revision ID: d80214bee0d7
 Revises:
-Create Date: 2017-09-12 17:17:29.785899
+Create Date: 2017-09-13 20:55:50.829629
 
 """
 from alembic import op
@@ -27,7 +27,7 @@ from perks.models import (
 
 
 # revision identifiers, used by Alembic.
-revision = 'e18c993d93c6'
+revision = 'd80214bee0d7'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -165,8 +165,8 @@ def upgrade():
         sa.Column('coverage_chunk_size', sa.Integer(), nullable=True),
         sa.Column('plantype', sa.String(length=50), nullable=True),
         sa.Column('code', sa.String(length=10), nullable=True),
-        sa.Column('name', sa.Unicode(length=70), nullable=True),
-        sa.Column('description', sa.String(length=250), nullable=True),
+        sa.Column('name', sa.Unicode(length=70), nullable=False),
+        sa.Column('description', sa.String(length=250), nullable=False),
         sa.Column('special_instructions', sa.String(length=250), nullable=True),
         sa.Column('is_active', sa.Boolean(), server_default='1', nullable=False),
         sa.Column('carrier_id', sa.Integer(), nullable=True),
@@ -457,6 +457,12 @@ def upgrade():
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
+        'other_plan',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table(
         'parking_transit_plan',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
@@ -614,6 +620,7 @@ def downgrade():
     op.drop_table('spouse_voluntary_life_plan')
     op.drop_table('spouse_standalone_add_plan')
     op.drop_table('parking_transit_plan')
+    op.drop_table('other_plan')
     op.drop_table('medical_vision_bundle_plan')
     op.drop_table('medical_plan')
     op.drop_table('medical_dental_vision_bundle_plan')
