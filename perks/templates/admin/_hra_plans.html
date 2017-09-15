@@ -1,4 +1,4 @@
-{% from "_macros.html" import render_formatters, render_row, render_save_update, render_table, render_ajax_methods %}
+{% from "_macros.html" import render_formatters, render_row, render_single_row, render_save_update, render_table, render_ajax_methods %}
 {{ render_formatters([
     ('cust_service_phone', 'phone'),
     ('website', 'url'),
@@ -14,6 +14,8 @@
     {{ render_row(hra_plan_form.name, hra_plan_form.code) }}
     {{ render_row(hra_plan_form.carrier, hra_plan_form.cust_service_phone) }}
     {{ render_row(hra_plan_form.website, hra_plan_form.active) }}
+
+    {{ render_single_row(hra_plan_form.required_plan) }}
 
     {{ render_save_update(hra_plan_form.id, 'hra_plan') }}
   </form>

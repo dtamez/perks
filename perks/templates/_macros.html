@@ -233,6 +233,7 @@
         method: 'DELETE'
           }).done(function(html) {
             $('#{{ model_name }}s_wrapper{{ suffix}}').replaceWith(html);
+            updateGlobalTotals();
         });
     };
     var new_{{ model_name }}{{ suffix }} = function() {
@@ -244,6 +245,7 @@
           method: 'POST'
         }).done(function(html) {
           $('#{{ model_name }}s_wrapper{{ suffix }}').replaceWith(html);
+          updateGlobalTotals();
        });
     };
     var update_{{ model_name }}{{ suffix }} = function(id) {
@@ -255,6 +257,7 @@
           method: 'PUT'
         }).done(function(html) {
           $('#{{ model_name }}s_wrapper{{ suffix }}').replaceWith(html);
+          updateGlobalTotals();
        });
     };
     var edit_{{ model_name }}{{ suffix }} = function(id) {

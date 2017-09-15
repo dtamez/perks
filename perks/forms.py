@@ -251,12 +251,17 @@ def carriers():
     return models.Carrier.query.all()
 
 
+def plans():
+    return models.Plan.query.filter_by(active=True)
+
+
 class AdminPlanForm(ModelForm):
     active = BooleanField('Active?')
     id = IntegerField(widget=HiddenInput())
     premium_matrix = TextAreaField()
     description = TextAreaField()
     carrier = QuerySelectField('Carrier', query_factory=carriers, get_label='name')
+    required_plan = QuerySelectField('Must First Be Enrolled In', query_factory=plans, get_label='name', allow_blank=True)
 
 
 class MedicalPlanForm(AdminPlanForm):

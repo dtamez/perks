@@ -6,7 +6,20 @@
     .mainHeader {height: 140px; }
   </style>
 {% endblock extra_css %}
-{% block extra_js %}{% endblock %}
+{% block extra_js %}
+<script charset="utf-8">
+  var updateGlobalTotals = function() {
+      $.ajax({
+        url: '/update_totals/',
+        dataType: 'json',
+        method: 'GET'
+      }).done(function(totals) {
+        $('#totalEmployerCost').replaceWith(totals.employerTotal);
+        $('#totalEmployeeCost').replaceWith(totals.employeeTotal);
+      });
+  };
+</script>
+{% endblock %}
 <div class="ui center aligned grid">
   {% block base_content %}
     <div class="wrapper">

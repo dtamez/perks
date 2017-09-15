@@ -647,6 +647,8 @@ class Plan(Base, EmployerContributionMixin, PlanPremiumMetaValuesMixin):
     cust_service_phone = db.Column(PhoneNumberType, info={'label': 'Customer Service Phone'})
     premiums = db.relationship('Premium', back_populates="plan")
     premium_matrix = db.Column(db.String(5000), info={'label': "Premium Matrix"})
+    required_plan_id = db.Column(db.ForeignKey('plan.id'))
+    required_plan = db.relationship('Plan', uselist=False, info={'label': 'Required plan'})
 
     __mapper_args__ = {
         'polymorphic_on': plantype,
@@ -749,15 +751,17 @@ class BasicLifePlan(Plan, GroupMixin, PostTaxMixin, BooleanElectionMixin, LifeMi
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
     # rates
     # benefits
-    multiple_of_salary_paid = db.Column(db.Numeric(4, 2))
-    min_benefit = db.Column(db.Numeric(9, 2))
-    max_benefit = db.Column(db.Numeric(9, 2))
-    spouse_benefit = db.Column(db.Numeric(9, 2))
-    child_benefit = db.Column(db.Numeric(9, 2))
-    guarantee_issue = db.Column(db.Numeric(9, 2))
+    multiple_of_salary_paid = db.Column(db.Numeric(4, 2), info={'label': 'Multiple of Salary Paid'})
+    min_benefit = db.Column(db.Numeric(9, 2), info={'label': 'Minimum Benefit'})
+    max_benefit = db.Column(db.Numeric(9, 2), info={'label': 'Maximum Benefit'})
+    spouse_benefit = db.Column(db.Numeric(9, 2), info={'label': 'Spouse Benefit'})
+    child_benefit = db.Column(db.Numeric(9, 2), info={'label': 'Child Benefit'})
+    guarantee_issue = db.Column(db.Numeric(9, 2), info={'label': 'Guarantee Issue'})
     age_based_reductions = db.relationship('AgeBasedReduction', back_populates="plan")
-    addl_salary_multiple_accidental_death = db.Column(db.Numeric(4, 2))
-    addl_salary_multiple_accidental_dismemberment = db.Column(db.Numeric(4, 2))
+    addl_salary_multiple_accidental_death = db.Column(
+        db.Numeric(4, 2), info={'label': 'Additional Multiple of Salary Paid for Accidental Death'})
+    addl_salary_multiple_accidental_dismemberment = db.Column(
+        db.Numeric(4, 2), info={'label': 'Additional Multiple of Salary Paid for Accidental Dismemberment'})
 
     __mapper_args__ = {
         'polymorphic_identity': 'life_add',
@@ -770,15 +774,17 @@ class VoluntaryLifePlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixi
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
     # rates
-    increments = db.Column(db.Integer)
-    min_election = db.Column(db.Numeric(9, 2))
-    max_election = db.Column(db.Numeric(9, 2))
+    increments = db.Column(db.Integer, info={'label': 'Election Amount Increments'})
+    min_election = db.Column(db.Numeric(9, 2), info={'label': 'Minimum Election'})
+    max_election = db.Column(db.Numeric(9, 2), info={'label': 'Maximum Election'})
     # benefits
     age_based_reductions = db.relationship('AgeBasedReduction', back_populates="plan")
-    guarantee_issue = db.Column(db.Numeric(9, 2))
+    guarantee_issue = db.Column(db.Numeric(9, 2), info={'label': 'Guarantee Issue'})
     # optional ADD
-    addl_salary_multiple_accidental_death = db.Column(db.Numeric(4, 2))
-    addl_salary_multiple_accidental_dismemberment = db.Column(db.Numeric(4, 2))
+    addl_salary_multiple_accidental_death = db.Column(
+        db.Numeric(4, 2), info={'label': 'Additional Multiple of Salary Paid for Accidental Death'})
+    addl_salary_multiple_accidental_dismemberment = db.Column(
+        db.Numeric(4, 2), info={'label': 'Additional Multiple of Salary Paid for Accidental Dismemberment'})
     age_based_reductions = db.relationship('AgeBasedReduction', back_populates="plan")
 
     __mapper_args__ = {
@@ -795,7 +801,7 @@ class SpouseVoluntaryLifePlan(VoluntaryLifePlan):
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
     # rates
-    use_employee_age_for_spouse = db.Column(db.Boolean)
+    use_employee_age_for_spouse = db.Column(db.Boolean, info={'label': "Use Employee's Age for Spouse's Age"})
     __mapper_args__ = {
         'polymorphic_identity': 'spouse_voluntary_life',
         'inherit_condition': (id == Plan.id),
@@ -821,9 +827,9 @@ class StandaloneADDPlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixi
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
     # rates
-    increments = db.Column(db.Integer)
-    min_election = db.Column(db.Numeric(9, 2))
-    max_election = db.Column(db.Numeric(9, 2))
+    increments = db.Column(db.Integer, info={'label': 'Election Amount Increments'})
+    min_election = db.Column(db.Numeric(9, 2), info={'label': 'Minimum Election'})
+    max_election = db.Column(db.Numeric(9, 2), info={'label': 'Maximum Election'})
     # benefits
 
     def _get_dob(self, employee):
@@ -863,8 +869,8 @@ class WholeLifePlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixin, L
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
     # rates
     # benefits
-    spouse_benefit = db.Column(db.Numeric(9, 2))
-    child_benefit = db.Column(db.Numeric(9, 2))
+    spouse_benefit = db.Column(db.Numeric(9, 2), info={'label': 'Spouse Benefit'})
+    child_benefit = db.Column(db.Numeric(9, 2), info={'label': 'Child Benefit'})
 
     __mapper_args__ = {
         'polymorphic_identity': 'whole_life',
@@ -878,8 +884,8 @@ class UniversalLifePlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixi
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
     # rates
     # benefits
-    spouse_benefit = db.Column(db.Numeric(9, 2))
-    child_benefit = db.Column(db.Numeric(9, 2))
+    spouse_benefit = db.Column(db.Numeric(9, 2), info={'label': 'Spouse Benefit'})
+    child_benefit = db.Column(db.Numeric(9, 2), info={'label': 'Child Benefit'})
 
     __mapper_args__ = {
         'polymorphic_identity': 'universal_life',
@@ -956,7 +962,7 @@ class FSAMedicalPlan(Plan, GroupMixin, PreTaxMixin, AmountSuppliedElectionMixin)
     __tablename__ = 'fsa_medical_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
-    min_contribution = db.Column(db.Numeric(9, 2), nullable=False)
+    min_contribution = db.Column(db.Numeric(9, 2), nullable=False, info={'label': 'Minimum Contribution'})
 
     def get_min_max_elections(self):
         limits = IRSLimits.query.first()
@@ -987,7 +993,7 @@ class HSAPlan(Plan, GroupMixin, PreTaxMixin, AmountSuppliedElectionMixin):
     __tablename__ = 'hsa_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
-    min_contribution = db.Column(db.Numeric(9, 2), nullable=False)
+    min_contribution = db.Column(db.Numeric(9, 2), nullable=False, info={'label': 'Minimum Contribution'})
 
     def get_min_max_elections(self):
         limits = IRSLimits.query.first()
@@ -1015,9 +1021,12 @@ class Employee401KPlan(Plan, GroupMixin, PreTaxMixin, AmountSuppliedElectionMixi
     __tablename__ = 'employee_401k_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
-    employer_percent_matched = db.Column(db.Numeric(3, 2), nullable=False)
-    employer_max_contribution = db.Column(db.Numeric(9, 2), nullable=False)
-    min_contribution = db.Column(db.Numeric(9, 2), nullable=False)
+    employer_percent_matched = db.Column(db.Numeric(3, 2), nullable=False,
+                                         info={'label': 'Employer Percent Match'})
+    employer_max_contribution = db.Column(db.Numeric(9, 2), nullable=False,
+                                          info={'label': 'Employer Maximum Contribution'})
+    min_contribution = db.Column(db.Numeric(9, 2), nullable=False,
+                                 info={'label': 'Minimum Contribution'})
 
     def get_min_max_elections(self):
         limits = IRSLimits.query.first()
@@ -1058,7 +1067,7 @@ class CriticalIllnessPlan(Plan, SupplementalMixin, PostTaxMixin, TieredElectionM
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
 
-    payout_amount = db.Column(db.Numeric(9, 2))
+    payout_amount = db.Column(db.Numeric(9, 2), info={'label': 'Payout Amount'})
 
     def _get_dob(self, employee):
         return employee.dob
@@ -1130,7 +1139,7 @@ class OtherPlan(Plan, SupplementalMixin, PostTaxMixin, TieredElectionMixin):
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
 
     __mapper_args__ = {
-        'polymorphic_identity': 'identity_theft',
+        'polymorphic_identity': 'other',
         'inherit_condition': (id == Plan.id),
     }
 

@@ -24,6 +24,8 @@
     {{ render_row(medical_plan_form.doctor_selection_required, medical_plan_form.cobra_eligible) }}
     {{ render_row(medical_plan_form.pre_tax, medical_plan_form.plan_termination_timing_type_id) }}
 
+    {{ render_single_row(medical_plan_form.required_plan) }}
+
     {{ render_save_update(medical_plan_form.id, 'medical_plan') }}
   </form>
 

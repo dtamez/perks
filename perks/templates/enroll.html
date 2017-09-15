@@ -85,6 +85,9 @@
       </div> {# end steps #}
     </div>  {# end four wide column #}
     <div class="eleven wide column">
+      <div class="ui segment basic right aligned">
+        Employer Cost: <span id='totalEmployerCost'>{{ g.employer_total }}</span> | Your Cost: <span id='totalEmployeeCost'>{{ g.employee_total }}</span>
+      </div>
       {% block step_content %}{% endblock step_content %}
     </div> {# end twelve wide column #}
   </div> {# end ui sixteen col grid #}

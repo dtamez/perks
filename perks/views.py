@@ -6,6 +6,7 @@
 # Distributed under terms of the MIT license.
 from datetime import date
 from decimal import Decimal
+import json
 import locale
 import numpy as np
 
@@ -144,6 +145,7 @@ def load_user(user_id):
 def before_request():
     g.user = current_user
     load_user(current_user.get_id())
+    update_totals()
 
 
 @app.route('/')
@@ -208,6 +210,7 @@ class AJAXCrudView(MethodView):
             return self.display_errors(main, forms)
 
         self.on_save(main)
+        create_plan_premiums(main)
 
         try:
             db.session.add(main)
@@ -224,10 +227,12 @@ class AJAXCrudView(MethodView):
         return template.render(ctx)
 
     def put(self, id):
+        errors = []
         forms = {}
         valid = True
         main = self.main['model'].query.get(id)
         form = self.main['form'](request.form, obj=main)
+        original_premium_matrix = main.premium_matrix
         if not form.validate():
             valid = False
         forms[self.main['form_name']] = form
@@ -242,11 +247,23 @@ class AJAXCrudView(MethodView):
                 obj = sub['model']()
                 setattr(main, sub['single'], obj)
             form.populate_obj(obj)
+
         if not valid:
-            return self.display_errors(main, forms)
+            return self.display_errors(main, forms, None)
+
+        if main.premium_matrix != original_premium_matrix:
+            # blow away existing premiumns
+            main.premiums = []
+            create_plan_premiums(main)
 
         self.on_edit(main)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            errors.append(e.message)
+            return self.display_errors(main, forms, errors)
+
         return self.display_all()
 
     def delete(self, id):
@@ -256,8 +273,8 @@ class AJAXCrudView(MethodView):
         db.session.commit()
         return self.display_all()
 
-    def display_errors(self, main, forms):
-        ctx = {self.main['single']: main}
+    def display_errors(self, main, forms, errors):
+        ctx = {self.main['single']: main, 'errors': errors}
         ctx.update(forms)
         template = env.get_template(self.main['template'])
         return template.render(ctx)
@@ -289,7 +306,10 @@ def get_age_bands_from_matrix(s):
     return None
 
 
-def create_plan_premiums(plan, pr_matrix):  # NOQA
+def create_plan_premiums(plan):  # NOQA
+    if not hasattr(plan, 'premium_matrix'):
+        return
+    pr_matrix = plan.premium_matrix
     # single premium
     if isinstance(pr_matrix, np.int64):
         premium = Premium(plan=plan, amount=pr_matrix)
@@ -771,6 +791,26 @@ def get_beneficiary_options(plan, employee):
                                                     dependent_id=dep.id, dependent=dep, percentage=0))
 
     return dep_options, estate_designated or blank_estate, heirs_designated or blank_heirs
+
+
+@app.route('/update_totals/', methods=['GET'])
+@login_required
+def update_totals():
+    employee = Employee.query.join(User).filter(User.id == g.user.id).first()
+    enrollment = Enrollment.query.filter(Enrollment.employee_id == employee.id).one()
+    employer_total = 0
+    employee_total = 0
+    for election in enrollment.elections:
+        amount = election.premium.amount
+        er = election.plan.er_flat_amount_contributed or amount * election.plan.er_percentage_contributed
+        ee = amount - er
+        employer_total += er
+        employee_total += ee
+
+    g.employer_total = locale.currency(employer_total, grouping=True)
+    g.employee_total = locale.currency(employee_total, grouping=True)
+    totals = json.dumps({'employerTotal': g.employer_total, 'employeeTotal': g.employee_total})
+    return totals
 
 
 @app.route('/enroll/finalize', methods=['GET', 'POST'])

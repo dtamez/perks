@@ -23,6 +23,8 @@
     {{ render_row(voluntary_life_plan_form.increments, voluntary_life_plan_form.guarantee_issue) }}
     {{ render_row(voluntary_life_plan_form.addl_salary_multiple_accidental_death, voluntary_life_plan_form.addl_salary_multiple_accidental_dismemberment) }}
 
+    {{ render_single_row(voluntary_life_plan_form.required_plan) }}
+
     {{ render_save_update(voluntary_life_plan_form.id, 'voluntary_life_plan') }}
   </form>
 
