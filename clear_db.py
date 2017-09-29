@@ -10,7 +10,7 @@
 Removes all the created entities from the database so we can test an import from scratch.
 """
 
-from perks import db, models
+from app import db, models
 
 
 def delete_all(objects):
@@ -27,8 +27,8 @@ def main():  # NOQA
     delete_all(models.EnrollmentPeriod.query.all())
     print 'removing premiums'
     delete_all(models.Premium.query.all())
-    delete_all(models.AgeBandedTier.query.all())
     print 'removing supplemental plans'
+    delete_all(models.IdentityTheftPlan.query.all())
     delete_all(models.AccidentPlan.query.all())
     delete_all(models.HospitalConfinementPlan.query.all())
     delete_all(models.CriticalIllnessPlan.query.all())

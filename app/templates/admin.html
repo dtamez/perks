@@ -1,0 +1,92 @@
+{% extends "member_base.html" %}
+{% block extra_js %}{% endblock %}
+{% block content %}
+  <div class="ui sixteen column grid">
+    <div class="five wide column">
+      <div class="ui mini vertical steps">
+
+        <a href="{{ url_for('main.bulk_load')}}" class="{% if g.active_step == 'import' %}active {% endif %}step">
+          <i class="upload {% if g.active_step == 'import' %}violet{% endif %} icon"></i>
+          <div class="content">
+            <div class="title">
+                Bulk Import
+            </div>
+
+            <div class="description">
+                One time data load
+            </div>
+          </div>
+        </a>
+
+        <a href="{{ url_for('main.admin_people')}}" class="{% if g.active_step == 'people' %}active {% endif %}step">
+          <i class="users {% if g.active_step == 'people' %}violet{% endif %} icon"></i>
+          <div class="content">
+            <div class="title">
+              Personell
+            </div>
+
+            <div class="description">
+              Admin & employees
+            </div>
+          </div>
+        </a>
+
+        <a href="{{ url_for('main.admin_carriers')}}" class="{% if g.active_step == 'carriers' %}active {% endif %}step">
+          <i class="heartbeat {% if g.active_step == 'carriers' %}violet{% endif %} icon"></i>
+          <div class="content">
+            <div class="title">
+              Carriers
+            </div>
+
+            <div class="description">
+              Manage carriers.
+            </div>
+          </div>
+        </a>
+
+        <a href="{{ url_for('main.admin_core') }}"  class="{% if g.active_step == 'core' %}active  {% endif %}step">
+          <i class="first aid {% if g.active_step == 'core' %}violet{% endif %} icon"></i>
+          <div class="content">
+            <div class="title">
+              Core Plans
+            </div>
+
+            <div class="description">
+              Manage core benefits.
+            </div>
+          </div>
+        </a>
+
+        <a href="{{ url_for('main.admin_group') }}"  class="{% if g.active_step == 'group' %}active  {% endif %}step">
+          <i class="first aid {% if g.active_step == 'group' %}violet{% endif %} icon"></i>
+          <div class="content">
+            <div class="title">
+              Group Plans
+            </div>
+
+            <div class="description">
+              Manage group benefits.
+            </div>
+          </div>
+        </a>
+
+        <a href="{{ url_for('main.admin_supplemental') }}"  class="{% if g.active_step == 'supplemental' %}active  {% endif %}step">
+          <i class="first aid {% if g.active_step == 'supplemental' %}violet{% endif %} icon"></i>
+          <div class="content">
+            <div class="title">
+              Supplemental Plans
+            </div>
+
+            <div class="description">
+              Manage other benefits.
+            </div>
+          </div>
+        </a>
+
+      </div> {# end steps #}
+    </div>  {# end four wide column #}
+    <div class="eleven wide column">
+      {% block step_content %}{% endblock step_content %}
+    </div> {# end twelve wide column #}
+  </div> {# end ui sixteen col grid #}
+{% endblock content %}

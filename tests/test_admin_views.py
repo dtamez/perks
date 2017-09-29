@@ -1,0 +1,39 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+# vim:fenc=utf-8
+#
+# Copyright © 2017 Danny Tamez <zematynnad@gmail.com>
+#
+# Distributed under terms of the MIT license.
+
+"""
+Tests for the admininstrative views.
+"""
+from __future__ import absolute_import
+
+import unittest
+
+from flask import current_app
+
+from app import create_app
+from app.models import db
+
+
+class AddressTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.app = create_app('testing')
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        db.create_all()
+
+    def tearDown(self):
+        db.session.remove()
+        db.drop_all()
+        self.app_context.pop()
+
+    def test_app_exists(self):
+        self.assertFalse(current_app is None)
+
+    def test_app_is_testing(self):
+        self.assertTrue(current_app.config['TESTING'])

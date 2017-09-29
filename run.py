@@ -3,11 +3,12 @@
 from gevent.wsgi import WSGIServer
 from werkzeug.debug import DebuggedApplication
 from werkzeug.serving import run_with_reloader
-from perks import app
+from app import create_app
 
 
 @run_with_reloader
 def run_server():
+    app = create_app('development')
     debug = app.config['DEBUG']
     if debug:
         http_server = WSGIServer(('', 5000), DebuggedApplication(app))

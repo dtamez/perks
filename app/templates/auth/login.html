@@ -1,0 +1,12 @@
+{% extends 'public_base.html' %}
+
+{% block heading %}Log-in to your account{% endblock heading %}
+{% block content %}
+    {{ render_field(form.email, tabindex=160, icon="mail" )}}
+    {# Password field #}
+    {{ render_field(form.password, tabindex=160, icon="lock", type="password" )}}
+    {# Submit button #}
+    {{ render_submit_field(form.submit, tabindex=180) }}
+
+{% endblock content %}
+<!-- vi set ft=jinja -->

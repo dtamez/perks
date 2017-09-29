@@ -1,0 +1,30 @@
+{% from "_macros.html" import render_formatters, render_row, render_single_row, render_3row, render_save_update, render_table, render_ajax_methods %}
+{{ render_formatters([
+    ('cust_service_phone', 'phone'),
+    ('original_effective_date', 'date'),
+    ('renewal_date', 'date'),
+    ('website', 'url'),
+    ], 'whole_life_plan-')}}
+ {{ render_ajax_methods('admin', 'whole_life_plan') }}
+
+<div id="whole_life_plans_wrapper">
+  <h4 class="ui dividing header">Whole Life Plans</h4>
+  {% include "admin/errors.html" %}
+
+  <form class="ui form {% if whole_life_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_whole_life_plans">
+    {{ render_row(whole_life_plan_form.name, whole_life_plan_form.code) }}
+    {{ render_row(whole_life_plan_form.carrier, whole_life_plan_form.cust_service_phone) }}
+    {{ render_row(whole_life_plan_form.website, whole_life_plan_form.active) }}
+
+    {{ render_row(whole_life_plan_form.er_flat_amount_contributed, whole_life_plan_form.er_percentage_contributed) }}
+    {{ render_single_row(whole_life_plan_form.premium_matrix) }}
+
+    {{ render_single_row(whole_life_plan_form.required_plan) }}
+
+    {{ render_save_update(whole_life_plan_form.id, 'whole_life_plan') }}
+  </form>
+
+  {% if not whole_life_plan_form.id.data %}
+    {{ render_table('whole_life_plan', [whole_life_plan_form.name, whole_life_plan_form.code, whole_life_plan_form.website ], whole_life_plans )}}
+  {% endif %}
+</div>

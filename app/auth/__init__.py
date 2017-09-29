@@ -5,9 +5,10 @@
 # Copyright © 2017 Danny Tamez <zematynnad@gmail.com>
 #
 # Distributed under terms of the MIT license.
-from app import create_app
+from flask import Blueprint
 
 
-if __name__ == "__main__":
-    app = create_app('development')
-    app.run(host='0.0.0.0', port=5000)
+auth = Blueprint('auth', __name__)
+
+
+from . import views  # NOQA
