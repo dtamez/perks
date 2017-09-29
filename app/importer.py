@@ -19,7 +19,6 @@ from . import db, models
 from .models import (
     AccidentPlan,
     Address,
-    #  AgeBandedTier,
     AgeBasedReduction,
     BasicLifePlan,
     Beneficiary,
@@ -53,7 +52,6 @@ from .models import (
     ParkingTransitPlan,
     Plan,
     Premium,
-    Role,
     SpouseVoluntaryLifePlan,
     STDPlan,
     STDVoluntaryPlan,
@@ -64,7 +62,6 @@ from .models import (
     VoluntaryLifePlan,
     WholeLifePlan,
 )
-#  from .util.orm import get_or_create
 
 
 class ValidationError(Exception):
@@ -82,7 +79,6 @@ def do_bulk_load(stream):
         import_locations(xls)
         import_carriers(xls)
         import_employees(xls)
-        import_admins(xls)
         import_dependents(xls)
         import_beneficiaries(xls)
         import_core_plans(xls, 'Medical Plans', MedicalPlan)
@@ -160,7 +156,7 @@ def import_employees(xls):
      FIRST_NAME, MIDDLE_NAME, LAST_NAME,
      SSN, DOB, GENDER, MARITAL_STATUS, SPOUSE_DOB, SMOKER_TYPE, SPOUSE_SMOKER_TYPE,
      STREET_1, STREET_2, CITY, STATE, ZIP,
-     USERNAME, PASSWORD, EMAIL, ACTIVE,
+     EMAIL, ACTIVE,
      HIRE_DATE, EFFECTIVE_DATE, TERMINATION_DATE,
      GROUP_ID, SUB_GROUP_ID, SUB_GROUP_EFFECTIVE_DATE,
      SALARY, SALARY_MODE, SALARY_EFFECTIVE_DATE,
@@ -168,7 +164,7 @@ def import_employees(xls):
      EMERGENCY_CONTACT_NAME, EMERGENCY_CONTACT_RELATIONSHIP, EMERGENCY_CONTACT_PHONE) = range(1, 36)
     converters = {n: strip for n in range(LOCATION_CODE)}
 
-    converters.update({EMPLOYEE_NUMBER - 1: str, PASSWORD - 1: str, SSN - 1: str, PHONE - 1: str,
+    converters.update({EMPLOYEE_NUMBER - 1: str, SSN - 1: str, PHONE - 1: str,
                        ALTERNATE_PHONE - 1: str, EMERGENCY_CONTACT_PHONE - 1: str})
     employee_sheet = xls.parse('Employees', converters=converters, keep_default_na=False)
 
@@ -193,12 +189,10 @@ def import_employees(xls):
         addr.zip_code = row[ZIP]
         employee.address = addr
         user = User()
-        user.username = row[USERNAME]
-        #  password = row[PASSWORD] or '{}{}{}'.format(employee.first_name[0], employee.last_name, employee.ssn[-4:])
-        #  user_manager.update_password(user, user_manager.hash_password(password))
         user.email = row[EMAIL]
         user.active = row[ACTIVE]
         user.confirmed_at = date.today()
+        user.password = employee.get_default_password()
         employee.user = user
         employee.hire_date = row[HIRE_DATE]
         employee.effective_date = row[EFFECTIVE_DATE]
@@ -219,30 +213,6 @@ def import_employees(xls):
 
         db.session.add(employee)
         print employee.first_name, employee.last_name
-
-
-def import_admins(xls):
-    print 'importing admins'
-    EMPLOYEE_NUMBER, USERNAME, PASSWORD = range(1, 4)
-    converters = {n: strip for n in range(PASSWORD)}
-    converters.update({EMPLOYEE_NUMBER - 1: str, PASSWORD - 1: str})
-    admins_sheet = xls.parse('Admins', converters=converters, keep_default_na=False)
-
-    admin_role = Role.query.filter(Role.name == 'admin').one()
-
-    for row in admins_sheet.itertuples():
-        if row[EMPLOYEE_NUMBER]:
-            employee = Employee.query.filter(Employee.employee_number == row[EMPLOYEE_NUMBER]).one()
-            employee.user.roles.append(admin_role)
-            db.session.add(employee)
-            print 'employee', employee.first_name, employee.last_name
-        else:
-            user = User()
-            user.username = row[USERNAME]
-            #  password = user_manager.hash_password(row[PASSWORD])
-            #  user_manager.update_password(user, password)
-            db.session.add(user)
-            print 'user', user.username
 
 
 def import_dependents(xls):

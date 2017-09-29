@@ -8,9 +8,10 @@ from datetime import date
 from decimal import Decimal
 import inflection
 import locale
+from logzero import logger
 
 #  from flask_user import SQLAlchemyAdapter, UserManager, UserMixin
-from flask_login import UserMixin, AnonymousUserMixin
+from flask_login import UserMixin
 from sqlalchemy import and_
 from sqlalchemy.orm import backref
 from sqlalchemy_utils import (
@@ -239,14 +240,11 @@ class PersonMixin(object):
 
 class User(UserMixin, Base):
     id = db.Column(db.Integer, primary_key=True, info={'widget': widgets.HiddenInput()})
-    username = db.Column(db.String(50), nullable=False, unique=True, info={'label': 'Username'}, index=True)
-    #  password = db.Column(db.String(255), nullable=False, unique=False, info={'label': 'Password'})
     password_hash = db.Column(db.String(128))
     email = db.Column(EmailType, info={'label': 'Email'}, index=True)
-    confirmed_at = db.Column(db.DateTime)
     reset_password_token = db.Column(db.String(100), nullable=True, server_default='')
-    active = db.Column('is_active', db.Boolean, nullable=False, server_default='0', info={'label': 'May Log In?'})
-    roles = db.relationship('Role', secondary='user_roles', backref=db.backref('users', lazy='dynamic'))
+    is_admin = db.Column(db.Boolean, nullable=False, default=False,
+                         server_default='0', info={'widget': widgets.HiddenInput()})
 
     @property
     def password(self):
@@ -258,28 +256,6 @@ class User(UserMixin, Base):
 
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
-
-
-class Role(Base):
-    id = db.Column(db.Integer, primary_key=True, info={'widget': widgets.HiddenInput()})
-    name = db.Column(db.String(50), nullable=False, server_default=u'', unique=True)
-    label = db.Column(db.Unicode(255), server_default=u'')
-
-
-class UserRoles(Base):
-    id = db.Column(db.Integer, primary_key=True, info={'widget': widgets.HiddenInput()})
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
-    role_id = db.Column(db.Integer, db.ForeignKey('role.id', ondelete='CASCADE'))
-
-
-class AnonymousUser(AnonymousUserMixin):
-    def can(self, permissions):
-        return False
-
-    def is_administrator(self):
-        return False
-
-login_manager.anonymous_user = AnonymousUser
 
 
 @login_manager.user_loader
@@ -422,6 +398,9 @@ class Employee(PersonMixin, Base):
         elif self.salary_mode == 'annually':
             return self.salary
 
+    def get_default_password(self):
+        return '{}{}'.format(self.last_name, self.ssn[-4:])
+
 
 class Carrier(Base):
     id = db.Column(db.Integer, primary_key=True, info={'widget': widgets.HiddenInput()})
@@ -496,6 +475,7 @@ class AmountSuppliedElectionMixin(object):
             return AmountInputElectionForm
 
     def get_premium_choices(self, chosen_value, employee):
+        logger.debug('chosen_value: {}, employee: {}'.format(chosen_value, employee))
         # TODO: This is a hack, need a better way
         if chosen_value == '|':
             chosen_value = None

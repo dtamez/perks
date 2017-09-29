@@ -62,7 +62,7 @@ def main():  # NOQA
     print 'removing employees'
     delete_all(models.Employee.query.all())
     print 'removing admins'
-    delete_all(models.User.query.filter(models.User.username != 'admin'))
+    delete_all(models.User.query.filter(models.User.is_admin != True))
     print 'removing locations'
     delete_all(models.Location.query.all())
     print 'removing carriers'

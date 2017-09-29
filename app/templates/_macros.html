@@ -30,7 +30,7 @@
             $('#beneficiaries_{{ plan_id }}').show();
         }
     });
-    $('.beneficiaryType, .beneficiaryPercentage').on('change', function() {
+    $('.beneficiaryType, .beneficiaryPercentage').on('input', function() {
         var primaryTotal = 0;
         var contingentTotal = 0;
         $('.beneficiaryType')

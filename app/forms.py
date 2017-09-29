@@ -109,6 +109,7 @@ class UserForm(ModelForm):
         model = models.User
         include = ['id']
     id = IntegerField(widget=HiddenInput())
+    password_reset = BooleanField('Reset password?')
 
 
 class AddressForm(ModelForm):

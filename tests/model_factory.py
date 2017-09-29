@@ -43,19 +43,10 @@ class UserFactory(factory.Factory):
     class Meta:
         model = models.User
 
-    username = factory.Faker('user_name')
     password = 'password'
     email = factory.LazyAttribute(lambda o: '%s@example.org' % o.username)
     confirmed_at = factory.LazyFunction(datetime.datetime.now)
-    active = True
-
-
-class UserRoleFactory(factory.Factory):
-    class Meta:
-        model = models.UserRoles
-
-    user_id = factory.SubFactory(UserFactory)
-    role_id = factory.SubFactory(RoleFactory)
+    is_admin = False
 
 
 class AddressFactory(factory.Factory):

@@ -38,22 +38,15 @@ def seed_data():
 
 @manager.command
 @manager.option('-e', '--email', help='Admin email address')
-def create_admin(email):
-    from app.models import Role, User
-
-    role = Role.query.filter(Role.name == 'admin').first()
-    if not role:
-        role = Role()
-        role.label = 'Administrator'
-        role.name = 'admin'
+def create_admin(email, password):
+    from app.models import User
 
     admin = User()
     admin.active = True
     admin.confirmed_at = date.today()
     admin.email = email
-    admin.roles.append(role)
-    admin.username = 'admin'
-    admin.password = 'password'
+    admin.password = password
+    admin.is_admin = True
 
     db.session.add(admin)
     db.session.commit()

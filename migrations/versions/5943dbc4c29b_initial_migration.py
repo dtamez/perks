@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: 31ee6ed1ca7a
+Revision ID: 5943dbc4c29b
 Revises:
-Create Date: 2017-09-28 21:11:13.969384
+Create Date: 2017-09-29 13:07:53.222978
 
 """
 from alembic import op
@@ -27,7 +27,7 @@ from app.models import (
 
 
 # revision identifiers, used by Alembic.
-revision = '31ee6ed1ca7a'
+revision = '5943dbc4c29b'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -98,26 +98,15 @@ def upgrade():
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
-        'role',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('name', sa.String(length=50), server_default=u'', nullable=False),
-        sa.Column('label', sa.Unicode(length=255), server_default=u'', nullable=True),
-        sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('name')
-    )
-    op.create_table(
         'user',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('username', sa.String(length=50), nullable=False),
         sa.Column('password_hash', sa.String(length=128), nullable=True),
         sa.Column('email', EmailType(length=255), nullable=True),
-        sa.Column('confirmed_at', sa.DateTime(), nullable=True),
         sa.Column('reset_password_token', sa.String(length=100), server_default='', nullable=True),
-        sa.Column('is_active', sa.Boolean(), server_default='0', nullable=False),
+        sa.Column('is_admin', sa.Boolean(), server_default='0', nullable=False),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_user_email'), 'user', ['email'], unique=False)
-    op.create_index(op.f('ix_user_username'), 'user', ['username'], unique=True)
     op.create_table(
         'employee',
         sa.Column('first_name', sa.Unicode(length=50), server_default=u'', nullable=False),
@@ -178,15 +167,6 @@ def upgrade():
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_plan_is_active'), 'plan', ['is_active'], unique=False)
-    op.create_table(
-        'user_roles',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('user_id', sa.Integer(), nullable=True),
-        sa.Column('role_id', sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(['role_id'], ['role.id'], ondelete='CASCADE'),
-        sa.ForeignKeyConstraint(['user_id'], ['user.id'], ondelete='CASCADE'),
-        sa.PrimaryKeyConstraint('id')
-    )
     op.create_table(
         'accident_plan',
         sa.Column('premium_matrix', sa.String(length=5000), nullable=True),
@@ -685,15 +665,12 @@ def downgrade():
     op.drop_index(op.f('ix_age_based_reduction_plan_id'), table_name='age_based_reduction')
     op.drop_table('age_based_reduction')
     op.drop_table('accident_plan')
-    op.drop_table('user_roles')
     op.drop_index(op.f('ix_plan_is_active'), table_name='plan')
     op.drop_table('plan')
     op.drop_index(op.f('ix_employee_user_id'), table_name='employee')
     op.drop_table('employee')
-    op.drop_index(op.f('ix_user_username'), table_name='user')
     op.drop_index(op.f('ix_user_email'), table_name='user')
     op.drop_table('user')
-    op.drop_table('role')
     op.drop_table('location')
     op.drop_table('irs_limits')
     op.drop_table('enrollment_period')

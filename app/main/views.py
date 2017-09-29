@@ -15,6 +15,7 @@ from flask import g, flash, request, render_template, redirect, url_for
 from flask.views import MethodView
 from flask_login import current_user, login_required
 from jinja2 import Environment, PackageLoader
+from logzero import logger
 from werkzeug.datastructures import CombinedMultiDict
 from werkzeug.datastructures import MultiDict
 
@@ -113,7 +114,6 @@ from ..models import (
     ParkingTransitPlan,
     Plan,
     Premium,
-    Role,
     SMOKER_TYPES,
     STDPlan,
     STDVoluntaryPlan,
@@ -220,13 +220,14 @@ class AJAXCrudView(MethodView):
         ctx['errors'] = errors
         return template.render(ctx)
 
-    def put(self, id):
+    def put(self, id):  # NOQA
         errors = []
         forms = {}
         valid = True
         main = self.main['model'].query.get(id)
         form = self.main['form'](request.form, obj=main)
-        original_premium_matrix = main.premium_matrix
+        if hasattr(main, 'premium_matrix'):
+            original_premium_matrix = main.premium_matrix
         if not form.validate():
             valid = False
         forms[self.main['form_name']] = form
@@ -245,10 +246,11 @@ class AJAXCrudView(MethodView):
         if not valid:
             return self.display_errors(main, forms, None)
 
-        if main.premium_matrix != original_premium_matrix:
-            # blow away existing premiumns
-            main.premiums = []
-            create_plan_premiums(main)
+        if hasattr(main, 'premium_matrix'):
+            if main.premium_matrix != original_premium_matrix:
+                # blow away existing premiumns
+                main.premiums = []
+                create_plan_premiums(main)
 
         self.on_edit(main)
         try:
@@ -827,6 +829,7 @@ def get_beneficiary_options(plan, employee):
             dep_options.append(DependentBeneficiary(plan=plan, employee=employee, employee_id=employee.id,
                                                     dependent_id=dep.id, dependent=dep, percentage=0))
 
+    dep_options.sort(key=lambda db: db.dependent.dob)
     return dep_options, estate_designated or blank_estate, heirs_designated or blank_heirs
 
 
@@ -884,26 +887,13 @@ def admin():
 def admin_people():
     g.active_tab = 'admin'
     g.active_step = 'people'
-    admin_role = Role.query.filter(Role.name == 'admin').one()
-    users = admin_role.users.all()
     employees = Employee.query.all()
     locations = Location.query.all()
     return render_template(
         'admin/people.html', marital_status_types=MARITAL_STATUS_TYPES,
-        users=users, user_form=UserForm(), employee_form=EmployeeForm(),
+        employee_form=EmployeeForm(), user_form=UserForm(),
         address_form=AddressForm(), location_form=LocationForm(),
         employees=employees, locations=locations)
-
-
-#  def update_user(user, request):
-    #  form = UserForm(request.form)
-    #  original = user.password
-    #  form.populate_obj(user)
-    #  if original != user.password:
-    #   #  password = user_manager.hash_password(user.password)
-    #   #  user.password = password
-
-    #  return user
 
 
 @main.route('/admin/carriers', methods=['GET'])
@@ -1443,16 +1433,8 @@ class EmployeeView(AJAXCrudView):
     ]
 
     def on_save(self, employee):
-        #  employee.user.password = user_manager.hash_password(employee.user.password)
+        employee.user.password = employee.get_default_password()
         employee.user.confirmed_at = date.today()
-
-    #  def on_edit(self, employee):
-        #  original = Employee.query.get(employee.id)
-        #  hashed = user_manager.hash_password(employee.user.password)
-        #  if (original.user.password == employee.user.password or hashed == employee.user.password):
-        #   #  return
-        #  else:
-        #   #  employee.user.password = hashed
 
 
 class LocationView(AJAXCrudView):

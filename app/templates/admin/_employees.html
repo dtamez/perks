@@ -26,8 +26,7 @@
   <form class="ui form {% if employee is not defined %}hidden{% endif %}" action="" method="post" id="form_employees">
     {{ render_3row(employee_form.first_name, employee_form.middle_name, employee_form.last_name) }}
     {{ render_row(employee_form.dob, employee_form.ssn) }}
-    {{ render_row(user_form.email, user_form.active) }}
-    {{ render_row(user_form.username, user_form.password) }}
+    {{ render_row(user_form.email, user_form.password_reset) }}
     {{ render_row(address_form.street_1, address_form.street_2) }}
     {{ render_3row(address_form.city, address_form.state, address_form.zip_code) }}
     {{ render_row(employee_form.smoker_type, None) }}

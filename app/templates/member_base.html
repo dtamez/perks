@@ -42,9 +42,11 @@
         <a class="item {% if g.active_tab == 'messages' %}active{% endif %}" href="{{ url_for('main.messages')}}">
           <i class="mail icon"></i> Messages
         </a>
+        {% if current_user.is_admin %}
         <a class="item {% if g.active_tab == 'admin' %}active{% endif %}" href="{{ url_for('main.admin')}}">
           <i class="settings icon"></i> Admin
         </a>
+        {% endif %}
         <div class="right menu">
           <a class="ui item" href="{{ url_for('auth.logout')}}">
             <i class="sign out icon"></i> Sign Out
