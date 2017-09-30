@@ -396,6 +396,7 @@ def enroll_dependents():
     employee = Employee.query.join(User).filter(
         User.id == g.user.id).first()
     dependents = employee.dependents
+    dependents.sort(key=lambda d: d.dob)
     return render_template('enroll/dependents.html',
                            dependents=dependents,
                            dependent_form=DependentForm(),

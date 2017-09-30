@@ -24,6 +24,7 @@ from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from wtforms_alchemy import ModelForm, ModelFormField
 
 from . import models
+from wtf.custom import PercentageField
 
 
 class LoginForm(FlaskForm):
@@ -178,6 +179,7 @@ class DependentForm(ModelForm):
     id = IntegerField(widget=HiddenInput())
     employee_id = IntegerField(widget=HiddenInput())
     address = ModelFormField(AddressForm)
+    full_name = StringField()
 
 
 class MiniDependentForm(ModelForm):
@@ -247,6 +249,7 @@ class AdminPlanForm(ModelForm):
     carrier = QuerySelectField('Carrier', query_factory=carriers, get_label='name')
     required_plan = QuerySelectField('Must First Be Enrolled In', query_factory=plans,
                                      get_label='name', allow_blank=True)
+    er_percentage_contributed = PercentageField('Percentage Contributed by Employer')
 
 
 class MedicalPlanForm(AdminPlanForm):

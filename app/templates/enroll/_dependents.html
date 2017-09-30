@@ -26,6 +26,6 @@
   </form>
 
   {% if not dependent_form.id.data %}
-    {{ render_table('dependent', [dependent_form.last_name, dependent_form.first_name], dependents )}}
+    {{ render_table('dependent', [dependent_form.full_name, dependent_form.dependent_type], dependents )}}
   {% endif %}
 </div>

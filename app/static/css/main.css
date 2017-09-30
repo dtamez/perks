@@ -17,3 +17,25 @@
 .beneficiaryPercentage {
   width: 65px !important;
 }
+.planEditTools {
+  width: 70px;
+  text-align: right;
+}
+.adminTableCol1 {
+  text-align: left;
+}
+.adminTableCol2 {
+  width: 175px;
+  text-align: right;
+}
+.adminTableCol3 {
+  width: 250px;
+  text-align: right;
+}
+.enrollTableCol1 {
+  text-align: left;
+}
+.enrollTableCol2 {
+  width: 150px;
+  text-align: right;
+}

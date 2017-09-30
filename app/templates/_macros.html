@@ -198,9 +198,9 @@
     <thead>
       <tr>
         {% for field in fields %}
-          <th>{{ field.label }}</th>
+        <th class="adminTableCol{{loop.index}}">{{ field.label }}</th>
         {% endfor %}
-        <th> <i class="plus icon link green" onclick="javascript: $('#table_{{ model_name }}s{{ suffix }}').hide();$('#form_{{ model_name }}s{{ suffix }}').show();"/></i>
+        <th class="planEditTools"> <i class="plus icon link green" onclick="javascript: $('#table_{{ model_name }}s{{ suffix }}').hide();$('#form_{{ model_name }}s{{ suffix }}').show();"/></i>
       </tr>
     </thead>
     <tbody>
@@ -316,16 +316,16 @@
   <table class="ui table" id="table_{{ plan_type }}s{{ suffix }}">
     <thead>
       <tr>
-          <th>Plan</th>
-          <th>Election</th>
-          <th></th>
+          <th class="enrollTableCol1">Plan</th>
+          <th class="enrollTableCol2">Election</th>
+          <th class="planEditTools"></th>
       </tr>
     </thead>
     <tbody>
       {% for selection in selections %}
         <tr>
             <td>{{ selection.plan_name }} </td>
-            <td>{{ selection.amount or selection.election_label }} </td>
+            <td class="planElection">{{ selection.amount or selection.election_label }} </td>
           <td>
             {% if selection.available %}
               <i class='write icon link blue' onclick="javascript: edit_{{ plan_type }}({{ selection.plan_id }})"></i>

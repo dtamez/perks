@@ -228,6 +228,10 @@ class PersonMixin(object):
     marital_status = db.Column(ChoiceType(MARITAL_STATUS_TYPES), info={'label': 'Marital Status'})
     smoker_type = db.Column(ChoiceType(SMOKER_TYPES), info={'label': 'Smoker Status'})
 
+    @property
+    def full_name(self):
+        return '{} {} {}'.format(self.first_name, self.middle_name, self.last_name)
+
     @declared_attr
     def address_id(cls):
         return db.Column(db.Integer, db.ForeignKey(
