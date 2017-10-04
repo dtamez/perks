@@ -13,7 +13,6 @@ class Config:
     USER_APP_NAME = 'Perks'
     USER_ENABLE_CONFIRM_EMAIL = True
 
-    SQLALCHEMY_RECORD_QUERIES = True
     SQLALCHEMY_ECHO = False
     SQLALCHEMY_RECORD_QUERIES = True
     SQLALCHEMY_TRACK_MODIFICATIONS = True
@@ -42,7 +41,9 @@ class DevelopmentConfig(Config):
 class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = 'postgresql://unittest:password@localhost/test_perks'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
+    WTF_CSRF_ENABLED = False
 
 
 class ProductionConfig(Config):

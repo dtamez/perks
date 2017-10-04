@@ -8,13 +8,15 @@
 """
 Factory for unittest fixtures.
 """
-import datetime
-import factory
-import factory.fuzzy
+from __future__ import unicode_literals
+
+from datetime import timedelta
 from faker import Faker
 from faker.providers import BaseProvider
 from random import choice
 from sqlalchemy_utils.types.choice import Choice
+import factory
+import factory.fuzzy
 
 from app import models
 
@@ -31,21 +33,12 @@ class PhoneProvider(BaseProvider):
 fake.add_provider(PhoneProvider)
 
 
-class RoleFactory(factory.Factory):
-    class Meta:
-        model = models.Role
-
-    name = factory.Sequence(lambda n: 'role_name%s' % n)
-    label = factory.Sequence(lambda n: 'role_label%s' % n)
-
-
 class UserFactory(factory.Factory):
     class Meta:
         model = models.User
 
     password = 'password'
-    email = factory.LazyAttribute(lambda o: '%s@example.org' % o.username)
-    confirmed_at = factory.LazyFunction(datetime.datetime.now)
+    email = fake.email()
     is_admin = False
 
 
@@ -76,7 +69,7 @@ class LocationFactory(factory.Factory):
     class Meta:
         model = models.Location
 
-    code = fake.word()
+    code = fake.pystr(max_chars=10)
     description = fake.sentence()
     effective_date = fake.past_date()
 
@@ -96,12 +89,13 @@ class EmployeeFactory(PersonFactory):
     salary_mode = Choice(*choice(models.SALARY_MODE_TYPES))
     salary_effective_date = fake.past_date()
     salary = fake.pydecimal(left_digits=5, right_digits=2, positive=True)
-    salary_mode = Choice('annually', 'Annually')
+    salary_mode = Choice(u'annually', 'Annually')
     phone = fake.phone()
     alternate_phone = fake.phone()
     emergency_contact_phone = fake.phone()
     emergency_contact_name = fake.name()
     emergency_contact_relationship = choice(['spouse', 'son', 'daughter'])
+    spouse_dob = factory.LazyAttribute(lambda o: o.dob - timedelta(365 * 2))
 
     @factory.post_generation
     def dependents(self, create, extracted, **kwargs):
@@ -111,21 +105,12 @@ class EmployeeFactory(PersonFactory):
             for dependent in extracted:
                 self.dependents.append(dependent)
 
-    @factory.post_generation
-    def beneficiaries(self, create, extracted, **kwargs):
-        if not create:
-            return
-        if extracted:
-            for beneficiary in extracted:
-                self.beneficiaries.append(beneficiary)
-
 
 class BeneficiaryFactory(factory.Factory):
     class Meta:
         model = models.Beneficiary
 
     beneficiary_type = Choice(*choice(models.BENEFICIARY_TYPES))
-    #  plan = factory.SubFactory(PlanFactory)
 
 
 class CarrierFactory(factory.Factory):
@@ -165,224 +150,485 @@ class SuccessionOfHeirsBeneficiaryFactory(BeneficiaryFactory):
         model = models.SuccessionOfHeirsBeneficiary
 
 
-#  class Plan(factory.Factory):
-    #  code = factory.Faker('word')
-    #  name = factory.Sequence(lambda n: 'plan%s' % n)
-    #  cust_service_phone = fake.phone()
-    #  website = factory.Faker('url')
-    #  not_available_in = []
+# Plans and Plan Mixins
+class BooleanElectionMixinFactory(factory.Factory):
+    class Meta:
+        abstract = True
+
+
+class TieredElectionMixinFactory(factory.Factory):
+    class Meta:
+        abstract = True
+
+
+class AmountChosenElectionMixinFactory(factory.Factory):
+    class Meta:
+        abstract = True
+
+
+class AmountSuppliedElectionMixinFactory(factory.Factory):
+    class Meta:
+        abstract = True
+
+
+class PremiumFactory(factory.Factory):
+    class Meta:
+        model = models.Premium
+    plan = None  # just pass it in
+    amount = None
+    rate = None
+    gender = None
+    smoker_status = None
+    age = None
+    age_band_low = None
+    age_band_high = None
+    family_tier = None
+    payout_amount = None
+
+
+class AgeBandedPremiumFactory:
+
+    def __init__(self, plan, matrix):
+        self.plan = plan
+        self.matrix = matrix
+
+    def get_premiums(self):
+        premiums = []
+        for lo, hi, rate in self.matrix:
+            premiums.append(PremiumFactory(
+                plan=self.plan,
+                age_band_low=lo,
+                age_band_high=hi,
+                rate=rate,
+            ))
+        return premiums
+
+
+class TieredPremiumFactory:
+
+    def __init__(self, plan, matrix):
+        self.plan = plan
+        self.matrix = matrix
+
+    def get_premiums(self):
+        premiums = []
+        for tier, amt in self.matrix:
+            premiums.append(PremiumFactory(
+                plan=self.plan,
+                family_tier=unicode(tier),
+                amount=amt,
+            ))
+        return premiums
+
+
+class AgeBandedPremiumSmokingGenderFactory:
+
+    def __init__(self, plan, matrix):
+        self.plan = plan
+        self.matrix = matrix
+
+    def get_premiums(self):
+        premiums = []
+        for lo, hi, smoker_status, gender, rate in self.matrix:
+            premiums.append(PremiumFactory(
+                plan=self.plan,
+                age_band_low=lo,
+                age_band_high=hi,
+                gender=unicode(gender),
+                smoker_status=unicode(smoker_status),
+                rate=rate,
+            ))
+        return premiums
+
+
+class AgeBandedPremiumSmokingTieredFactory:
+
+    def __init__(self, plan, matrix):
+        self.plan = plan
+        self.matrix = matrix
+
+    def get_premiums(self):
+        premiums = []
+        for smoker_status, lo, hi, tier, amt in self.matrix:
+            premiums.append(PremiumFactory(
+                plan=self.plan,
+                age_band_low=lo,
+                age_band_high=hi,
+                family_tier=unicode(tier),
+                smoker_status=unicode(smoker_status),
+                amount=amt,
+            ))
+        return premiums
+
+
+class AgeBandedPremiumSmokingGenderTieredFactory:
 
+    def __init__(self, plan, matrix):
+        self.plan = plan
+        self.matrix = matrix
 
-#  class Core(factory.Factory):
-    #  group_number = '33387-01'
-    #  original_effective_date = factory.Faker('date')
-    #  renewal_date = factory.Faker('date')
-    #  existing = True
-    #  list_billed = True
-    #  doctor_selection_required = False
-    #  account_rep_name = factory.Faker('name')
-    #  cobra_eligible = True
-    #  pre_tax = True
+    def get_premiums(self):
+        premiums = []
+        for gender, smoker_status, lo, hi, tier, amt in self.matrix:
+            premiums.append(PremiumFactory(
+                plan=self.plan,
+                gender=unicode(gender),
+                age_band_low=lo,
+                age_band_high=hi,
+                family_tier=unicode(tier),
+                smoker_status=unicode(smoker_status),
+                amount=amt,
+            ))
+        return premiums
 
 
-#  class Group(factory.Factory):
-    #  minimum_benefit = 50000
-    #  maximum_benefit = 100000
+class EmployerContributionMixinFactory(factory.Factory):
+    class Meta:
+        abstract = True
+    er_flat_amount_contributed = 0
+    er_percentage_contributed = 0
+    er_max_contribution = 5000
 
 
-#  class Supplemental(factory.Factory):
-    #  pass
+class PlanPremiumMetaValuesMixinFactory(factory.Factory):
+    class Meta:
+        abstract = True
+    salary_chunk_size = 10000
+    coverage_chunk_size = 10000
 
 
-#  class MedicalPlanFactory(Plan, Core):
-    #  class Meta:
-        #  model = models.MedicalPlan
+class CoreMixinFactory(factory.Factory):
+    class Meta:
+        abstract = True
+    group_number = fake.numerify('#######')
+    original_effective_date = fake.past_date()
+    renewal_date = fake.past_date()
+    list_billed = True
+    doctor_selection_required = True
+    cobra_eligible = True
 
-    #  self_funded = False
 
+class PreOrPostTaxMixinFactory(factory.Factory):
+    class Meta:
+        abstract = True
+    pre_tax = True
 
-#  class DentalPlanFactory(Plan, Core):
-    #  class Meta:
-        #  model = models.DentalPlan
 
+class PlanFactory(EmployerContributionMixinFactory, PlanPremiumMetaValuesMixinFactory):
+    class Meta:
+        abstract = True
+    code = fake.pystr(max_chars=10)
+    name = factory.Sequence(lambda n: u'plan%s' % n)
+    description = fake.words(8)
+    special_instructions = fake.words(8)
+    active = True
+    carrier = factory.SubFactory(CarrierFactory)
+    website = factory.Faker('url')
+    cust_service_phone = fake.phone()
+    required_plan = None
 
-#  class VisionPlanFactory(Plan, Core):
-    #  class Meta:
-        #  model = models.VisionPlan
 
+class MedicalPlanFactory(PlanFactory, CoreMixinFactory, PreOrPostTaxMixinFactory, TieredElectionMixinFactory):
+    class Meta:
+        model = models.MedicalPlan
+    name = factory.sequence(lambda n: u'Medical Plan%s' % n)
 
-#  class EAPPlanFactory(Plan, Group):
-    #  class Meta:
-        #  model = models.EAPPlan
 
+class DentalPlanFactory(PlanFactory, CoreMixinFactory, PreOrPostTaxMixinFactory, TieredElectionMixinFactory):
+    class Meta:
+        model = models.DentalPlan
+    name = factory.sequence(lambda n: u'Dental Plan%s' % n)
 
-#  class LTDPlanFactory(Plan, Group):
-    #  class Meta:
-        #  model = models.LTDPlan
 
+class VisionPlanFactory(PlanFactory, CoreMixinFactory, PreOrPostTaxMixinFactory, TieredElectionMixinFactory):
+    class Meta:
+        model = models.VisionPlan
 
-#  class LifeADDPlanFactory(Plan, Group):
-    #  class Meta:
-        #  model = models.LTDPlan
+    name = factory.sequence(lambda n: u'Vision Plan%s' % n)
 
 
-#  class STDPlanFactory(Plan, Group):
-    #  class Meta:
-        #  model = models.STDPlan
+class MedicalDentalBundlePlanFactory(PlanFactory, CoreMixinFactory, PreOrPostTaxMixinFactory,
+                                     TieredElectionMixinFactory):
+    class Meta:
+        model = models.MedicalDentalBundlePlan
 
-    #  payout_interval = Choice(*choice(models.PAYOUT_INTERVAL_TYPES))
-    #  max_weekly_benefit = 10000
-    #  max_monthly_benefit = 4000
-    #  benefit_percentage = 10
-    #  mandatory_in_states = None
+    name = factory.sequence(lambda n: u'Medical Dental Bundle Plan%s' % n)
 
 
-#  class FSAMedicalPlanFactory(Plan, Supplemental):
-    #  class Meta:
-        #  model = models.FSAMedicalPlan
+class MedicalVisionBundlePlanFactory(PlanFactory, CoreMixinFactory, PreOrPostTaxMixinFactory,
+                                     TieredElectionMixinFactory):
+    class Meta:
+        model = models.MedicalVisionBundlePlan
 
+    name = factory.sequence(lambda n: u'Medical Vision Bundle Plan%s' % n)
 
-#  class ParkingTransitPlanFactory(Plan, Supplemental):
-    #  class Meta:
-        #  model = models.ParkingTransitPlan
 
+class MedicalDentalVisionBundlePlanFactory(PlanFactory, CoreMixinFactory, PreOrPostTaxMixinFactory,
+                                           TieredElectionMixinFactory):
+    class Meta:
+        model = models.MedicalDentalVisionBundlePlan
 
-#  class HSAPlanFactory(Plan, Supplemental):
-    #  class Meta:
-        #  model = models.HSAPlan
+    name = factory.sequence(lambda n: u'Medical Dental Vision Bundle Plan%s' % n)
 
 
-#  class Employee401KPlanFactory(Plan, Supplemental):
-    #  class Meta:
-        #  model = models.HSAPlan
+class DentalVisionBundlePlanFactory(PlanFactory, CoreMixinFactory, PreOrPostTaxMixinFactory,
+                                    TieredElectionMixinFactory):
+    class Meta:
+        model = models.DentalVisionBundlePlan
 
+    name = factory.sequence(lambda n: u'Dental Vision Bundle Plan%s' % n)
 
-#  class SupplumentalInsurancePlanFactory(Plan, Supplemental):
-    #  class Meta:
-        #  model = models.SupplumentalInsurancePlan
 
+class AgeBasedMixinFactory(factory.Factory):
+    class Meta:
+        abstract = True
 
-#  class LongTermCarePlanFactory(Plan, Supplemental):
-    #  class Meta:
-        #  model = models.LongTermCarePlan
 
+class AgeBasedReductionFactory(factory.Factory):
+    class Meta:
+        model = models.AgeBasedReduction
 
-#  class OtherPlanFactory(Plan, Supplemental):
-    #  class Meta:
-        #  model = models.OtherPlan
+    age = factory.fuzzy.FuzzyInteger(50, 70)
+    percentage = factory.fuzzy.FuzzyInteger(70)
 
 
-#  class CancerPlanFactory(Plan, Supplemental):
-    #  class Meta:
-        #  model = models.CancerPlan
+class LifeMixinFactory(factory.Factory):
+    class Meta:
+        abstract = True
 
+    @factory.post_generation
+    def beneficiaries(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted:
+            for beneficiary in extracted:
+                self.beneficiaries.append(beneficiary)
 
-#  class CriticalIllnessPlanFactory(Plan, Supplemental):
-    #  class Meta:
-        #  model = models.CriticalIllnessPlan
 
-    #  payout_amount = 100000
+class BasicLifePlanFactory(PlanFactory, AgeBasedMixinFactory, LifeMixinFactory, BooleanElectionMixinFactory):
+    class Meta:
+        model = models.BasicLifePlan
 
+    multiple_of_salary_paid = factory.fuzzy.FuzzyInteger(1, 3)
+    min_benefit = factory.fuzzy.FuzzyInteger(5000, 50000, step=5000)
+    max_benefit = factory.fuzzy.FuzzyInteger(50000, 250000, step=10000)
+    spouse_benefit = factory.fuzzy.FuzzyInteger(25000, 50000, step=5000)
+    child_benefit = factory.fuzzy.FuzzyInteger(12500, 25000, step=500)
+    guarantee_issue = factory.fuzzy.FuzzyInteger(10000, 50000, step=10000)
+    addl_salary_multiple_accidental_death = factory.fuzzy.FuzzyChoice([0, 1])
+    addl_salary_multiple_accidental_dismemberment = factory.fuzzy.FuzzyChoice([0, 1])
 
-#  class TieredPremiumFactory(factory.Factory):
-    #  class Meta:
-        #  model = models.TieredPremium
-        #  abstract = True
+    @factory.post_generation
+    def age_based_reductions(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted:
+            for abr in extracted:
+                self.age_based_reductions.append(abr)
 
-    #  tier_type = Choice(*choice(models.FAMILY_TIER_TYPES))
-    #  premium = 200
-    #  employer_portion = 150
-    #  employee_portion = 50
-    #  flat_amount = 75
-    #  percentage = 2.50
 
+class VoluntaryLifePlanFactory(PlanFactory, AmountChosenElectionMixinFactory, LifeMixinFactory):
+    class Meta:
+        model = models.VoluntaryLifePlan
 
-#  class MedicalTieredPremiumFactory(TieredPremiumFactory):
+    increments = factory.fuzzy.FuzzyChoice([5000, 10000])
+    min_election = 5000
+    max_election = 50000
+    guarantee_issue = 25000
+    addl_salary_multiple_accidental_death = 1
+    addl_salary_multiple_accidental_dismemberment = 1
 
-    #  plan = factory.SubFactory(MedicalPlanFactory)
+    @factory.post_generation
+    def age_based_reductions(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted:
+            for abr in extracted:
+                self.age_based_reductions.append(abr)
 
 
-#  class DentalTieredPremiumFactory(TieredPremiumFactory):
+class SpouseVoluntaryLifePlanFactory(VoluntaryLifePlanFactory):
+    class Meta:
+        model = models.SpouseVoluntaryLifePlan
 
-    #  plan = factory.SubFactory(DentalPlanFactory)
+    use_employee_age_for_spouse = True
 
 
-#  class VisionTieredPremiumFactory(TieredPremiumFactory):
+class ChildVoluntaryLifePanFactory(VoluntaryLifePlanFactory):
+    class Meta:
+        model = models.ChildVoluntaryLifePlan
 
-    #  plan = factory.SubFactory(VisionPlanFactory)
 
+class StandaloneADDPlanFactory(PlanFactory, AmountChosenElectionMixinFactory, LifeMixinFactory):
+    class Meta:
+        model = models.StandaloneADDPlan
 
-#  class EAPTieredPremiumFactory(TieredPremiumFactory):
+    increments = factory.fuzzy.FuzzyChoice([5000, 10000])
+    min_election = factory.fuzzy.FuzzyChoice([10000, 20000, 30000])
+    max_election = factory.LazyAttribute(lambda o: o.min_election * 10)
 
-    #  plan = factory.SubFactory(EAPPlanFactory)
 
+class SpouseStandaloneADDPlanFactory(StandaloneADDPlanFactory):
+    class Meta:
+        model = models.SpouseStandaloneADDPlan
 
-#  class LTDTieredPremiumFactory(TieredPremiumFactory):
 
-    #  plan = factory.SubFactory(LTDPlanFactory)
+class ChildStandaloneADDPlanFactory(StandaloneADDPlanFactory):
+    class Meta:
+        model = models.ChildStandaloneADDPlan
 
 
-#  class LifeADDTieredPremiumFactory(TieredPremiumFactory):
+class WholeLifePlanFactory(PlanFactory, AmountChosenElectionMixinFactory, LifeMixinFactory, AgeBasedMixinFactory):
+    class Meta:
+        model = models.WholeLifePlan
 
-    #  plan = factory.SubFactory(LifeADDPlanFactory)
+    spouse_benefit = factory.fuzzy.FuzzyChoice(range(5000, 55000, 5000))
+    child_benefit = factory.LazyAttribute(lambda o: o.spouse_benefit / 2)
 
 
-#  class STDTieredPremiumFactory(TieredPremiumFactory):
+class SpouseWholeLife(WholeLifePlanFactory):
+    class Meta:
+        model = models.SpouseWholeLifePlan
 
-    #  plan = factory.SubFactory(STDPlanFactory)
 
+class ChildWholeLife(WholeLifePlanFactory):
+    class Meta:
+        model = models.ChildWholeLifePlan
 
-#  class FSATieredPremiumFactory(TieredPremiumFactory):
 
-    #  plan = factory.SubFactory(FSAPlanFactory)
+class UniversalLifePlanFactory(PlanFactory, AmountChosenElectionMixinFactory, LifeMixinFactory, AgeBasedMixinFactory):
+    class Meta:
+        model = models.UniversalLifePlan
+    spouse_benefit = factory.fuzzy.FuzzyChoice(range(5000, 55000, 5000))
+    child_benefit = factory.LazyAttribute(lambda o: o.spouse_benefit / 2)
 
 
-#  class ParkingTransitTieredPremiumFactory(TieredPremiumFactory):
+class LTDPlanFactory(PlanFactory, PreOrPostTaxMixinFactory, BooleanElectionMixinFactory):
+    class Meta:
+        model = models.LTDPlan
 
-    #  plan = factory.SubFactory(ParkingTransitPlanFactory)
+    max_monthly_benefit = factory.fuzzy.FuzzyChoice(range(1000, 11000, 1000))
+    percentage_of_salary_paid = factory.fuzzy.FuzzyChoice([.5, .6, .7, .8])
 
 
-#  class HSATieredPremiumFactory(TieredPremiumFactory):
+class STDPlanFactory(PlanFactory, BooleanElectionMixinFactory):
+    class Meta:
+        model = models.STDPlan
 
-    #  plan = factory.SubFactory(HSAPlanFactory)
+    max_weekly_benefit = factory.fuzzy.FuzzyChoice(range(250, 2000, 250))
+    percentage_of_salary_paid = factory.fuzzy.FuzzyChoice([.5, .6, .7, .8])
+    premium_based_on_benefit = False
 
 
-#  class Employee401KTieredPremiumFactory(TieredPremiumFactory):
+class FSAMedicalPlanFactory(PlanFactory, AmountSuppliedElectionMixinFactory):
+    class Meta:
+        model = models.FSAMedicalPlan
 
-    #  plan = factory.SubFactory(Employee401KPlanFactory)
+    min_contribution = factory.fuzzy.FuzzyChoice(range(250, 2000, 250))
 
 
-#  class SupllementalInsuranceTieredPremiumFactory(TieredPremiumFactory):
+class FSADependentCarePlanFactory(FSAMedicalPlanFactory):
+    class Meta:
+        model = models.FSAMedicalPlan
 
-    #  plan = factory.SubFactory(SupplumentalInsurancePlanFactory)
 
+class HSAPlanFactory(PlanFactory, AmountSuppliedElectionMixinFactory):
+    class Meta:
+        model = models.HSAPlan
 
-#  class LongTermCareTieredPremiumFactory(TieredPremiumFactory):
+    min_contribution = factory.fuzzy.FuzzyChoice(range(250, 2000, 250))
 
-    #  plan = factory.SubFactory(LongTermCarePlanFactory)
 
+class HRAPlanFactory(PlanFactory, BooleanElectionMixinFactory):
+    class Meta:
+        model = models.HRAPlan
 
-#  class OtherTieredPremiumFactory(TieredPremiumFactory):
 
-    #  plan = factory.SubFactory(OtherPlanFactory)
+class Employee401KPlanFactory(PlanFactory, AmountSuppliedElectionMixinFactory):
+    class Meta:
+        model = models.Employee401KPlan
 
+    employer_percent_matched = factory.fuzzy.FuzzyInteger(0, 100)
+    employer_max_contribution = factory.fuzzy.FuzzyInteger(2000, 10000)
+    min_contribution = factory.fuzzy.FuzzyChoice(range(250, 2000, 250))
 
-#  class CancerTieredPremiumFactory(TieredPremiumFactory):
 
-    #  plan = factory.SubFactory(CancerPlanFactory)
+class EAPPlanFactory(PlanFactory, BooleanElectionMixinFactory):
+    class Meta:
+        model = models.EAPPlan
 
 
-#  class CriticalIllnessTieredPremiumFactory(TieredPremiumFactory):
+class LongTermCarePlanFactory(PlanFactory, PreOrPostTaxMixinFactory, TieredElectionMixinFactory):
+    class Meta:
+        model = models.LongTermCarePlan
 
-    #  plan = factory.SubFactory(CriticalIllnessPlanFactory)
 
+class CriticalIllnessPlanFactory(PlanFactory, TieredElectionMixinFactory):
+    class Meta:
+        model = models.CriticalIllnessPlan
 
-# Premiums
-#  class AgeBandedPremiumFactory(factory.Factory):
-    #  class Meta:
-        #  model = models.AgeBandedPremium
 
-    #  low = 40
-    #  high = 55
-    #  premium = 100000
-    #  plan = factory.SubFactory(SupplumentalInsurancePlanFactory)
+class CancerPlanFactory(PlanFactory, TieredElectionMixinFactory):
+    class Meta:
+        model = models.CancerPlan
+
+
+class AccidentPlanFactory(PlanFactory, TieredElectionMixinFactory):
+    class Meta:
+        model = models.AccidentPlan
+
+
+class HospitalConfinementPlanFactory(PlanFactory, TieredElectionMixinFactory):
+    class Meta:
+        model = models.HospitalConfinementPlan
+
+
+class ParkingTransitPlanFactory(PlanFactory, TieredElectionMixinFactory):
+    class Meta:
+        model = models.ParkingTransitPlan
+
+
+class IdentityTheftPlanFactory(PlanFactory, TieredElectionMixinFactory):
+    class Meta:
+        model = models.IdentityTheftPlan
+
+
+class OtherPlanFactory(PlanFactory, TieredElectionMixinFactory):
+    class Meta:
+        model = models.OtherPlan
+
+
+class ElectionFactory(factory.Factory):
+    class Meta:
+        model = models.Election
+    plan = None
+    premium = None
+    amount = None
+    elected = None
+    total_cost = None
+    employer_cost = None
+    employee_cost = None
+
+
+class EnrollmentPeriodFactory(factory.Factory):
+    class Meta:
+        model = models.EnrollmentPeriod
+
+    year = 2017
+
+
+class EnrollmentFactory(factory.Factory):
+    class Meta:
+        model = models.Enrollment
+
+    employee = factory.SubFactory(EmployeeFactory)
+    life_event = Choice(*choice(models.LIFE_EVENT_TYPES))
+    enrollment_period = factory.SubFactory(EnrollmentPeriodFactory)
+
+    @factory.post_generation
+    def elections(self, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted:
+            for election in extracted:
+                self.elections.append(election)

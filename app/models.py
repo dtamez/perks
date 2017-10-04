@@ -4,13 +4,14 @@
 # Copyright © 2017 Danny Tamez <zematynnad@gmail.com>
 #
 # Distributed under terms of the MIT license.
+from __future__ import unicode_literals
+
 from datetime import date
 from decimal import Decimal
 import inflection
 import locale
 from logzero import logger
 
-#  from flask_user import SQLAlchemyAdapter, UserManager, UserMixin
 from flask_login import UserMixin
 from sqlalchemy import and_
 from sqlalchemy.orm import backref
@@ -20,190 +21,185 @@ from sqlalchemy_utils import (
     PhoneNumberType,
     URLType,
 )
-from sqlalchemy.ext.declarative import (
-    as_declarative,
-    declared_attr,
-)
+from sqlalchemy.ext.declarative import declared_attr
 from werkzeug.security import generate_password_hash, check_password_hash
 from wtforms import widgets
 
 from . import db, login_manager
 
 
-@as_declarative()
-class Base(object):
+class Base(db.Model):
     """Base class for all models to create a default table name based on the
     class name and an id field.
     """
+    __abstract__ = True
 
     @declared_attr
     def __tablename__(cls):
         return inflection.underscore(cls.__name__)
 
-Base.query = db.session.query_property()
-
 
 # CHOICES
 GENDER_TYPES = [
-    ('M', 'Male'),
-    ('F', 'Female'),
+    (u'M', 'Male'),
+    (u'F', 'Female'),
 ]
 
 
 MARITAL_STATUS_TYPES = [
-    ('single', 'Single'),
-    ('married', 'Married'),
-    ('divorced', 'Divorced'),
-    ('widowed', 'Widowed'),
+    (u'single', 'Single'),
+    (u'married', 'Married'),
+    (u'divorced', 'Divorced'),
+    (u'widowed', 'Widowed'),
 ]
 
 
 SMOKER_TYPES = [
-    ('SM', 'Smoker'),
-    ('NS', 'Non Smoker'),
+    (u'SM', 'Smoker'),
+    (u'NS', 'Non Smoker'),
 ]
 
 
 BENEFICIARY_TYPES = [
-    ('', '----'),
-    ('primary', 'Primary'),
-    ('contingent', 'Contingent'),
+    (u'', '----'),
+    (u'primary', 'Primary'),
+    (u'contingent', 'Contingent'),
 ]
 
 DEPENDENT_TYPES = [
-    ('husband', 'Husband'),
-    ('wife', 'Wife'),
-    ('son', 'Son'),
-    ('daughter', 'Daughter'),
-    ('incapacitated', 'Incapacitated'),
-    ('charity', 'Charity'),
+    (u'husband', 'Husband'),
+    (u'wife', 'Wife'),
+    (u'son', 'Son'),
+    (u'daughter', 'Daughter'),
+    (u'incapacitated', 'Incapacitated'),
+    (u'charity', 'Charity'),
 ]
 
 SALARY_MODE_TYPES = [
-    ('hourly', 'Hourly'),
-    ('weekly', 'Weekly'),
-    ('bi-weekly', 'Bi-weekly'),
-    ('semi-monthly', 'Semi-monthly'),
-    ('monthly', 'Monthly'),
-    ('annually', 'Annually'),
+    (u'hourly', 'Hourly'),
+    (u'weekly', 'Weekly'),
+    (u'bi-weekly', 'Bi-weekly'),
+    (u'semi-monthly', 'Semi-monthly'),
+    (u'monthly', 'Monthly'),
+    (u'annually', 'Annually'),
 ]
 
 
 FAMILY_TIER_TYPES = [
-    ('EO', 'Employee Only'),
-    ('ES', 'Employee and Spouse'),
-    ('EC', 'Employee and Children'),
-    ('EF', 'Employee and Family'),
-    ('E1', 'Employee Plus 1'),
-    ('E2', 'Employee Plus 2'),
-    ('E3', 'Employee Plus 3'),
+    (u'EO', 'Employee Only'),
+    (u'ES', 'Employee and Spouse'),
+    (u'EC', 'Employee and Children'),
+    (u'EF', 'Employee and Family'),
+    (u'E1', 'Employee Plus 1'),
+    (u'E2', 'Employee Plus 2'),
+    (u'E3', 'Employee Plus 3'),
 ]
 
 
 PAYOUT_TYPES = [
-    ('percentage_of_salary', 'Percentage of Salary'),
-    ('lump_sum', 'Lump Sum'),
+    (u'percentage_of_salary', 'Percentage of Salary'),
+    (u'lump_sum', 'Lump Sum'),
 ]
 
 
 PLAN_TERMINATION_TIMING_TYPES = [
-    ('same_day', 'Same Day'),
-    ('first_day_of_the_month', 'First Day of the Month'),
-    ('last_day_of_the_month', 'Last Day of the Month'),
+    (u'same_day', 'Same Day'),
+    (u'first_day_of_the_month', 'First Day of the Month'),
+    (u'last_day_of_the_month', 'Last Day of the Month'),
 ]
 
 
 PAYROLL_CYCLE_TYPES = [
-    ('weekly', 'Weekly'),
-    ('bi-weekly', 'Bi-weekly'),
-    ('semi-monthly', 'Semi-monthly'),
-    ('monthly', 'Monthly'),
+    (u'weekly', 'Weekly'),
+    (u'bi-weekly', 'Bi-weekly'),
+    (u'semi-monthly', 'Semi-monthly'),
+    (u'monthly', 'Monthly'),
 ]
 
 
 LIFE_EVENT_TYPES = [
-    ('NEW_HIRE', 'New Hire'),
-    ('REHIRE', 'Rehire'),
-    ('CHANGE_STATUS', 'Change to Eligible Status - Enroll in Benefits'),
-    ('MARRIAGE', 'Marriage'),
-    ('DIVORCE', 'Divorce, Legal Separation'),
-    ('BIRTH', 'Birth, Adoption, Legal Guardianship'),
-    ('DEPENDENT', 'Dependent Changes '
+    (u'NEW_HIRE', 'New Hire'),
+    (u'REHIRE', 'Rehire'),
+    (u'CHANGE_STATUS', 'Change to Eligible Status - Enroll in Benefits'),
+    (u'MARRIAGE', 'Marriage'),
+    (u'DIVORCE', 'Divorce, Legal Separation'),
+    (u'BIRTH', 'Birth, Adoption, Legal Guardianship'),
+    (u'DEPENDENT', 'Dependent Changes '
      '(Eligibility Change, Court Order, Death)'),
-    ('LOSS', 'Loss of Other Coverage'),
-    ('SPOUSE_EMPLOYMENT', 'Spouse Employment Status Change'),
-    ('BENEFICIARY', 'Beneficiary Change'),
-    ('MEDICARE', 'Medicare Eligible'),
+    (u'LOSS', 'Loss of Other Coverage'),
+    (u'SPOUSE_EMPLOYMENT', 'Spouse Employment Status Change'),
+    (u'BENEFICIARY', 'Beneficiary Change'),
+    (u'MEDICARE', 'Medicare Eligible'),
 ]
 
 
 PAYOUT_INTERVAL_TYPES = [
-    ('weekly', 'Weekly'),
-    ('monthly', 'Monthly'),
+    (u'weekly', 'Weekly'),
+    (u'monthly', 'Monthly'),
 ]
 
 PREMIUM_FREQUENCY_TYPE = [
-    ('weekly', 'Weekly'),
-    ('bi-weekly', 'Bi-Weekly'),
-    ('monthly', 'Monthly'),
-    ('bi-monthly', 'Bi-Monthly'),
-    ('quarterly', 'Quarterly'),
-    ('semi-annually', 'Semi-Annually'),
-    ('annually', 'Annually'),
+    (u'weekly', 'Weekly'),
+    (u'bi-weekly', 'Bi-Weekly'),
+    (u'monthly', 'Monthly'),
+    (u'bi-monthly', 'Bi-Monthly'),
+    (u'quarterly', 'Quarterly'),
+    (u'semi-annually', 'Semi-Annually'),
+    (u'annually', 'Annually'),
 ]
 
 STATES = [
-    ('AL', 'Alabama'),
-    ('AK', 'Alaska'),
-    ('AZ', 'Arizona'),
-    ('AR', 'Arkansas'),
-    ('CA', 'California'),
-    ('CO', 'Colorado'),
-    ('CT', 'Connecticut'),
-    ('DE', 'Delaware'),
-    ('DC', 'District_Of_Columbia'),
-    ('FL', 'Florida'),
-    ('GA', 'Georgia'),
-    ('HI', 'Hawaii'),
-    ('ID', 'Idaho'),
-    ('IL', 'Illinois'),
-    ('IN', 'Indiana'),
-    ('IA', 'Iowa'),
-    ('KS', 'Kansas'),
-    ('KY', 'Kentucky'),
-    ('LA', 'Louisiana'),
-    ('ME', 'Maine'),
-    ('MD', 'Maryland'),
-    ('MA', 'Massachusetts'),
-    ('MI', 'Michigan'),
-    ('MN', 'Minnesota'),
-    ('MS', 'Mississippi'),
-    ('MO', 'Missouri'),
-    ('MT', 'Montana'),
-    ('NE', 'Nebraska'),
-    ('NV', 'Nevada'),
-    ('NH', 'New_Hampshire'),
-    ('NJ', 'New_Jersey'),
-    ('NM', 'New_Mexico'),
-    ('NY', 'New_York'),
-    ('NC', 'North_Carolina'),
-    ('ND', 'North_Dakota'),
-    ('OH', 'Ohio'),
-    ('OK', 'Oklahoma'),
-    ('OR', 'Oregon'),
-    ('PA', 'Pennsylvania'),
-    ('RI', 'Rhode_Island'),
-    ('SC', 'South_Carolina'),
-    ('SD', 'South_Dakota'),
-    ('TN', 'Tennessee'),
-    ('TX', 'Texas'),
-    ('UT', 'Utah'),
-    ('VT', 'Vermont'),
-    ('VA', 'Virginia'),
-    ('WA', 'Washington'),
-    ('WV', 'West_Virginia'),
-    ('WI', 'Wisconsin'),
-    ('WY', 'Wyoming'),
+    (u'AL', 'Alabama'),
+    (u'AK', 'Alaska'),
+    (u'AZ', 'Arizona'),
+    (u'AR', 'Arkansas'),
+    (u'CA', 'California'),
+    (u'CO', 'Colorado'),
+    (u'CT', 'Connecticut'),
+    (u'DE', 'Delaware'),
+    (u'DC', 'District_Of_Columbia'),
+    (u'FL', 'Florida'),
+    (u'GA', 'Georgia'),
+    (u'HI', 'Hawaii'),
+    (u'ID', 'Idaho'),
+    (u'IL', 'Illinois'),
+    (u'IN', 'Indiana'),
+    (u'IA', 'Iowa'),
+    (u'KS', 'Kansas'),
+    (u'KY', 'Kentucky'),
+    (u'LA', 'Louisiana'),
+    (u'ME', 'Maine'),
+    (u'MD', 'Maryland'),
+    (u'MA', 'Massachusetts'),
+    (u'MI', 'Michigan'),
+    (u'MN', 'Minnesota'),
+    (u'MS', 'Mississippi'),
+    (u'MO', 'Missouri'),
+    (u'MT', 'Montana'),
+    (u'NE', 'Nebraska'),
+    (u'NV', 'Nevada'),
+    (u'NH', 'New_Hampshire'),
+    (u'NJ', 'New_Jersey'),
+    (u'NM', 'New_Mexico'),
+    (u'NY', 'New_York'),
+    (u'NC', 'North_Carolina'),
+    (u'ND', 'North_Dakota'),
+    (u'OH', 'Ohio'),
+    (u'OK', 'Oklahoma'),
+    (u'OR', 'Oregon'),
+    (u'PA', 'Pennsylvania'),
+    (u'RI', 'Rhode_Island'),
+    (u'SC', 'South_Carolina'),
+    (u'SD', 'South_Dakota'),
+    (u'TN', 'Tennessee'),
+    (u'TX', 'Texas'),
+    (u'UT', 'Utah'),
+    (u'VT', 'Vermont'),
+    (u'VA', 'Virginia'),
+    (u'WA', 'Washington'),
+    (u'WV', 'West_Virginia'),
+    (u'WI', 'Wisconsin'),
+    (u'WY', 'Wyoming'),
 ]
 
 
@@ -230,7 +226,10 @@ class PersonMixin(object):
 
     @property
     def full_name(self):
-        return '{} {} {}'.format(self.first_name, self.middle_name, self.last_name)
+        if self.middle_name:
+            return '{} {} {}'.format(self.first_name, self.middle_name, self.last_name)
+        else:
+            return '{} {}'.format(self.first_name, self.last_name)
 
     @declared_attr
     def address_id(cls):
@@ -387,6 +386,9 @@ class Employee(PersonMixin, Base):
 
     def get_monthly_salary(self):
         return self.get_annual_salary() / 12
+
+    def get_weekly_salary(self):
+        return self.get_annual_salary() / 52
 
     def get_annual_salary(self):
         if self.salary_mode == 'hourly':
@@ -625,9 +627,9 @@ class TieredElectionMixin(PremiumsMixin):
         if prem.age:
             filters.append(Premium.age == age)
         if prem.gender:
-            filters.append(Premium.gender == employee.gender)
+            filters.append(Premium.gender == unicode(employee.gender))
         if prem.smoker_status:
-            filters.append(Premium.smoker_status == employee.smoker_type)
+            filters.append(Premium.smoker_status == unicode(employee.smoker_type))
 
         q = q.filter(*filters)
 
@@ -668,7 +670,10 @@ class TieredElectionMixin(PremiumsMixin):
 
     def get_monthly_costs(self, amount):
         total = amount
-        er = self.er_flat_amount_contributed or (total * self.er_percentage_contributed)
+        if self.er_flat_amount_contributed:
+            er = min([self.er_flat_amount_contributed, total])
+        else:
+            er = total * self.er_percentage_contributed
         ee = total - er
         return total, er, ee
 
@@ -687,9 +692,9 @@ class BooleanElectionMixin(PremiumsMixin):
         if prem.age:
             filters.append(Premium.age == age)
         if prem.gender:
-            filters.append(Premium.gender == employee.gender)
+            filters.append(Premium.gender == unicode(employee.gender))
         if prem.smoker_status:
-            filters.append(Premium.smoker_status == employee.smoker_type)
+            filters.append(Premium.smoker_status == unicode(employee.smoker_type))
 
         q = q.filter(*filters)
 
@@ -873,7 +878,7 @@ class BasicLifePlan(Plan, GroupMixin, PostTaxMixin, BooleanElectionMixin, LifeMi
         db.Numeric(4, 2), info={'label': 'Additional Multiple of Salary Paid for Accidental Dismemberment'})
 
     def get_monthly_costs(self, premium, employee):
-        total = (premium.rate * (employee.get_annual_salary() / 1000))
+        total = (premium.rate * (employee.get_annual_salary() * self.multiple_of_salary_paid / 1000))
         er = self.er_flat_amount_contributed or (total * self.er_percentage_contributed)
         ee = total - er
         return total, er, ee
@@ -893,7 +898,6 @@ class VoluntaryLifePlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixi
     min_election = db.Column(db.Numeric(9, 2), info={'label': 'Minimum Election'})
     max_election = db.Column(db.Numeric(9, 2), info={'label': 'Maximum Election'})
     # benefits
-    age_based_reductions = db.relationship('AgeBasedReduction', back_populates="plan")
     guarantee_issue = db.Column(db.Numeric(9, 2), info={'label': 'Guarantee Issue'})
     # optional ADD
     addl_salary_multiple_accidental_death = db.Column(
@@ -923,7 +927,7 @@ class VoluntaryLifePlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixi
 class SpouseVoluntaryLifePlan(VoluntaryLifePlan):
     __tablename__ = 'spouse_voluntary_life_plan'
     __table_args__ = {'extend_existing': True}
-    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+    derived_id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
     # rates
     use_employee_age_for_spouse = db.Column(db.Boolean, info={'label': "Use Employee's Age for Spouse's Age"})
 
@@ -932,7 +936,7 @@ class SpouseVoluntaryLifePlan(VoluntaryLifePlan):
 
     __mapper_args__ = {
         'polymorphic_identity': 'spouse_voluntary_life',
-        'inherit_condition': (id == Plan.id),
+        'inherit_condition': (derived_id == Plan.id),
     }
 
     def _get_dob(self, employee):
@@ -942,14 +946,14 @@ class SpouseVoluntaryLifePlan(VoluntaryLifePlan):
 class ChildVoluntaryLifePlan(VoluntaryLifePlan):
     __tablename__ = 'child_voluntary_life_plan'
     __table_args__ = {'extend_existing': True}
-    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+    derived_id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
 
     def sort_value(self):
         return 3
 
     __mapper_args__ = {
         'polymorphic_identity': 'child_voluntary_life',
-        'inherit_condition': (id == Plan.id),
+        'inherit_condition': (derived_id == Plan.id),
     }
 
 
@@ -984,28 +988,28 @@ class StandaloneADDPlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixi
 class SpouseStandaloneADDPlan(StandaloneADDPlan):
     __tablename__ = 'spouse_standalone_add_plan'
     __table_args__ = {'extend_existing': True}
-    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+    derived_id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
 
     def sort_value(self):
         return 2
 
     __mapper_args__ = {
         'polymorphic_identity': 'spouse_standalone_add',
-        'inherit_condition': (id == Plan.id),
+        'inherit_condition': (derived_id == Plan.id),
     }
 
 
 class ChildStandaloneADDPlan(StandaloneADDPlan):
     __tablename__ = 'child_standalone_add_plan'
     __table_args__ = {'extend_existing': True}
-    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+    derived_id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
 
     def sort_value(self):
         return 3
 
     __mapper_args__ = {
         'polymorphic_identity': 'child_standalone_add',
-        'inherit_condition': (id == Plan.id),
+        'inherit_condition': (derived_id == Plan.id),
     }
 
 
@@ -1039,28 +1043,28 @@ class WholeLifePlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixin, L
 class SpouseWholeLifePlan(WholeLifePlan):
     __tablename__ = 'spouse_whole_life_plan'
     __table_args__ = {'extend_existing': True}
-    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+    derived_id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
 
     def sort_value(self):
         return 2
 
     __mapper_args__ = {
         'polymorphic_identity': 'spouse_whole_life',
-        'inherit_condition': (id == Plan.id),
+        'inherit_condition': (derived_id == Plan.id),
     }
 
 
 class ChildWholeLifePlan(WholeLifePlan):
     __tablename__ = 'child_whole_life_plan'
     __table_args__ = {'extend_existing': True}
-    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+    derived_id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
 
     def sort_value(self):
         return 3
 
     __mapper_args__ = {
         'polymorphic_identity': 'child_whole_life',
-        'inherit_condition': (id == Plan.id),
+        'inherit_condition': (derived_id == Plan.id),
     }
 
 
@@ -1091,14 +1095,14 @@ class LTDPlan(Plan, GroupMixin, PreOrPostTaxMixin, BooleanElectionMixin):
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
 
-    # has fixed premium based on some formula from the carrier across all employees
+    # has premium based on composite rate
     # monthly benefit is some percent of one month's salary
-    # but the cost is figured as rate * (monthly_benefit / 1000) per month
+    # premium cost is figured as rate * (monthly salary / 100) per month
     max_monthly_benefit = db.Column(db.Numeric(9, 2), nullable=False, info={'label': 'Maximum Monthly Benefit'})
     percentage_of_salary_paid = db.Column(db.Numeric(3, 2), nullable=False, info={'label': 'Benefit Percentage'})
 
     def get_monthly_costs(self, premium, employee):
-        total = (premium.rate * self.percentage_of_salary_paid * (employee.get_monthly_salary() / 1000))
+        total = (premium.rate * (employee.get_monthly_salary() / 100))
         er = self.er_flat_amount_contributed or (total * self.er_percentage_contributed)
         ee = total - er
         return total, er, ee
@@ -1109,63 +1113,32 @@ class LTDPlan(Plan, GroupMixin, PreOrPostTaxMixin, BooleanElectionMixin):
     }
 
 
-class LTDVoluntaryPlan(LTDPlan):
-    # has age banded rates (e.g. 25 - 34 = 0.05, 35 - 39 = 0.06)
-    # so monthly premium for age 37 at $70,000 = 0.06 * 70 or $4.20/month
-    # rate * (amount_chosen / 1000) per month
-    __tablename__ = 'ltd_voluntary_plan'
-    __table_args__ = {'extend_existing': True}
-    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'ltd_voluntary',
-        'inherit_condition': (id == Plan.id),
-    }
-
-
 # STD
 class STDPlan(Plan, GroupMixin, PostTaxMixin, BooleanElectionMixin):
-    # composite rate * (weekly_benefit / $10)
     __tablename__ = 'std_plan'
     __table_args__ = {'extend_existing': True}
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
 
     max_weekly_benefit = db.Column(db.Numeric(9, 2), nullable=False, info={'label': 'Maximum Weekly Benefit'})
     percentage_of_salary_paid = db.Column(db.Numeric(3, 2), nullable=False, info={'label': 'Benefit Percentage'})
+    premium_based_on_benefit = db.Column(db.Boolean, nullable=False,
+                                         info={'label': 'Premiums are based on benefit instead of salary'})
 
     def get_monthly_costs(self, premium, employee):
-        total = (premium.rate * self.percentage_of_salary_paid * (employee.get_monthly_salary() / 2000))
+        # cost = benefit amt / (10 * rate) or weekly salary / (10 * rate)
+        # benefit amt is weekly salary * percentage of salary paid
+        # either way the amount to base the cost is capped by max_weekly_benefit
+        if self.premium_based_on_benefit:
+            base = (employee.get_weekly_salary() * self.percentage_of_salary_paid)
+        else:
+            base = employee.get_weekly_salary()
+        total = min([base, self.max_weekly_benefit]) / (10 * premium.rate)
         er = self.er_flat_amount_contributed or (total * self.er_percentage_contributed)
         ee = total - er
         return total, er, ee
 
     __mapper_args__ = {
         'polymorphic_identity': 'std',
-        'inherit_condition': (id == Plan.id),
-    }
-
-
-class STDVoluntaryPlan(Plan, GroupMixin, PostTaxMixin, BooleanElectionMixin):
-    # has a weekly benefit not a monthly benefit -> = % of weekly salary usually 60% or so
-    # premium = age banded rate (e.g. 0.29) * weekly benefit / $10)
-    # weekly salary = $500 and age rate is 0.31 and plan pays 60% of salary THEN
-    # weekly benefit = $500 * 60% = $300
-    # so premium = .31 * ($300 / 10) = $9.30
-    __tablename__ = 'std_voluntary_plan'
-    __table_args__ = {'extend_existing': True}
-    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
-
-    max_weekly_benefit = db.Column(db.Numeric(9, 2), nullable=False, info={'label': 'Maximum Weekly Benefit'})
-    percentage_of_salary_paid = db.Column(db.Numeric(3, 2), nullable=False, info={'label': 'Benefit Percentage'})
-
-    def get_monthly_costs(self, premium, employee):
-        total = (premium.rate * self.percentage_of_salary_paid * (employee.get_monthly_salary() / 2000))
-        er = self.er_flat_amount_contributed or (total * self.er_percentage_contributed)
-        ee = total - er
-        return total, er, ee
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'std_voluntary',
         'inherit_condition': (id == Plan.id),
     }
 
@@ -1190,7 +1163,7 @@ class FSAMedicalPlan(Plan, GroupMixin, PreTaxMixin, AmountSuppliedElectionMixin)
 class FSADependentCarePlan(FSAMedicalPlan):
     __tablename__ = 'fsa_dependent_care_plan'
     __table_args__ = {'extend_existing': True}
-    id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
+    derived_id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
 
     def get_min_max_elections(self):
         limits = IRSLimits.query.first()
@@ -1198,7 +1171,7 @@ class FSADependentCarePlan(FSAMedicalPlan):
 
     __mapper_args__ = {
         'polymorphic_identity': 'fsa_dependent_care',
-        'inherit_condition': (id == Plan.id),
+        'inherit_condition': (derived_id == Plan.id),
     }
 
 
@@ -1386,7 +1359,7 @@ class Premium(Base):
     # amount may not be known until a coverage amount is elected or it may vary with the employee's salary
     amount = db.Column(db.Numeric(9, 2), info={'label': 'Premium'})
     # rate to be multiplied by some part of elected coverage or salary
-    rate = db.Column(db.Numeric(6, 2), info={'label': 'Rate'})
+    rate = db.Column(db.Numeric(8, 4), info={'label': 'Rate'})
     # not null if the premium is tiered on gender
     gender = db.Column(ChoiceType(GENDER_TYPES), info={'label': 'Gender'})
     # not null if the premium is tiered on smoker status

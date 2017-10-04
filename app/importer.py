@@ -42,7 +42,6 @@ from .models import (
     HSAPlan,
     IdentityTheftPlan,
     LTDPlan,
-    LTDVoluntaryPlan,
     Location,
     LongTermCarePlan,
     MedicalDentalBundlePlan,
@@ -54,7 +53,6 @@ from .models import (
     Premium,
     SpouseVoluntaryLifePlan,
     STDPlan,
-    STDVoluntaryPlan,
     StandaloneADDPlan,
     UniversalLifePlan,
     User,
@@ -96,9 +94,7 @@ def do_bulk_load(stream):
         # import_whole_life_plans(xls)
         # import_universal_life_plans(xls)
         import_ltd_plans(xls, 'LTD Plans', LTDPlan)
-        import_ltd_plans(xls, 'Voluntary LTD Plans', LTDVoluntaryPlan)
         import_std_plans(xls, 'STD Plans', STDPlan)
-        import_std_plans(xls, 'Voluntary STD Plans', STDVoluntaryPlan)
         import_fsa_plan(xls, 'FSA Medical Spending Plan', FSAMedicalPlan)
         import_fsa_plan(xls, 'FSA Dependent Care Spending Plan', FSADependentCarePlan)
         import_hsa_plan(xls, 'HSA Plan', HSAPlan)

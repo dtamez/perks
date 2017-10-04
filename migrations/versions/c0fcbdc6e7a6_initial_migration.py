@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: 5943dbc4c29b
+Revision ID: c0fcbdc6e7a6
 Revises:
-Create Date: 2017-09-29 13:07:53.222978
+Create Date: 2017-10-04 15:35:17.493574
 
 """
 from alembic import op
@@ -27,7 +27,7 @@ from app.models import (
 
 
 # revision identifiers, used by Alembic.
-revision = '5943dbc4c29b'
+revision = 'c0fcbdc6e7a6'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -102,8 +102,8 @@ def upgrade():
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('password_hash', sa.String(length=128), nullable=True),
         sa.Column('email', EmailType(length=255), nullable=True),
-        sa.Column('reset_password_token', sa.String(length=100), server_default='', nullable=True),
-        sa.Column('is_admin', sa.Boolean(), server_default='0', nullable=False),
+        sa.Column('reset_password_token', sa.String(length=100), server_default=u'', nullable=True),
+        sa.Column('is_admin', sa.Boolean(), server_default=u'0', nullable=False),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_user_email'), 'user', ['email'], unique=False)
@@ -138,17 +138,17 @@ def upgrade():
         sa.Column('address_id', sa.Integer(), nullable=True),
         sa.Column('spouse_dob', sa.Date(), nullable=False),
         sa.Column('spouse_smoker_type', ChoiceType(SMOKER_TYPES), nullable=True),
-        sa.ForeignKeyConstraint(['address_id'], ['address.id'], ),
-        sa.ForeignKeyConstraint(['location_id'], ['location.id'], ),
-        sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
+        sa.ForeignKeyConstraint(['address_id'], [u'address.id'], ),
+        sa.ForeignKeyConstraint(['location_id'], [u'location.id'], ),
+        sa.ForeignKeyConstraint(['user_id'], [u'user.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_employee_user_id'), 'employee', ['user_id'], unique=False)
     op.create_table(
         'plan',
-        sa.Column('er_flat_amount_contributed', sa.Numeric(precision=9, scale=2), server_default='0', nullable=True),
-        sa.Column('er_percentage_contributed', sa.Numeric(precision=3, scale=2), server_default='0', nullable=True),
-        sa.Column('er_max_contribution', sa.Numeric(precision=9, scale=2), server_default='0', nullable=True),
+        sa.Column('er_flat_amount_contributed', sa.Numeric(precision=9, scale=2), server_default=u'0', nullable=True),
+        sa.Column('er_percentage_contributed', sa.Numeric(precision=3, scale=2), server_default=u'0', nullable=True),
+        sa.Column('er_max_contribution', sa.Numeric(precision=9, scale=2), server_default=u'0', nullable=True),
         sa.Column('salary_chunk_size', sa.Integer(), nullable=True),
         sa.Column('coverage_chunk_size', sa.Integer(), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
@@ -157,13 +157,13 @@ def upgrade():
         sa.Column('name', sa.Unicode(length=70), nullable=False),
         sa.Column('description', sa.String(length=250), nullable=False),
         sa.Column('special_instructions', sa.String(length=250), nullable=True),
-        sa.Column('is_active', sa.Boolean(), server_default='1', nullable=False),
+        sa.Column('is_active', sa.Boolean(), server_default=u'1', nullable=False),
         sa.Column('carrier_id', sa.Integer(), nullable=True),
         sa.Column('website', URLType(), nullable=True),
         sa.Column('cust_service_phone', PhoneNumberType(length=20), nullable=True),
         sa.Column('required_plan_id', sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(['carrier_id'], ['carrier.id'], ),
-        sa.ForeignKeyConstraint(['required_plan_id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['carrier_id'], [u'carrier.id'], ),
+        sa.ForeignKeyConstraint(['required_plan_id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_plan_is_active'), 'plan', ['is_active'], unique=False)
@@ -171,7 +171,7 @@ def upgrade():
         'accident_plan',
         sa.Column('premium_matrix', sa.String(length=5000), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -180,7 +180,7 @@ def upgrade():
         sa.Column('plan_id', sa.Integer(), nullable=True),
         sa.Column('age', sa.Integer(), nullable=False),
         sa.Column('percentage', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['plan_id'], ['plan.id'], ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['plan_id'], [u'plan.id'], ondelete=u'CASCADE'),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_age_based_reduction_plan_id'), 'age_based_reduction', ['plan_id'], unique=False)
@@ -190,10 +190,10 @@ def upgrade():
         sa.Column('beneficiary_type', ChoiceType(BENEFICIARY_TYPES), nullable=True),
         sa.Column('plan_id', sa.Integer(), nullable=True),
         sa.Column('employee_id', sa.Integer(), nullable=True),
-        sa.Column('percentage', sa.Integer(), server_default='0', nullable=True),
+        sa.Column('percentage', sa.Integer(), server_default=u'0', nullable=True),
         sa.Column('btype', sa.String(length=50), nullable=True),
-        sa.ForeignKeyConstraint(['employee_id'], ['employee.id'], ),
-        sa.ForeignKeyConstraint(['plan_id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['employee_id'], [u'employee.id'], ),
+        sa.ForeignKeyConstraint(['plan_id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_beneficiary_plan_id'), 'beneficiary', ['plan_id'], unique=False)
@@ -201,33 +201,33 @@ def upgrade():
         'cancer_plan',
         sa.Column('premium_matrix', sa.String(length=5000), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
         'child_standalone_add_plan',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
-        sa.PrimaryKeyConstraint('id')
+        sa.Column('derived_id', sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(['derived_id'], [u'plan.id'], ),
+        sa.PrimaryKeyConstraint('derived_id')
     )
     op.create_table(
         'child_voluntary_life_plan',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
-        sa.PrimaryKeyConstraint('id')
+        sa.Column('derived_id', sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(['derived_id'], [u'plan.id'], ),
+        sa.PrimaryKeyConstraint('derived_id')
     )
     op.create_table(
         'child_whole_life_plan',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
-        sa.PrimaryKeyConstraint('id')
+        sa.Column('derived_id', sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(['derived_id'], [u'plan.id'], ),
+        sa.PrimaryKeyConstraint('derived_id')
     )
     op.create_table(
         'cricial_illness_plan',
         sa.Column('premium_matrix', sa.String(length=5000), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('payout_amount', sa.Numeric(precision=9, scale=2), nullable=True),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -242,7 +242,7 @@ def upgrade():
         sa.Column('premium_matrix', sa.String(length=5000), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('plan_termination_timing_type_id', ChoiceType(PLAN_TERMINATION_TIMING_TYPES), nullable=True),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -257,7 +257,7 @@ def upgrade():
         sa.Column('premium_matrix', sa.String(length=5000), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('plan_termination_timing_type_id', ChoiceType(PLAN_TERMINATION_TIMING_TYPES), nullable=True),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -272,20 +272,20 @@ def upgrade():
         sa.Column('smoker_type', ChoiceType(SMOKER_TYPES), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('dependent_type', ChoiceType(DEPENDENT_TYPES), nullable=True),
-        sa.Column('full_time_student', sa.Boolean(), server_default='0', nullable=True),
-        sa.Column('disabled', sa.Boolean(), server_default='0', nullable=True),
+        sa.Column('full_time_student', sa.Boolean(), server_default=u'0', nullable=True),
+        sa.Column('disabled', sa.Boolean(), server_default=u'0', nullable=True),
         sa.Column('disability_date', sa.Date(), nullable=True),
         sa.Column('employee_id', sa.Integer(), nullable=True),
         sa.Column('address_id', sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(['address_id'], ['address.id'], ),
-        sa.ForeignKeyConstraint(['employee_id'], ['employee.id'], ),
+        sa.ForeignKeyConstraint(['address_id'], [u'address.id'], ),
+        sa.ForeignKeyConstraint(['employee_id'], [u'employee.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
         'eap_plan',
         sa.Column('premium_matrix', sa.String(length=5000), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -294,7 +294,7 @@ def upgrade():
         sa.Column('employer_percent_matched', sa.Numeric(precision=3, scale=2), nullable=False),
         sa.Column('employer_max_contribution', sa.Numeric(precision=9, scale=2), nullable=False),
         sa.Column('min_contribution', sa.Numeric(precision=9, scale=2), nullable=False),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -303,50 +303,50 @@ def upgrade():
         sa.Column('employee_id', sa.Integer(), nullable=True),
         sa.Column('life_event', ChoiceType(LIFE_EVENT_TYPES), nullable=True),
         sa.Column('enrollment_period_id', sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(['employee_id'], ['employee.id'], ),
-        sa.ForeignKeyConstraint(['enrollment_period_id'], ['enrollment_period.id'], ),
+        sa.ForeignKeyConstraint(['employee_id'], [u'employee.id'], ),
+        sa.ForeignKeyConstraint(['enrollment_period_id'], [u'enrollment_period.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_enrollment_employee_id'), 'enrollment', ['employee_id'], unique=False)
     op.create_table(
         'fsa_dependent_care_plan',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
-        sa.PrimaryKeyConstraint('id')
+        sa.Column('derived_id', sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(['derived_id'], [u'plan.id'], ),
+        sa.PrimaryKeyConstraint('derived_id')
     )
     op.create_table(
         'fsa_medical_plan',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('min_contribution', sa.Numeric(precision=9, scale=2), nullable=False),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
         'hospital_confinement_plan',
         sa.Column('premium_matrix', sa.String(length=5000), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
         'hra_plan',
         sa.Column('premium_matrix', sa.String(length=5000), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
         'hsa_plan',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('min_contribution', sa.Numeric(precision=9, scale=2), nullable=False),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
         'identity_theft_plan',
         sa.Column('premium_matrix', sa.String(length=5000), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -362,7 +362,7 @@ def upgrade():
         sa.Column('guarantee_issue', sa.Numeric(precision=9, scale=2), nullable=True),
         sa.Column('addl_salary_multiple_accidental_death', sa.Numeric(precision=4, scale=2), nullable=True),
         sa.Column('addl_salary_multiple_accidental_dismemberment', sa.Numeric(precision=4, scale=2), nullable=True),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -370,7 +370,7 @@ def upgrade():
         sa.Column('pre_tax', sa.Boolean(), nullable=False),
         sa.Column('premium_matrix', sa.String(length=5000), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -380,13 +380,7 @@ def upgrade():
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('max_monthly_benefit', sa.Numeric(precision=9, scale=2), nullable=False),
         sa.Column('percentage_of_salary_paid', sa.Numeric(precision=3, scale=2), nullable=False),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
-        sa.PrimaryKeyConstraint('id')
-    )
-    op.create_table(
-        'ltd_voluntary_plan',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -401,7 +395,7 @@ def upgrade():
         sa.Column('premium_matrix', sa.String(length=5000), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('plan_termination_timing_type_id', ChoiceType(PLAN_TERMINATION_TIMING_TYPES), nullable=True),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -416,7 +410,7 @@ def upgrade():
         sa.Column('premium_matrix', sa.String(length=5000), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('plan_termination_timing_type_id', ChoiceType(PLAN_TERMINATION_TIMING_TYPES), nullable=True),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -431,7 +425,7 @@ def upgrade():
         sa.Column('premium_matrix', sa.String(length=5000), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('plan_termination_timing_type_id', ChoiceType(PLAN_TERMINATION_TIMING_TYPES), nullable=True),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -446,21 +440,21 @@ def upgrade():
         sa.Column('premium_matrix', sa.String(length=5000), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('plan_termination_timing_type_id', ChoiceType(PLAN_TERMINATION_TIMING_TYPES), nullable=True),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
         'other_plan',
         sa.Column('premium_matrix', sa.String(length=5000), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
         'parking_transit_plan',
         sa.Column('premium_matrix', sa.String(length=5000), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -468,7 +462,7 @@ def upgrade():
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('plan_id', sa.Integer(), nullable=True),
         sa.Column('amount', sa.Numeric(precision=9, scale=2), nullable=True),
-        sa.Column('rate', sa.Numeric(precision=6, scale=2), nullable=True),
+        sa.Column('rate', sa.Numeric(precision=8, scale=4), nullable=True),
         sa.Column('gender', ChoiceType(GENDER_TYPES), nullable=True),
         sa.Column('smoker_status', ChoiceType(SMOKER_TYPES), nullable=True),
         sa.Column('age', sa.Integer(), nullable=True),
@@ -476,28 +470,28 @@ def upgrade():
         sa.Column('age_band_high', sa.Integer(), nullable=True),
         sa.Column('family_tier', ChoiceType(FAMILY_TIER_TYPES), nullable=True),
         sa.Column('payout_amount', sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(['plan_id'], ['plan.id'], ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['plan_id'], [u'plan.id'], ondelete=u'CASCADE'),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_premium_plan_id'), 'premium', ['plan_id'], unique=False)
     op.create_table(
         'spouse_standalone_add_plan',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
-        sa.PrimaryKeyConstraint('id')
+        sa.Column('derived_id', sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(['derived_id'], [u'plan.id'], ),
+        sa.PrimaryKeyConstraint('derived_id')
     )
     op.create_table(
         'spouse_voluntary_life_plan',
-        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('derived_id', sa.Integer(), nullable=False),
         sa.Column('use_employee_age_for_spouse', sa.Boolean(), nullable=True),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
-        sa.PrimaryKeyConstraint('id')
+        sa.ForeignKeyConstraint(['derived_id'], [u'plan.id'], ),
+        sa.PrimaryKeyConstraint('derived_id')
     )
     op.create_table(
         'spouse_whole_life_plan',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
-        sa.PrimaryKeyConstraint('id')
+        sa.Column('derived_id', sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(['derived_id'], [u'plan.id'], ),
+        sa.PrimaryKeyConstraint('derived_id')
     )
     op.create_table(
         'standalone_add_plan',
@@ -506,7 +500,7 @@ def upgrade():
         sa.Column('increments', sa.Integer(), nullable=True),
         sa.Column('min_election', sa.Numeric(precision=9, scale=2), nullable=True),
         sa.Column('max_election', sa.Numeric(precision=9, scale=2), nullable=True),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -515,16 +509,8 @@ def upgrade():
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('max_weekly_benefit', sa.Numeric(precision=9, scale=2), nullable=False),
         sa.Column('percentage_of_salary_paid', sa.Numeric(precision=3, scale=2), nullable=False),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
-        sa.PrimaryKeyConstraint('id')
-    )
-    op.create_table(
-        'std_voluntary_plan',
-        sa.Column('premium_matrix', sa.String(length=5000), nullable=True),
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('max_weekly_benefit', sa.Numeric(precision=9, scale=2), nullable=False),
-        sa.Column('percentage_of_salary_paid', sa.Numeric(precision=3, scale=2), nullable=False),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.Column('premium_based_on_benefit', sa.Boolean(), nullable=False),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -534,7 +520,7 @@ def upgrade():
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('spouse_benefit', sa.Numeric(precision=9, scale=2), nullable=True),
         sa.Column('child_benefit', sa.Numeric(precision=9, scale=2), nullable=True),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -549,7 +535,7 @@ def upgrade():
         sa.Column('premium_matrix', sa.String(length=5000), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('plan_termination_timing_type_id', ChoiceType(PLAN_TERMINATION_TIMING_TYPES), nullable=True),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -562,7 +548,7 @@ def upgrade():
         sa.Column('guarantee_issue', sa.Numeric(precision=9, scale=2), nullable=True),
         sa.Column('addl_salary_multiple_accidental_death', sa.Numeric(precision=4, scale=2), nullable=True),
         sa.Column('addl_salary_multiple_accidental_dismemberment', sa.Numeric(precision=4, scale=2), nullable=True),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -572,15 +558,15 @@ def upgrade():
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('spouse_benefit', sa.Numeric(precision=9, scale=2), nullable=True),
         sa.Column('child_benefit', sa.Numeric(precision=9, scale=2), nullable=True),
-        sa.ForeignKeyConstraint(['id'], ['plan.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'plan.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
         'dependent_beneficiary',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('dependent_id', sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(['dependent_id'], ['dependent.id'], ),
-        sa.ForeignKeyConstraint(['id'], ['beneficiary.id'], ),
+        sa.ForeignKeyConstraint(['dependent_id'], [u'dependent.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'beneficiary.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -594,22 +580,22 @@ def upgrade():
         sa.Column('total_cost', sa.Numeric(precision=6, scale=2), nullable=True),
         sa.Column('employer_cost', sa.Numeric(precision=6, scale=2), nullable=True),
         sa.Column('employee_cost', sa.Numeric(precision=6, scale=2), nullable=True),
-        sa.ForeignKeyConstraint(['enrollment_id'], ['enrollment.id'], ),
-        sa.ForeignKeyConstraint(['plan_id'], ['plan.id'], ),
-        sa.ForeignKeyConstraint(['premium_id'], ['premium.id'], ),
+        sa.ForeignKeyConstraint(['enrollment_id'], [u'enrollment.id'], ),
+        sa.ForeignKeyConstraint(['plan_id'], [u'plan.id'], ),
+        sa.ForeignKeyConstraint(['premium_id'], [u'premium.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_election_plan_id'), 'election', ['plan_id'], unique=False)
     op.create_table(
         'estate_beneficiary',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['id'], ['beneficiary.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'beneficiary.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
         'succession_of_heirs_beneficiary',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['id'], ['beneficiary.id'], ),
+        sa.ForeignKeyConstraint(['id'], [u'beneficiary.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
 
@@ -624,7 +610,6 @@ def downgrade():
     op.drop_table('voluntary_life_plan')
     op.drop_table('vision_plan')
     op.drop_table('universal_life_plan')
-    op.drop_table('std_voluntary_plan')
     op.drop_table('std_plan')
     op.drop_table('standalone_add_plan')
     op.drop_table('spouse_whole_life_plan')
@@ -638,7 +623,6 @@ def downgrade():
     op.drop_table('medical_plan')
     op.drop_table('medical_dental_vision_bundle_plan')
     op.drop_table('medical_dental_bundle_plan')
-    op.drop_table('ltd_voluntary_plan')
     op.drop_table('ltd_plan')
     op.drop_table('long_term_care_plan')
     op.drop_table('life_add_plan')

@@ -357,17 +357,6 @@ class LTDPlanForm(AdminPlanForm):
         include = ['id']
 
 
-class LTDVoluntaryPlanForm(AdminPlanForm):
-    def __init__(self, *args, **kwargs):
-        kwargs.update({'prefix': 'ltd_voluntary_plan'})
-        super(LTDVoluntaryPlanForm, self).__init__(*args, **kwargs)
-
-    class Meta:
-        model = models.LTDVoluntaryPlan
-        date_format = '%Y-%m-%d'
-        include = ['id']
-
-
 class STDPlanForm(AdminPlanForm):
     def __init__(self, *args, **kwargs):
         kwargs.update({'prefix': 'std_plan'})

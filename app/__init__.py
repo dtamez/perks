@@ -8,6 +8,7 @@ import logging
 
 from flask import Flask
 from flask_debugtoolbar import DebugToolbarExtension
+from flask_errormail import mail_on_500
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_migrate import Migrate
@@ -27,11 +28,13 @@ login_manager.login_view = 'auth.login'
 
 def create_app(config_name):
     app = Flask(__name__)
-    app.config.from_object(config[config_name])
-    config[config_name].init_app(app)
+    cfg = config[config_name]
+    app.config.from_object(cfg)
+    cfg.init_app(app)
 
     db.init_app(app)
     mail.init_app(app)
+    mail_on_500(app, cfg.ADMINS)
     migrate.init_app(app)
     login_manager.init_app(app)
     toolbar.init_app(app)

@@ -47,9 +47,7 @@ def main():  # NOQA
     delete_all(models.StandaloneADDPlan.query.all())
     delete_all(models.BasicLifePlan.query.all())
     delete_all(models.STDPlan.query.all())
-    delete_all(models.STDVoluntaryPlan.query.all())
     delete_all(models.LTDPlan.query.all())
-    delete_all(models.LTDVoluntaryPlan.query.all())
     delete_all(models.EAPPlan.query.all())
     print 'removing core plans'
     delete_all(models.VisionPlan.query.all())

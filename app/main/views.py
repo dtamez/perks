@@ -101,7 +101,6 @@ from ..models import (
     IdentityTheftPlan,
     LIFE_EVENT_TYPES,
     LTDPlan,
-    LTDVoluntaryPlan,
     LifeMixin,
     Location,
     LongTermCarePlan,
@@ -116,7 +115,6 @@ from ..models import (
     Premium,
     SMOKER_TYPES,
     STDPlan,
-    STDVoluntaryPlan,
     SpouseStandaloneADDPlan,
     SpouseVoluntaryLifePlan,
     SpouseWholeLifePlan,
@@ -323,11 +321,11 @@ def create_plan_premiums(plan):  # NOQA
             age_bands = get_age_bands_from_matrix(dimension)
             print 'age_bands: ', age_bands
             if dimension in gender_keys:
-                premium.gender = dimension
+                premium.gender = unicode(dimension)
             elif dimension in smoker_keys:
-                premium.smoker_status = dimension
+                premium.smoker_status = unicode(dimension)
             elif dimension in family_tier_keys:
-                premium.family_tier = dimension
+                premium.family_tier = unicode(dimension)
             elif dimension.endswith('K'):
                 premium.payout_amount = int(dimension[:-1]) * 1000
             elif dimension.isdigit():
@@ -340,7 +338,7 @@ def create_plan_premiums(plan):  # NOQA
             elif dimension.startswith('$'):
                 premium.amount = Decimal(dimension[1:])
             elif dimension.endswith('%'):
-                premium.rate = Decimal(dimension[:-1]) / 100
+                premium.rate = Decimal(dimension[:-1])
             else:
                 raise Exception("Invalid premium matrix dimension value: .".format(dimension))
         db.session.add(premium)
@@ -506,12 +504,8 @@ def enroll_group():
 
     ltd_plans = LTDPlan.query.filter(Plan.active == True).all()
     ltd_selections = get_selections(ltd_plans, enrollment)
-    ltd_voluntary_plans = LTDVoluntaryPlan.query.filter(Plan.active == True).all()
-    ltd_voluntary_selections = get_selections(ltd_voluntary_plans, enrollment)
     std_plans = STDPlan.query.filter(Plan.active == True).all()
     std_selections = get_selections(std_plans, enrollment)
-    std_voluntary_plans = STDVoluntaryPlan.query.filter(Plan.active == True).all()
-    std_voluntary_selections = get_selections(std_voluntary_plans, enrollment)
 
     fsa_plans = FSAMedicalPlan.query.filter(Plan.active == True).all()
     fsa_selections = get_selections(fsa_plans, enrollment)
@@ -536,9 +530,7 @@ def enroll_group():
            'standalone_add_selections': standalone_add_selections,
 
            'ltd_selections': ltd_selections,
-           'ltd_voluntary_selections': ltd_voluntary_selections,
            'std_selections': std_selections,
-           'std_voluntary_selections': std_voluntary_selections,
 
            'fsa_selections': fsa_selections,
            'hsa_selections': hsa_selections,
