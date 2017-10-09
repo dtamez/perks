@@ -7,7 +7,7 @@
 <div id="locations_wrapper">
   <h4 class="ui dividing header">Locations</h4>
   {% include "admin/errors.html" %}
-  <form class="ui form {% if location is not defined %}hidden{% endif %}" action="" method="post" id="form_locations">
+  <form class="ui form {% if location_form.errors %}error{% endif %} {% if location is not defined %}hidden{% endif %}" action="" method="post" id="form_locations">
     {{ render_row(location_form.code, location_form.description  )}}
     {{ render_row(location_form.effective_date, None)}}
     {{ render_save_update(location_form.id, 'location') }}

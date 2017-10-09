@@ -11,7 +11,7 @@
   <h4 class="ui dividing header">Vision Plans</h4>
   {% include "admin/errors.html" %}
 
-  <form class="ui form {% if vision_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_vision_plans">
+  <form class="ui form {% if vision_plan_form.errors %}error{% endif %} {% if vision_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_vision_plans">
     {{ render_row(vision_plan_form.name, vision_plan_form.code) }}
     {{ render_row(vision_plan_form.carrier, vision_plan_form.cust_service_phone) }}
     {{ render_row(vision_plan_form.website, vision_plan_form.active) }}

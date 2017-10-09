@@ -10,7 +10,7 @@
   <h4 class="ui dividing header">Other Plans</h4>
   {% include "admin/errors.html" %}
 
-  <form class="ui form {% if other_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_other_plans">
+  <form class="ui form {% if other_plan_form.errors %}error{% endif %} {% if other_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_other_plans">
     {{ render_row(other_plan_form.name, other_plan_form.code) }}
     {{ render_row(other_plan_form.carrier, other_plan_form.cust_service_phone) }}
     {{ render_row(other_plan_form.website, other_plan_form.active) }}

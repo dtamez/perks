@@ -11,7 +11,7 @@
   <h4 class="ui dividing header">Employee Voluntary Life Plans</h4>
   {% include "admin/errors.html" %}
 
-  <form class="ui form {% if voluntary_life_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_voluntary_life_plans">
+  <form class="ui form {% if voluntary_life_plan_form.errors %}error{% endif %} {% if voluntary_life_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_voluntary_life_plans">
     {{ render_row(voluntary_life_plan_form.name, voluntary_life_plan_form.code) }}
     {{ render_row(voluntary_life_plan_form.carrier, voluntary_life_plan_form.cust_service_phone) }}
     {{ render_row(voluntary_life_plan_form.website, voluntary_life_plan_form.active) }}

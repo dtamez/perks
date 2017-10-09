@@ -21,7 +21,7 @@
 <div id="infos_wrapper">
   <h4 class="ui dividing header">Personal Information</h4>
   {% if info_form is defined %}
-  <form class="ui form" action="" method="POST" id='form_infos'>
+  <form class="ui form {% if info_form.errors %}error{% endif %}" action="" method="POST" id='form_infos'>
     {{ info_form.id }}
     {{ info_form.address_id }}
     {{ address_form.id }}

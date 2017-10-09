@@ -11,7 +11,7 @@
   <h4 class="ui dividing header">Child Whole Life Plans</h4>
   {% include "admin/errors.html" %}
 
-  <form class="ui form {% if child_whole_life_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_child_whole_life_plans">
+  <form class="ui form {% if child_whole_life_plan_form.errors %}error{% endif %} {% if child_whole_life_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_child_whole_life_plans">
     {{ render_row(child_whole_life_plan_form.name, child_whole_life_plan_form.code) }}
     {{ render_row(child_whole_life_plan_form.carrier, child_whole_life_plan_form.cust_service_phone) }}
     {{ render_row(child_whole_life_plan_form.website, child_whole_life_plan_form.active) }}

@@ -6,7 +6,7 @@
   <h4 class="ui dividing header">Qualifying Life Event</h4>
   {% if life_event_form is defined %}
 
-  <form class="ui form"  action="" method="post" id="form_life_events">
+  <form class="ui form {% if life_event_form.errors %}error{% endif %}"  action="" method="post" id="form_life_events">
     {{ life_event_form.csrf_token }}
     {{ life_event_form.employee_id }}
     {{ life_event_form.id }}

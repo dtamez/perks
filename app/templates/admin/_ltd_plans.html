@@ -14,7 +14,7 @@
   <h4 class="ui dividing header">Long Term Disability</h4>
   {% include "admin/errors.html" %}
 
-  <form class="ui form {% if ltd_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_ltd_plans">
+  <form class="ui form {% if ltd_plan_form.errors %}error{% endif %} {% if ltd_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_ltd_plans">
     {{ render_row(ltd_plan_form.name, ltd_plan_form.code) }}
     {{ render_row(ltd_plan_form.carrier, ltd_plan_form.cust_service_phone) }}
     {{ render_row(ltd_plan_form.website, ltd_plan_form.active) }}

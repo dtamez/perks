@@ -11,7 +11,7 @@
   <h4 class="ui dividing header">Standalone Accidental Death and Dismemberment Plans</h4>
   {% include "admin/errors.html" %}
 
-  <form class="ui form {% if standalone_add_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_standalone_add_plans">
+  <form class="ui form {% if standalone_add_plan_form.errors %}error{% endif %} {% if standalone_add_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_standalone_add_plans">
     {{ render_row(standalone_add_plan_form.name, standalone_add_plan_form.code) }}
     {{ render_row(standalone_add_plan_form.carrier, standalone_add_plan_form.cust_service_phone) }}
     {{ render_row(standalone_add_plan_form.website, standalone_add_plan_form.active) }}

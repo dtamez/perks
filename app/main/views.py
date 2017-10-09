@@ -172,6 +172,8 @@ class AJAXCrudView(MethodView):
             for sub in self.subs:
                 ctx[sub['form_name']] = sub['form'](None, getattr(main, sub['single']))
 
+            import ipdb
+            ipdb.set_trace()
             return template.render(ctx)
 
     def post(self):
@@ -181,6 +183,7 @@ class AJAXCrudView(MethodView):
         main = self.main['model']()
         form = self.main['form'](request.form)
         if not form.validate():
+            logger.error(form.errors)
             valid = False
         forms[self.main['form_name']] = form
         form.populate_obj(main)
@@ -189,6 +192,7 @@ class AJAXCrudView(MethodView):
             obj = sub['model']()
             form = sub['form'](request.form)
             if not form.validate():
+                logger.error(form.errors)
                 valid = False
             forms[sub['form_name']] = form
             form.populate_obj(obj)
@@ -208,6 +212,7 @@ class AJAXCrudView(MethodView):
             db.session.add(main)
             db.session.commit()
         except Exception as e:
+            logger.error(e)
             db.session.rollback()
             errors.append(e.message)
 
@@ -227,6 +232,7 @@ class AJAXCrudView(MethodView):
         if hasattr(main, 'premium_matrix'):
             original_premium_matrix = main.premium_matrix
         if not form.validate():
+            logger.error(form.errors)
             valid = False
         forms[self.main['form_name']] = form
         form.populate_obj(main)
@@ -234,6 +240,7 @@ class AJAXCrudView(MethodView):
             obj = getattr(main, sub['single'])
             form = sub['form'](request.form, obj=obj)
             if not form.validate():
+                logger.error(form.errors)
                 valid = False
             forms[sub['form_name']] = form
             if not obj:
@@ -254,6 +261,7 @@ class AJAXCrudView(MethodView):
         try:
             db.session.commit()
         except Exception as e:
+            logger.error(e)
             db.session.rollback()
             errors.append(e.message)
             return self.display_errors(main, forms, errors)

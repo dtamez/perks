@@ -11,7 +11,7 @@
   <h4 class="ui dividing header">Basic Life Plans</h4>
   {% include "admin/errors.html" %}
 
-  <form class="ui form {% if basic_life_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_basic_life_plans">
+  <form class="ui form {% if basic_life_plan_form.errors %}error{% endif %} {% if basic_life_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_basic_life_plans">
     {{ render_row(basic_life_plan_form.name, basic_life_plan_form.code) }}
     {{ render_row(basic_life_plan_form.carrier, basic_life_plan_form.cust_service_phone) }}
     {{ render_row(basic_life_plan_form.website, basic_life_plan_form.active) }}

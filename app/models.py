@@ -384,13 +384,20 @@ class Employee(PersonMixin, Base):
     spouse_dob = db.Column(db.Date, nullable=False, info={'label': 'Spouse Date of Birth'})
     spouse_smoker_type = db.Column(ChoiceType(SMOKER_TYPES), info={'label': 'Spouse Smoker Status'})
 
-    def get_monthly_salary(self):
-        return self.get_annual_salary() / 12
+    @property
+    def email(self):
+        return self.user.email
 
-    def get_weekly_salary(self):
-        return self.get_annual_salary() / 52
+    @property
+    def monthly_salary(self):
+        return self.annual_salary / 12
 
-    def get_annual_salary(self):
+    @property
+    def weekly_salary(self):
+        return self.annual_salary / 52
+
+    @property
+    def annual_salary(self):
         if self.salary_mode == 'hourly':
             return self.salary * 40 * 52
         elif self.salary_mode == 'weekly':
@@ -406,6 +413,12 @@ class Employee(PersonMixin, Base):
 
     def get_default_password(self):
         return '{}{}'.format(self.last_name, self.ssn[-4:])
+
+    @property
+    def age(self):
+        today = date.today()
+        born = self.dob
+        return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
 
 
 class Carrier(Base):
@@ -488,7 +501,7 @@ class AmountSuppliedElectionMixin(object):
         else:
             chosen_value = int(chosen_value)
 
-        min_election, max_election = self.get_min_max_elections()
+        min_election, max_election = self.get_min_max_elections(employee)
         if chosen_value:
             chosen_value = int(chosen_value)
         total, er, ee = self.get_monthly_costs(chosen_value)
@@ -536,6 +549,8 @@ class AmountChosenElectionMixin(PremiumsMixin):
     def get_premium_choices(self, chosen_value, employee):
         #  TODO: Do we stil need to call this method when we already have the premium id?
         amt, premium_id = chosen_value.split('|') if chosen_value and chosen_value != 'DE' else ('', '')
+        if amt:
+            amt = int(amt)
         choices = []
         filters = [Premium.plan_id == self.id]
         today = date.today()
@@ -547,20 +562,21 @@ class AmountChosenElectionMixin(PremiumsMixin):
         if prem.age:
             filters.append(Premium.age == age)
         if prem.gender:
-            filters.append(Premium.gender == employee.gender)
+            filters.append(Premium.gender == unicode(employee.gender))
         if prem.smoker_status:
-            filters.append(Premium.smoker_status == employee.smoker_type)
+            filters.append(Premium.smoker_status == unicode(employee.smoker_type))
 
         q = q.filter(*filters)
 
         if prem.age_band_low or prem.age_band_high:
             q = q.filter(and_(Premium.age_band_low <= age, Premium.age_band_high >= age))
 
-        if prem.payout_amount:
+        if prem.payout_amount:  # whole life, universal life
             prems = q.all()
             selected = False
             for prem in prems:
-                total, er, ee = self.get_monthly_costs(prem.amount, prem.payout_amount)
+                total, er, ee = self.get_monthly_costs(prem.amount)
+                selected = (total == amt)
                 choices.append(('{}|{}'.format(prem.payout_amount, prem.id),
                                 prem.payout_amount, selected,
                                 locale.currency(total, grouping=True),
@@ -573,6 +589,7 @@ class AmountChosenElectionMixin(PremiumsMixin):
             prem = q.one()
             selected = False
             for coverage in range(self.min_election, self.max_election + 1, self.increments):
+                selected = (coverage == amt)
                 total, er, ee = self.get_monthly_costs(prem.rate, coverage)
                 choices.append(('{}|{}'.format(coverage, prem.id),
                                 coverage, selected,
@@ -745,6 +762,21 @@ class IRSLimits(Base):
     max_401k_salary_deferal = db.Column(db.Numeric(9, 2))
     max_401k_salary_deferal_over_50 = db.Column(db.Numeric(9, 2))
 
+    def __repr__(self):
+        return ('<IRSLimits:\n max_fsa_medical_contribution: {}\n'
+                'max_fsa_dependent_care_contribution: {}\n'
+                'max_hsa_individual_contribution: {}\n'
+                'max_hsa_family_over_55_contribution: {}\n'
+                'max_401k_salary_deferal: {}\n'
+                'max_401k_salary_deferal_over_50: {}\n'.format(
+                    self.max_fsa_medical_contribution,
+                    self.max_fsa_dependent_care_contribution,
+                    self.max_hsa_individual_contribution,
+                    self.max_hsa_family_contribution,
+                    self.max_hsa_family_over_55_contribution,
+                    self.max_401k_salary_deferal,
+                    self.max_401k_salary_deferal_over_50))
+
 
 class Plan(Base, EmployerContributionMixin, PlanPremiumMetaValuesMixin):
     id = db.Column(db.Integer, primary_key=True, info={'widget': widgets.HiddenInput()})
@@ -753,8 +785,8 @@ class Plan(Base, EmployerContributionMixin, PlanPremiumMetaValuesMixin):
     name = db.Column(db.Unicode(70), nullable=False, info={'label': 'Name'})
     description = db.Column(db.String(250), nullable=False, info={'label': ''})
     special_instructions = db.Column(db.String(250), info={'label': ''})
-    active = db.Column('is_active', db.Boolean, nullable=False, index=True, server_default='1',
-                       info={'label': 'Plan is active?'})
+    active = db.Column('is_active', db.Boolean, nullable=False, index=True, default=True,
+                       server_default='1', info={'label': 'Plan is active?'})
     carrier_id = db.Column(db.ForeignKey('carrier.id'))
     carrier = db.relationship('Carrier', uselist=False, info={'label': 'Caarrier'})
     website = db.Column(URLType, info={'label': 'Website'})
@@ -878,7 +910,7 @@ class BasicLifePlan(Plan, GroupMixin, PostTaxMixin, BooleanElectionMixin, LifeMi
         db.Numeric(4, 2), info={'label': 'Additional Multiple of Salary Paid for Accidental Dismemberment'})
 
     def get_monthly_costs(self, premium, employee):
-        total = (premium.rate * (employee.get_annual_salary() * self.multiple_of_salary_paid / 1000))
+        total = (premium.rate * (employee.annual_salary * self.multiple_of_salary_paid / 1000))
         er = self.er_flat_amount_contributed or (total * self.er_percentage_contributed)
         ee = total - er
         return total, er, ee
@@ -1022,7 +1054,7 @@ class WholeLifePlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixin, L
     spouse_benefit = db.Column(db.Numeric(9, 2), info={'label': 'Spouse Benefit'})
     child_benefit = db.Column(db.Numeric(9, 2), info={'label': 'Child Benefit'})
 
-    def get_monthly_costs(self, amount, payout_amount):
+    def get_monthly_costs(self, amount):
         total = amount
         er = (self.er_flat_amount_contributed or (total * self.er_percentage_contributed))
         ee = total - er
@@ -1077,11 +1109,14 @@ class UniversalLifePlan(Plan, GroupMixin, PostTaxMixin, AmountChosenElectionMixi
     spouse_benefit = db.Column(db.Numeric(9, 2), info={'label': 'Spouse Benefit'})
     child_benefit = db.Column(db.Numeric(9, 2), info={'label': 'Child Benefit'})
 
-    def get_monthly_costs(self, rate, amount):
-        total = (rate * (amount / 1000))
+    def get_monthly_costs(self, amount):
+        total = amount
         er = (self.er_flat_amount_contributed or (total * self.er_percentage_contributed))
         ee = total - er
         return total, er, ee
+
+    def _get_dob(self, employee):
+        return employee.dob
 
     __mapper_args__ = {
         'polymorphic_identity': 'universal_life',
@@ -1102,7 +1137,7 @@ class LTDPlan(Plan, GroupMixin, PreOrPostTaxMixin, BooleanElectionMixin):
     percentage_of_salary_paid = db.Column(db.Numeric(3, 2), nullable=False, info={'label': 'Benefit Percentage'})
 
     def get_monthly_costs(self, premium, employee):
-        total = (premium.rate * (employee.get_monthly_salary() / 100))
+        total = (premium.rate * (employee.monthly_salary / 100))
         er = self.er_flat_amount_contributed or (total * self.er_percentage_contributed)
         ee = total - er
         return total, er, ee
@@ -1129,9 +1164,9 @@ class STDPlan(Plan, GroupMixin, PostTaxMixin, BooleanElectionMixin):
         # benefit amt is weekly salary * percentage of salary paid
         # either way the amount to base the cost is capped by max_weekly_benefit
         if self.premium_based_on_benefit:
-            base = (employee.get_weekly_salary() * self.percentage_of_salary_paid)
+            base = (employee.weekly_salary * self.percentage_of_salary_paid)
         else:
-            base = employee.get_weekly_salary()
+            base = employee.weekly_salary
         total = min([base, self.max_weekly_benefit]) / (10 * premium.rate)
         er = self.er_flat_amount_contributed or (total * self.er_percentage_contributed)
         ee = total - er
@@ -1150,7 +1185,7 @@ class FSAMedicalPlan(Plan, GroupMixin, PreTaxMixin, AmountSuppliedElectionMixin)
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
     min_contribution = db.Column(db.Numeric(9, 2), nullable=False, info={'label': 'Minimum Contribution'})
 
-    def get_min_max_elections(self):
+    def get_min_max_elections(self, employee=None):
         limits = IRSLimits.query.first()
         return self.min_contribution, limits.max_fsa_medical_contribution
 
@@ -1165,7 +1200,7 @@ class FSADependentCarePlan(FSAMedicalPlan):
     __table_args__ = {'extend_existing': True}
     derived_id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
 
-    def get_min_max_elections(self):
+    def get_min_max_elections(self, employee=None):
         limits = IRSLimits.query.first()
         return self.min_contribution, limits.max_fsa_dependent_care_contribution
 
@@ -1181,7 +1216,7 @@ class HSAPlan(Plan, GroupMixin, PreTaxMixin, AmountSuppliedElectionMixin):
     id = db.Column(None, db.ForeignKey('plan.id'), primary_key=True)
     min_contribution = db.Column(db.Numeric(9, 2), nullable=False, info={'label': 'Minimum Contribution'})
 
-    def get_min_max_elections(self):
+    def get_min_max_elections(self, employee=None):
         limits = IRSLimits.query.first()
         # TODO: Where do family and individual contributions come into play?
         return self.min_contribution, limits.max_hsa_individual_contribution
@@ -1199,7 +1234,10 @@ class HRAPlan(Plan, GroupMixin, PreTaxMixin, BooleanElectionMixin):
 
     def get_monthly_costs(self, premium, employee):
         total = premium.amount
-        er = self.er_flat_amount_contributed or (total * self.er_percentage_contributed)
+        if self.er_flat_amount_contributed:
+            er = min([self.er_flat_amount_contributed, total])
+        else:
+            er = total * self.er_percentage_contributed
         ee = total - er
         return total, er, ee
 
@@ -1220,9 +1258,13 @@ class Employee401KPlan(Plan, GroupMixin, PreTaxMixin, AmountSuppliedElectionMixi
     min_contribution = db.Column(db.Numeric(9, 2), nullable=False,
                                  info={'label': 'Minimum Contribution'})
 
-    def get_min_max_elections(self):
+    def get_min_max_elections(self, employee):
         limits = IRSLimits.query.first()
-        return self.min_contribution, limits.max_401k_salary_deferal
+        if employee.age > 49:
+            max_contrib = limits.max_401k_salary_deferal_over_50
+        else:
+            max_contrib = limits.max_401k_salary_deferal
+        return self.min_contribution, max_contrib
 
     __mapper_args__ = {
         'polymorphic_identity': '401k',
@@ -1239,7 +1281,10 @@ class EAPPlan(Plan, GroupMixin, PostTaxMixin, BooleanElectionMixin):
 
     def get_monthly_costs(self, premium, employee):
         total = premium.amount
-        er = self.er_flat_amount_contributed or (total * self.er_percentage_contributed)
+        if self.er_flat_amount_contributed:
+            er = min([self.er_flat_amount_contributed, total])
+        else:
+            er = total * self.er_percentage_contributed
         ee = total - er
         return total, er, ee
 
@@ -1318,7 +1363,10 @@ class ParkingTransitPlan(Plan, SupplementalMixin, PreTaxMixin, BooleanElectionMi
 
     def get_monthly_costs(self, premium, employee):
         total = premium.amount
-        er = self.er_flat_amount_contributed or (total * self.er_percentage_contributed)
+        if self.er_flat_amount_contributed:
+            er = min([total, self.er_flat_amount_contributed])
+        else:
+            er = total * self.er_percentage_contributed
         ee = total - er
         return total, er, ee
 

@@ -70,7 +70,7 @@ class LocationFactory(factory.Factory):
         model = models.Location
 
     code = fake.pystr(max_chars=10)
-    description = fake.sentence()
+    description = fake.text(max_nb_chars=60)
     effective_date = fake.past_date()
 
 
@@ -96,6 +96,7 @@ class EmployeeFactory(PersonFactory):
     emergency_contact_name = fake.name()
     emergency_contact_relationship = choice(['spouse', 'son', 'daughter'])
     spouse_dob = factory.LazyAttribute(lambda o: o.dob - timedelta(365 * 2))
+    location = factory.SubFactory(LocationFactory)
 
     @factory.post_generation
     def dependents(self, create, extracted, **kwargs):
@@ -277,6 +278,25 @@ class AgeBandedPremiumSmokingGenderTieredFactory:
                 age_band_high=hi,
                 family_tier=unicode(tier),
                 smoker_status=unicode(smoker_status),
+                amount=amt,
+            ))
+        return premiums
+
+
+class AgeSmokingPayoutPremiumFactory:
+
+    def __init__(self, plan, matrix):
+        self.plan = plan
+        self.matrix = matrix
+
+    def get_premiums(self):
+        premiums = []
+        for age, smoker_status, payout, amt in self.matrix:
+            premiums.append(PremiumFactory(
+                plan=self.plan,
+                age=age,
+                smoker_status=unicode(smoker_status),
+                payout_amount=payout,
                 amount=amt,
             ))
         return premiums
@@ -596,6 +616,18 @@ class IdentityTheftPlanFactory(PlanFactory, TieredElectionMixinFactory):
 class OtherPlanFactory(PlanFactory, TieredElectionMixinFactory):
     class Meta:
         model = models.OtherPlan
+
+
+class IRSLimitsFactory(factory.Factory):
+    class Meta:
+        model = models.IRSLimits
+    max_fsa_medical_contribution = 1200
+    max_fsa_dependent_care_contribution = 1000
+    max_hsa_individual_contribution = 800
+    max_hsa_family_contribution = 1200
+    max_hsa_family_over_55_contribution = 1500
+    max_401k_salary_deferal = 5000
+    max_401k_salary_deferal_over_50 = 8000
 
 
 class ElectionFactory(factory.Factory):

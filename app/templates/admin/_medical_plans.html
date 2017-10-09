@@ -11,7 +11,7 @@
   <h4 class="ui dividing header">Medical Plans</h4>
   {% include "admin/errors.html" %}
 
-  <form class="ui form {% if medical_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_medical_plans">
+  <form class="ui form {% if medical_plan_form.errors %}error{% endif %} {% if medical_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_medical_plans">
     {{ render_row(medical_plan_form.name, medical_plan_form.code) }}
     {{ render_row(medical_plan_form.carrier, medical_plan_form.cust_service_phone) }}
     {{ render_row(medical_plan_form.website, medical_plan_form.active) }}

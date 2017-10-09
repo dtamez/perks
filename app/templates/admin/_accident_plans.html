@@ -12,7 +12,7 @@
   <h4 class="ui dividing header">Accident Insurance Plans</h4>
   {% include "admin/errors.html" %}
 
-  <form class="ui form {% if accident_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_accident_plans">
+  <form class="ui form {% if accident_plan_form.errors %}error{% endif %} {% if accident_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_accident_plans">
     {{ render_row(accident_plan_form.name, accident_plan_form.code) }}
     {{ render_row(accident_plan_form.carrier, accident_plan_form.cust_service_phone) }}
     {{ render_row(accident_plan_form.website, accident_plan_form.active) }}

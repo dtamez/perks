@@ -8,7 +8,7 @@
   <h4 class="ui dividing header">Administrators</h4>
   {% include "admin/errors.html" %}
 
-  <form class="ui form {% if user is not defined %}hidden{% endif %}" action="" method="post" id="form_users">
+  <form class="ui form {% if user_form.errors %}error{% endif %} {% if user is not defined %}hidden{% endif %}" action="" method="post" id="form_users">
     {{ render_row(user_form.first_name, user_form.last_name) }}
     {{ render_3row(user_form.email, user_form.active user_form.password_reset) }}
     {{ render_save_update(user_form.id, 'user')}}

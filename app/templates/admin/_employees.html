@@ -23,7 +23,7 @@
   <h4 class="ui dividing header">Employees</h4>
   {% include "admin/errors.html" %}
 
-  <form class="ui form {% if employee is not defined %}hidden{% endif %}" action="" method="post" id="form_employees">
+  <form class="ui form {% if employee_form.errors %}error{% endif %} {% if employee is not defined %}hidden{% endif %}" action="" method="post" id="form_employees">
     {{ render_3row(employee_form.first_name, employee_form.middle_name, employee_form.last_name) }}
     {{ render_row(employee_form.dob, employee_form.ssn) }}
     {{ render_row(user_form.email, user_form.password_reset) }}

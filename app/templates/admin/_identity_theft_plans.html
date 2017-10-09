@@ -10,7 +10,7 @@
   <h4 class="ui dividing header">Identity Theft Insurance Plans</h4>
   {% include "admin/errors.html" %}
 
-  <form class="ui form {% if identity_theft_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_identity_theft_plans">
+  <form class="ui form {% if identity_theft_plan_form.errors %}error{% endif %} {% if identity_theft_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_identity_theft_plans">
     {{ render_row(identity_theft_plan_form.name, identity_theft_plan_form.code) }}
     {{ render_row(identity_theft_plan_form.carrier, identity_theft_plan_form.cust_service_phone) }}
     {{ render_row(identity_theft_plan_form.website, identity_theft_plan_form.active) }}

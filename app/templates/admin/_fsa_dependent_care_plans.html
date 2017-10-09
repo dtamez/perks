@@ -10,7 +10,7 @@
   <h4 class="ui dividing header">Dependent Care Flexible Spending Account Plans</h4>
   {% include "admin/errors.html" %}
 
-  <form class="ui form {% if fsa_dependent_care_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_fsa_dependent_care_plans">
+  <form class="ui form {% if fsa_dependent_care_plan_form.errors %}error{% endif %} {% if fsa_dependent_care_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_fsa_dependent_care_plans">
     {{ render_row(fsa_dependent_care_plan_form.name, fsa_dependent_care_plan_form.code) }}
     {{ render_row(fsa_dependent_care_plan_form.carrier, fsa_dependent_care_plan_form.cust_service_phone) }}
     {{ render_row(fsa_dependent_care_plan_form.website, fsa_dependent_care_plan_form.active) }}

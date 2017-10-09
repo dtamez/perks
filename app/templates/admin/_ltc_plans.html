@@ -10,7 +10,7 @@
   <h4 class="ui dividing header">Long Term Care Plans</h4>
   {% include "admin/errors.html" %}
 
-  <form class="ui form {% if ltc_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_ltc_plans">
+  <form class="ui form {% if ltc_plan_form.errors %}error{% endif %} {% if ltc_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_ltc_plans">
     {{ render_row(ltc_plan_form.name, ltc_plan_form.code) }}
     {{ render_row(ltc_plan_form.carrier, ltc_plan_form.cust_service_phone) }}
     {{ render_row(ltc_plan_form.website, ltc_plan_form.active) }}

@@ -5,7 +5,7 @@
 <div id="spouse_voluntary_lifes_wrapper">
   <h4 class="ui dividing header">Voluntary Life Plan Elections</h4>
 
-  <form class="ui form {% if election is not defined %}hidden{% endif %}" action="" method="post" id="form_spouse_voluntary_lifes">
+  <form class="ui form {% if election_form and election_form.errors %}error{% endif %} {% if election is not defined %}hidden{% endif %}" action="" method="post" id="form_spouse_voluntary_lifes">
     {% if election_form %}
       {{ election_form.id }}
       {{ election_form.employee_id }}

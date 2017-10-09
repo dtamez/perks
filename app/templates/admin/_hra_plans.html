@@ -10,7 +10,7 @@
   <h4 class="ui dividing header">Health Reimbursement Account Plans</h4>
   {% include "admin/errors.html" %}
 
-  <form class="ui form {% if hra_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_hra_plans">
+  <form class="ui form {% if hra_plan_form.errors %}error{% endif %} {% if hra_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_hra_plans">
     {{ render_row(hra_plan_form.name, hra_plan_form.code) }}
     {{ render_row(hra_plan_form.carrier, hra_plan_form.cust_service_phone) }}
     {{ render_row(hra_plan_form.website, hra_plan_form.active) }}

@@ -10,7 +10,7 @@
   <h4 class="ui dividing header">Employee Assistance Programs</h4>
   {% include "admin/errors.html" %}
 
-  <form class="ui form {% if eap_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_eap_plans">
+  <form class="ui form {% if eap_plan_form.errors %}error{% endif %} {% if eap_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_eap_plans">
     {{ render_row(eap_plan_form.name, eap_plan_form.code) }}
     {{ render_row(eap_plan_form.carrier, eap_plan_form.cust_service_phone) }}
     {{ render_row(eap_plan_form.website, eap_plan_form.active) }}

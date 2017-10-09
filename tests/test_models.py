@@ -12,6 +12,7 @@ Tests for application models that have any logic/methods.
 from __future__ import absolute_import
 
 from datetime import date, timedelta
+from decimal import Decimal
 import unittest
 
 from app import create_app, db
@@ -59,8 +60,21 @@ class ModelsTestCase(unittest.TestCase):
         self.assertEqual(dep_middle.full_name, 'a b c')
         self.assertEqual(dep_no_middle.full_name, 'a c')
 
+    # Employee
+    def test_empoyee_age(self):
+        emp = mf.EmployeeFactory(dob=get_date_of_birth(52))
+
+        self.assertEqual(52, emp.age)
+
+    def test_salary_calculations(self):
+        emp = mf.EmployeeFactory(salary=120000)
+
+        self.assertEqual(120000, emp.annual_salary)
+        self.assertEqual(10000, emp.monthly_salary)
+        self.assertEqual(2307, emp.weekly_salary)
+
     # BooleanElectionMixin - BasicLife, LTD, STD, HRA, EAP, Parking
-    def test_boolean_get_premium_choices_age_banded_composite(self):
+    def test_boolean_get_premium_choices_basic_life(self):
         """ per premium matrix:
             42 yr old employee making $100,000 annually should have a rate of 8.91 per $1000 of coverage
             coverage = 2 * salary = $200,000
@@ -326,58 +340,51 @@ class ModelsTestCase(unittest.TestCase):
         emp = mf.EmployeeFactory(dob=get_date_of_birth(35), salary=52000)
         # set up plan
         plan = mf.HRAPlanFactory(er_percentage_contributed=1)
-        plan.premiums = [mf.PremiumFactory(amount=250, plan=plan)]
-        db.session.add(plan)
-        db.session.commit()
-
+        plans = [
+            mf.HRAPlanFactory(er_percentage_contributed=1),
+            mf.EAPPlanFactory(er_percentage_contributed=1),
+            mf.ParkingTransitPlanFactory(er_percentage_contributed=1),
+        ]
         TOTAL = '$250.00'
         ER = '$250.00'
         EE = '$0.00'
-        choices = plan.get_premium_choices(True, emp)
-        for id, label, selected, total, er, ee in choices:
-            if label == 'Enroll':
-                self.assertEqual(selected, True)
-                self.assertEqual(total, TOTAL)
-                self.assertEqual(ee, EE)
-                self.assertEqual(er, ER)
+        for plan in plans:
+            plan.premiums = [mf.PremiumFactory(amount=250, plan=plan)]
+            db.session.add(plan)
+            db.session.commit()
 
-    def test_boolean_get_premium_choices_eap(self):
+            choices = plan.get_premium_choices(True, emp)
+            for id, label, selected, total, er, ee in choices:
+                if label == 'Enroll':
+                    self.assertEqual(selected, True)
+                    self.assertEqual(total, TOTAL)
+                    self.assertEqual(ee, EE)
+                    self.assertEqual(er, ER)
+
+    def test_boolean_get_premium_choices_flat_amt_greater_than_premium(self):
         emp = mf.EmployeeFactory(dob=get_date_of_birth(35), salary=52000)
         # set up plan
-        plan = mf.EAPPlanFactory(er_percentage_contributed=1)
-        plan.premiums = [mf.PremiumFactory(amount=250, plan=plan)]
-        db.session.add(plan)
-        db.session.commit()
-
-        TOTAL = '$250.00'
-        ER = '$250.00'
+        plan = mf.HRAPlanFactory(er_percentage_contributed=1)
+        plans = [
+            mf.HRAPlanFactory(er_flat_amount_contributed=200),
+            mf.EAPPlanFactory(er_flat_amount_contributed=200),
+            mf.ParkingTransitPlanFactory(er_flat_amount_contributed=200),
+        ]
+        TOTAL = '$150.00'
+        ER = '$150.00'
         EE = '$0.00'
-        choices = plan.get_premium_choices(True, emp)
-        for id, label, selected, total, er, ee in choices:
-            if label == 'Enroll':
-                self.assertEqual(selected, True)
-                self.assertEqual(total, TOTAL)
-                self.assertEqual(ee, EE)
-                self.assertEqual(er, ER)
+        for plan in plans:
+            plan.premiums = [mf.PremiumFactory(amount=150, plan=plan)]
+            db.session.add(plan)
+            db.session.commit()
 
-    def test_boolean_get_premium_choices_parking(self):
-        emp = mf.EmployeeFactory(dob=get_date_of_birth(35), salary=52000)
-        # set up plan
-        plan = mf.ParkingTransitPlanFactory(er_percentage_contributed=1)
-        plan.premiums = [mf.PremiumFactory(amount=250, plan=plan)]
-        db.session.add(plan)
-        db.session.commit()
-
-        TOTAL = '$250.00'
-        ER = '$250.00'
-        EE = '$0.00'
-        choices = plan.get_premium_choices(True, emp)
-        for id, label, selected, total, er, ee in choices:
-            if label == 'Enroll':
-                self.assertEqual(selected, True)
-                self.assertEqual(total, TOTAL)
-                self.assertEqual(ee, EE)
-                self.assertEqual(er, ER)
+            choices = plan.get_premium_choices(True, emp)
+            for id, label, selected, total, er, ee in choices:
+                if label == 'Enroll':
+                    self.assertEqual(selected, True)
+                    self.assertEqual(total, TOTAL)
+                    self.assertEqual(ee, EE)
+                    self.assertEqual(er, ER)
 
     # tiered_election get_premium_choices
     def test_tiered_get_premium_choices_single_tiers(self):
@@ -615,3 +622,131 @@ class ModelsTestCase(unittest.TestCase):
 
             self.assertSequenceEqual(jack_choices, jack_expected)
             self.assertSequenceEqual(jill_choices, jill_expected)
+
+    # AmountChosenElectionMixin VoluntaryLife, StandaloneADD, WholeLife, UniversalLife
+    def test_amount_chosen_get_premium_choices(self):
+        emp = mf.EmployeeFactory(dob=get_date_of_birth(35), salary=52000)
+        # set up plan
+        plans = [
+            mf.VoluntaryLifePlanFactory(er_percentage_contributed=0, min_election=10000,
+                                        max_election=40000, increments=10000),
+            mf.StandaloneADDPlanFactory(er_percentage_contributed=0, min_election=10000,
+                                        max_election=40000, increments=10000),
+        ]
+        matrix = [
+            [0, 24, 2.81],        # 1
+            [25, 29, 3.69],       # 2
+            [30, 34, 4.98],       # 3
+            [35, 39, 5.63],       # 4
+            [40, 44, 8.91],       # 5
+            [45, 49, 14.17],      # 6
+            [50, 54, 27.23],      # 7
+            [55, 59, 42.32],      # 8
+            [60, 64, 82.29],      # 9
+            [65, 69, 82.29],      # 10
+            [70, 74, 134.08],     # 11
+            [75, 100, 134.08]]    # 12
+        for idx, plan in enumerate(plans):
+            expected = [
+                (u'10000|{}'.format(idx * 12 + 4), 10000, False, '$56.30', '$0.00', '$56.30'),
+                (u'20000|{}'.format(idx * 12 + 4), 20000, False, '$112.60', '$0.00', '$112.60'),
+                (u'30000|{}'.format(idx * 12 + 4), 30000, True, '$168.90', '$0.00', '$168.90'),
+                (u'40000|{}'.format(idx * 12 + 4), 40000, False, '$225.20', '$0.00', '$225.20'),
+                (u'DE', u'Decline', False, u'', u'', u'')
+            ]
+            premium_factory = mf.AgeBandedPremiumFactory(plan, matrix)
+            plan.premiums = premium_factory.get_premiums()
+            db.session.add(plan)
+            db.session.commit()
+
+            choices = plan.get_premium_choices('30000|4', emp)
+
+            self.assertSequenceEqual(choices, expected)
+
+    def test_amount_chosen_get_premium_choices_payout(self):
+        emp_17_sm = mf.EmployeeFactory(dob=get_date_of_birth(17), smoker_type='SM')
+        emp_48_ns = mf.EmployeeFactory(dob=get_date_of_birth(48), smoker_type='NS')
+        emp_59_ns = mf.EmployeeFactory(dob=get_date_of_birth(59), smoker_type='NS')
+        # set up plan
+        plans = [
+            mf.WholeLifePlanFactory(er_percentage_contributed=0),
+            mf.UniversalLifePlanFactory(er_percentage_contributed=0),
+        ]
+        # abbreviated matrix with all entries for ages 17 (8), 48 (6) and 59 (2)
+        matrix = [
+            [17, 'NS', 50000, 8.93],      # 1
+            [17, 'SM', 50000, 10.43],     # 2
+            [17, 'NS', 75000, 7.93],      # 3
+            [17, 'SM', 75000, 9.43],      # 4
+            [17, 'NS', 100000, 9.93],     # 5
+            [17, 'SM', 100000, 11.43],    # 6
+            [17, 'NS', 150000, 11.93],    # 7
+            [17, 'SM', 150000, 13.43],    # 8
+            [48, 'NS', 50000, 28.04],     # 9
+            [48, 'SM', 50000, 36.35],     # 10
+            [48, 'NS', 75000, 29.04],     # 11
+            [48, 'SM', 75000, 37.35],     # 12
+            [48, 'NS', 100000, 31.04],    # 13
+            [48, 'SM', 100000, 39.35],    # 14
+            [59, 'NS', 50000, 30.53],     # 15
+            [59, 'SM', 50000, 39.101],    # 16
+        ]
+        for idx, plan in enumerate(plans):
+            expected_emp_17_sm = [
+                (u'150000|{}'.format(idx * 16 + 8), 150000, False, '$13.43', '$0.00', '$13.43'),
+                (u'100000|{}'.format(idx * 16 + 6), 100000, False, '$11.43', '$0.00', '$11.43'),
+                (u'75000|{}'.format(idx * 16 + 4), 75000, False, '$9.43', '$0.00', '$9.43'),
+                (u'50000|{}'.format(idx * 16 + 2), 50000, False, '$10.43', '$0.00', '$10.43'),
+                (u'DE', u'Decline', False, u'', u'', u''),
+            ]
+            expected_emp_48_ns = [
+                (u'100000|{}'.format(idx * 16 + 13), 100000, False, '$31.04', '$0.00', '$31.04'),
+                (u'75000|{}'.format(idx * 16 + 11), 75000, False, '$29.04', '$0.00', '$29.04'),
+                (u'50000|{}'.format(idx * 16 + 9), 50000, False, '$28.04', '$0.00', '$28.04'),
+                (u'DE', u'Decline', False, u'', u'', u''),
+            ]
+            expected_emp_59_ns = [
+                (u'50000|{}'.format(idx * 16 + 15), 50000, False, '$30.53', '$0.00', '$30.53'),
+                (u'DE', u'Decline', False, u'', u'', u''),
+            ]
+            premium_factory = mf.AgeSmokingPayoutPremiumFactory(plan, matrix)
+            plan.premiums = premium_factory.get_premiums()
+            db.session.add(plan)
+            db.session.commit()
+
+            emp_17_sm_choices = plan.get_premium_choices('', emp_17_sm)
+            emp_48_ns_choices = plan.get_premium_choices('', emp_48_ns)
+            emp_59_ns_choices = plan.get_premium_choices('', emp_59_ns)
+
+            self.assertSequenceEqual(emp_17_sm_choices, expected_emp_17_sm)
+            self.assertSequenceEqual(emp_48_ns_choices, expected_emp_48_ns)
+            self.assertSequenceEqual(emp_59_ns_choices, expected_emp_59_ns)
+
+    # AmountSupplied FSAMedical, FSADependentCare, HSA, 401K
+    def test_amount_supplied_get_premium_choices(self):
+        emp = mf.EmployeeFactory(dob=get_date_of_birth(47))
+        plans = [
+            mf.FSAMedicalPlanFactory(er_percentage_contributed=0, min_contribution=250),
+            mf.FSADependentCarePlanFactory(er_percentage_contributed=0, min_contribution=500),
+            mf.HSAPlanFactory(er_percentage_contributed=0, min_contribution=750),
+            mf.Employee401KPlanFactory(er_percentage_contributed=0, employer_max_contribution=6000,
+                                       min_contribution=1000),
+        ]
+        limits = mf.IRSLimitsFactory()
+        db.session.add(limits)
+        db.session.commit()
+
+        expected_fsa_medical = [(250, Decimal('1200.00'), None, 0, 0, 0)]
+        expected_fsa_dependent = [(500, Decimal('1200.00'), None, 0, 0, 0)]
+        expected_hsa = [(750, Decimal('800.00'), None, 0, 0, 0)]
+        expected_401k = [(1000, Decimal('5000.00'), None, 0, 0, 0)]
+        expectations = [
+            expected_fsa_medical,
+            expected_fsa_dependent,
+            expected_hsa,
+            expected_401k,
+        ]
+        for plan, expected in zip(plans, expectations):
+            choices = plan.get_premium_choices('|', emp)
+
+            self.assertSequenceEqual(choices, expected)

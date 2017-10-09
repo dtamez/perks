@@ -10,7 +10,7 @@
   <h4 class="ui dividing header">Parking and Transit Assistance</h4>
   {% include "admin/errors.html" %}
 
-  <form class="ui form {% if parking_transit_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_parking_transit_plans">
+  <form class="ui form {% if parking_transit_plan_form.errors %}error{% endif %} {% if parking_transit_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_parking_transit_plans">
     {{ render_row(parking_transit_plan_form.name, parking_transit_plan_form.code) }}
     {{ render_row(parking_transit_plan_form.carrier, parking_transit_plan_form.cust_service_phone) }}
     {{ render_row(parking_transit_plan_form.website, parking_transit_plan_form.active) }}

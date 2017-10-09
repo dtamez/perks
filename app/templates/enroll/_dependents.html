@@ -12,7 +12,7 @@
 <div id="dependents_wrapper">
   <h4 class="ui dividing header">Dependents</h4>
 
-  <form class="ui form {% if dependent is not defined %}hidden{% endif %}" action="" method="post" id="form_dependents">
+  <form class="ui form {% if dependent_form.errors %}error{% endif %} {% if dependent is not defined %}hidden{% endif %}" action="" method="post" id="form_dependents">
     {{ dependent_form.id }} {{ dependent_form.employee_id(hidden=True)}} {{ address_form.id }}
     {{ render_3row(dependent_form.first_name, dependent_form.middle_name, dependent_form.last_name) }}
     {{ render_row(dependent_form.dependent_type, dependent_form.gender) }}

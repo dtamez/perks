@@ -12,7 +12,7 @@
   <h4 class="ui dividing header">Cancer Insurance Plans</h4>
   {% include "admin/errors.html" %}
 
-  <form class="ui form {% if cancer_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_cancer_plans">
+  <form class="ui form {% if cancer_plan_form.errors %}error{% endif %} {% if cancer_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_cancer_plans">
     {{ render_row(cancer_plan_form.name, cancer_plan_form.code) }}
     {{ render_row(cancer_plan_form.carrier, cancer_plan_form.cust_service_phone) }}
     {{ render_row(cancer_plan_form.website, cancer_plan_form.active) }}

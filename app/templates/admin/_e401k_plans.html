@@ -10,7 +10,7 @@
   <h4 class="ui dividing header">Employee 401K Plans</h4>
   {% include "admin/errors.html" %}
 
-  <form class="ui form {% if e401k_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_e401k_plans">
+  <form class="ui form {% if e401k_plan_form.errors %}error{% endif %} {% if e401k_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_e401k_plans">
     {{ render_row(e401k_plan_form.name, e401k_plan_form.code) }}
     {{ render_row(e401k_plan_form.carrier, e401k_plan_form.cust_service_phone) }}
     {{ render_row(e401k_plan_form.website, e401k_plan_form.active) }}

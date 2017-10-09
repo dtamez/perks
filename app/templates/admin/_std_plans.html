@@ -14,7 +14,7 @@
   <h4 class="ui dividing header">Short Term Disability</h4>
   {% include "admin/errors.html" %}
 
-  <form class="ui form {% if std_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_std_plans">
+  <form class="ui form {% if std_plan_form.errors %}error{% endif %} {% if std_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_std_plans">
     {{ render_row(std_plan_form.name, std_plan_form.code) }}
     {{ render_row(std_plan_form.carrier, std_plan_form.cust_service_phone) }}
     {{ render_row(std_plan_form.website, std_plan_form.active) }}

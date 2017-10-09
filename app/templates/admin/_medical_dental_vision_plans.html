@@ -11,7 +11,7 @@
   <h4 class="ui dividing header">Medical, Dental, Vision Bundle Plans</h4>
   {% include "admin/errors.html" %}
 
-  <form class="ui form {% if medical_dental_vision_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_medical_dental_vision_plans">
+  <form class="ui form {% if medical_dental_vision_plan_form.errors %}error{% endif %} {% if medical_dental_vision_plan is not defined %}hidden{% endif %}" action="" method="post" id="form_medical_dental_vision_plans">
     {{ render_row(medical_dental_vision_plan_form.name, medical_dental_vision_plan_form.code) }}
     {{ render_row(medical_dental_vision_plan_form.carrier, medical_dental_vision_plan_form.cust_service_phone) }}
     {{ render_row(medical_dental_vision_plan_form.website, medical_dental_vision_plan_form.active) }}

@@ -57,7 +57,7 @@
 
 {% macro render_checkbox_field(field, label=None) -%}
     {% if not label %}{% set label=field.label.text %}{% endif %}
-    <div class="inline field {% if field.errors %}error{% endif %}">
+    <div class="inline field {% if field.flags.required %}required{% endif %} {% if field.errors %}error{% endif %}">
       <div class="ui checkbox">
         {{ field(type='checkbox', **kwargs) }}
         <label> {{ label }} </label>
@@ -67,7 +67,7 @@
 {% macro render_radio_field(field) -%}
       <label>{{ field.label }}</label>
       {% for k, v in field.choices %}
-        <div class="field {% if field.errors %}error{% endif %}">
+        <div class="field {% if field.flags.required %}required{% endif %} {% if field.errors %}error{% endif %}">
           <div class="ui radio checkbox">
             <input value="{{ k }}" name="{{ field.id }}" {% if k == field.data %}checked="checked"{% endif %} type="radio" required>
             <label>{{ v }}</label>
@@ -81,7 +81,7 @@
       {% if with_label %}
         {{ field.label }}
       {% endif %}
-      <select class="ui fluid dropdown {% if field.errors %}error{% endif %}" name="{{ field.id }}">
+      <select class="ui fluid dropdown {% if field.flags.required %}required{% endif %} {% if field.errors %}error{% endif %}" name="{{ field.id }}">
       {% for k, v in field.choices %}
 
         <div class="field">
@@ -93,7 +93,7 @@
 {%- endmacro %}
 
 {% macro render_input(field) -%}
-  <div class="field {% if field.errors %}error{% endif %}">
+  <div class="field {% if field.flags.required %}required{% endif %} {% if field.errors %}error{% endif %}">
     {{ field.label }}
     {{ field(**kwargs)|safe }}
   </div>
@@ -114,12 +114,12 @@
 
 {% macro render_row(field1, field2) -%}
 <div class="two fields">
-  <div class="field {% if field1.errors %}error{% endif %}">
+  <div class="field {% if field1.flags.required %}required{% endif %} {% if field1.errors %}error{% endif %}">
     {{ field1.label }}
     {{ field1(**kwargs)|safe }}
   </div>
   {% if field2 %}
-  <div class="field {% if field2.errors %}error{% endif %}">
+  <div class="field {% if field2.flags.required %}required{% endif %} {% if field2.errors %}error{% endif %}">
     {{ field2.label }}
     {{ field2(**kwargs)|safe }}
   </div>
@@ -132,7 +132,7 @@
 
 {% macro render_single_row(field1) -%}
 <div class="two fields">
-  <div class="two field {% if field1.errors %}error{% endif %}">
+  <div class="two field {% if field1.flags.required %}required{% endif %} {% if field1.errors %}error{% endif %}">
     {{ field1.label }}
     {{ field1(**kwargs)|safe }}
   </div>
@@ -141,15 +141,15 @@
 
 {% macro render_3row(field1, field2, field3) -%}
 <div class="three fields">
-  <div class="field {% if field1.errors %}error{% endif %}">
+  <div class="field {% if field1.flags.required %}required{% endif %} {% if field1.errors %}error{% endif %}">
     {{ field1.label }}
     {{ field1(**kwargs)|safe }}
   </div>
-  <div class="field {% if field2.errors %}error{% endif %}">
+  <div class="field {% if field2.flags.required %}required{% endif %} {% if field2.errors %}error{% endif %}">
     {{ field2.label }}
     {{ field2(**kwargs)|safe }}
   </div>
-  <div class="field {% if field3.errors %}error{% endif %}">
+  <div class="field {% if field3.flags.required %}required{% endif %} {% if field3.errors %}error{% endif %}">
     {{ field3.label }}
     {{ field3(**kwargs)|safe }}
   </div>

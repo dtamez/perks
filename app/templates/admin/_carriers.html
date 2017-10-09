@@ -7,7 +7,7 @@
 <div id='carriers_wrapper'>
   <h4 class="ui dividing header">Carriers</h4>
 
-  <form class="ui form {% if carrier is not defined %}hidden{% endif %}" action="" method="post" id="form_carriers">
+  <form class="ui form {% if carrier_form.errors %}error{% endif %} {% if carrier is not defined %}hidden{% endif %}" action="" method="post" id="form_carriers">
     {{ render_row(carrier_form.name, carrier_form.phone) }}
     {{ render_row(carrier_form.api_endpoint, None) }}
     {{ render_save_update(carrier_form.id, 'carrier')}}
