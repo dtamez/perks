@@ -172,8 +172,6 @@ class AJAXCrudView(MethodView):
             for sub in self.subs:
                 ctx[sub['form_name']] = sub['form'](None, getattr(main, sub['single']))
 
-            import ipdb
-            ipdb.set_trace()
             return template.render(ctx)
 
     def post(self):
