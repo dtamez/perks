@@ -6,7 +6,7 @@
       <div class="ui mini vertical steps">
 
         <a href="{{ url_for('main.bulk_load')}}" class="{% if g.active_step == 'import' %}active {% endif %}step">
-          <i class="upload {% if g.active_step == 'import' %}violet{% endif %} icon"></i>
+          <i class="upload {% if g.active_step == 'import' %}active{% endif %} icon"></i>
           <div class="content">
             <div class="title">
                 Bulk Import
@@ -19,7 +19,7 @@
         </a>
 
         <a href="{{ url_for('main.admin_people')}}" class="{% if g.active_step == 'people' %}active {% endif %}step">
-          <i class="users {% if g.active_step == 'people' %}violet{% endif %} icon"></i>
+          <i class="users {% if g.active_step == 'people' %}active{% endif %} icon"></i>
           <div class="content">
             <div class="title">
               Personell
@@ -32,7 +32,7 @@
         </a>
 
         <a href="{{ url_for('main.admin_carriers')}}" class="{% if g.active_step == 'carriers' %}active {% endif %}step">
-          <i class="heartbeat {% if g.active_step == 'carriers' %}violet{% endif %} icon"></i>
+          <i class="heartbeat {% if g.active_step == 'carriers' %}active{% endif %} icon"></i>
           <div class="content">
             <div class="title">
               Carriers
@@ -44,8 +44,8 @@
           </div>
         </a>
 
-        <a href="{{ url_for('main.admin_core') }}"  class="{% if g.active_step == 'core' %}active  {% endif %}step">
-          <i class="first aid {% if g.active_step == 'core' %}violet{% endif %} icon"></i>
+        <a href="{{ url_for('main.admin_core') }}"  class="{% if g.active_step == 'core' %}active {% endif %}step">
+          <i class="first aid {% if g.active_step == 'core' %}active{% endif %} icon"></i>
           <div class="content">
             <div class="title">
               Core Plans
@@ -57,8 +57,8 @@
           </div>
         </a>
 
-        <a href="{{ url_for('main.admin_group') }}"  class="{% if g.active_step == 'group' %}active  {% endif %}step">
-          <i class="first aid {% if g.active_step == 'group' %}violet{% endif %} icon"></i>
+        <a href="{{ url_for('main.admin_group') }}"  class="{% if g.active_step == 'group' %}active {% endif %}step">
+          <i class="first aid {% if g.active_step == 'group' %}active{% endif %} icon"></i>
           <div class="content">
             <div class="title">
               Group Plans
@@ -70,8 +70,8 @@
           </div>
         </a>
 
-        <a href="{{ url_for('main.admin_supplemental') }}"  class="{% if g.active_step == 'supplemental' %}active  {% endif %}step">
-          <i class="first aid {% if g.active_step == 'supplemental' %}violet{% endif %} icon"></i>
+        <a href="{{ url_for('main.admin_supplemental') }}"  class="{% if g.active_step == 'supplemental' %}active {% endif %}step">
+          <i class="first aid {% if g.active_step == 'supplemental' %}active{% endif %} icon"></i>
           <div class="content">
             <div class="title">
               Supplemental Plans

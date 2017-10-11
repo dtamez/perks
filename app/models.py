@@ -231,6 +231,11 @@ class PersonMixin(object):
         else:
             return '{} {}'.format(self.first_name, self.last_name)
 
+    @full_name.setter
+    def full_name(self, full_name):
+        # workaround for form having a display of full_name but then failing when trying to set it
+        pass
+
     @declared_attr
     def address_id(cls):
         return db.Column(db.Integer, db.ForeignKey(

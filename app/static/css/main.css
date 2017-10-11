@@ -39,3 +39,6 @@
   width: 150px;
   text-align: right;
 }
+.active {
+  color: #2185D0;
+}

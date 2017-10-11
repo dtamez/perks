@@ -37,13 +37,13 @@
 
 {% macro render_submit_field(field, label=None, tabindex=None) -%}
     {% if not label %}{% set label=field.label.text %}{% endif %}
-    <input type="submit" class="ui fluid large button-primary button" value="{{label}}"
+    <input type="submit" class="ui fluid large primary button" value="{{label}}"
     {% if tabindex %}tabindex="{{ tabindex }}"{% endif %} >
 {%- endmacro %}
 
 {% macro render_secondary_button(field, href=None, label=None, tabindex=None) -%}
     {% if not label %}{% set label=field.label.text %}{% endif %}
-    <a class="button button-secondary ui fluid large" href="{{ href }}" {% if tabindex %}tabindex="{{ tabindex }}"{% endif %}>{{label}}</a>
+    <a class="button secondary ui fluid large" href="{{ href }}" {% if tabindex %}tabindex="{{ tabindex }}"{% endif %}>{{label}}</a>
 {%- endmacro %}
 
 {% macro render_save_update(field, model_name, id=None, test_id=None) %}
@@ -57,15 +57,15 @@
       <td>
         <div class="field">
           {% if (test_id and test_id.data) or (not test_id and field.data) %}
-          <a id="save_update_{{ model_name }}" class='ui violet button button-primary' tabindex="0" href="#" onclick="javascript: update_{{ model_name}}{{ suffix }}({{ field.data }});">Update</a>
+          <a id="save_update_{{ model_name }}" class='ui button primary' tabindex="0" href="#" onclick="javascript: update_{{ model_name}}{{ suffix }}({{ field.data }});">Update</a>
           {% else %}
-            <a id="save_update_{{ model_name }}" class='ui violet button button-primary' tabindex="0" href="#" onclick="javascript: new_{{ model_name }}{{ suffix }}();">Save</a>
+            <a id="save_update_{{ model_name }}" class='ui button primary' tabindex="0" href="#" onclick="javascript: new_{{ model_name }}{{ suffix }}();">Save</a>
           {% endif %}
         </div>
       </td>
       <td>
         <div class="field">
-          <a id="cancel_{{ model_name }}" class='ui violet button button-secondary' tabindex="0" href="#" onclick="javascript: cancel_edit_{{ model_name}}{{ suffix }}();">Cancel</a>
+          <a id="cancel_{{ model_name }}" class='ui button secondary' tabindex="0" href="#" onclick="javascript: cancel_edit_{{ model_name}}{{ suffix }}();">Cancel</a>
         </div>
       </td>
     </tr>
@@ -74,7 +74,7 @@
 
 {% macro render_submit(label=None, tabindex=None) %}
 <div class="field">
-  <input class='ui button button-primary'  type="submit" name="submit" id="submit" value="{{ label }}" />
+  <input class='ui button primary'  type="submit" name="submit" id="submit" value="{{ label }}" />
 </div>
 {%- endmacro %}
 
@@ -137,35 +137,43 @@
 {% macro render_beneficiary_javascript(plan, plan_id) -%}
   <script>
     $('input[name=selection]').on('change', function() {
+      displayOrHideBeneficiaries();
+    });
+    var displayOrHideBeneficiaries = function() {
       val = $('input[name=selection]:checked', '#form_{{ plan }}s').val();
         if (val == 'DE') {
             $('#beneficiaries_{{ plan_id }}').hide();
+            $('#' + 'save_update_{{ plan }}' ).show();
         } else {
             $('#beneficiaries_{{ plan_id }}').show();
+            updateSaveUpdateButtons();
         }
-    });
+    };
     $('.beneficiaryType, .beneficiaryPercentage').on('input', function() {
-        var primaryTotal = 0;
-        var contingentTotal = 0;
-        $('.beneficiaryType')
-            .each(function() {
-              typeId = this.id;
-              percentId = '#' + typeId.replace('beneficiary_type', 'percentage');
-              percent = $(percentId);
-              if (this.value == 'primary') {
-                primaryTotal += parseInt(percent.val());
-              } else if (this.value == 'contingent') {
-                contingentTotal += parseInt(percent.val());
-              }
-            });
-        $('#primaryTotal').html(primaryTotal);
-        $('#contingentTotal').html(contingentTotal);
+      updateSaveUpdateButtons();
+    });
+    var updateSaveUpdateButtons = function() {
+      var primaryTotal = 0;
+      var contingentTotal = 0;
+      $('.beneficiaryType')
+          .each(function() {
+            typeId = this.id;
+            percentId = '#' + typeId.replace('beneficiary_type', 'percentage');
+            percent = $(percentId);
+            if (this.value == 'primary') {
+              primaryTotal += parseInt(percent.val());
+            } else if (this.value == 'contingent') {
+              contingentTotal += parseInt(percent.val());
+            }
+          });
+      $('#primaryTotal').html(primaryTotal);
+      $('#contingentTotal').html(contingentTotal);
       if (primaryTotal == 100 && contingentTotal == 100) {
         $('#' + 'save_update_{{ plan }}' ).show();
       } else {
         $('#' + 'save_update_{{ plan }}').hide();
       }
-    });
+    };
   </script>
 {%- endmacro %}
 
@@ -247,6 +255,7 @@
           method: 'GET'
           }).done(function(html) {
             $('#{{ model_name }}s_wrapper{{ suffix }}').replaceWith(html);
+            displayOrHideBeneficiaries();
         });
       };
       var cancel_edit_{{ model_name }}{{ suffix }} = function() {

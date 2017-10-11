@@ -773,7 +773,7 @@ class EnrollPlanAJAXView(MethodView):
         employee = Employee.query.join(User).filter(User.id == g.user.id).first()
         plans = self.plan_class.query.all()
         if hasattr(self.plan_class(), 'sort_value'):
-            plans.sort(methodcaller('sort_value'))
+            plans.sort(key=methodcaller('sort_value'))
 
         enrollment = Enrollment.query.filter(Enrollment.employee_id == employee.id).one()
         selections = []
@@ -1574,6 +1574,8 @@ class EnrollInfoAJAXView(MethodView):
 class EnrollDependentsView(MethodView):
 
     def get(self, id):
+        if not id:
+            return self.display_all()
         # displaying a form to edit an existng dependent
         dependent = Dependent.query.get(id)
         dependent_form = DependentForm(None, dependent)
@@ -1588,8 +1590,17 @@ class EnrollDependentsView(MethodView):
     def post(self):
         # add the dependent from the form
         form = DependentForm(request.form)
+        address_form = AddressForm(request.form)
         employee = Employee.query.join(User).filter(User.id == g.user.id).first()
         dependent = Dependent()
+        valid = form.validate()
+        add_valid = address_form.validate()
+        if not valid or not add_valid:
+            template = env.get_template('enroll/_dependents.html')
+            ctx = {'dependent_form': form, 'address_form': address_form,
+                   'employee': employee, 'dependent': dependent}
+            return template.render(ctx)
+
         form.populate_obj(dependent)
         dependent.id = None
         dependent.employee_id = employee.id

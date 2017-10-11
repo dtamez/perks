@@ -4,8 +4,8 @@
     <div class="five wide column">
       <div class="ui mini vertical steps">
 
-        <a href="{{ url_for('main.enroll_life_events')}}" class="{% if g.active_step == 'life' %}active {% endif %}step">
-          <i class="spinner icon"></i>
+        <a href="{{ url_for('main.enroll_life_events')}}" class="{% if g.active_step == 'life' %}active ui {% endif %}step">
+          <i class="spinner icon{% if g.active_step == 'life' %} active{% endif %}"></i>
           <div class="content">
             <div class="title">
               Life Events
@@ -17,8 +17,8 @@
           </div>
         </a>
 
-        <a href="{{ url_for('main.enroll_dependents')}}" class="{% if g.active_step == 'dependents' %}active {% endif %}step">
-          <i class="child icon"></i>
+        <a href="{{ url_for('main.enroll_dependents')}}" class="{% if g.active_step == 'dependents' %}active ui {% endif %}step">
+          <i class="child icon{% if g.active_step == 'dependents' %} active{% endif %}"></i>
           <div class="content">
             <div class="title">
               Dependents
@@ -30,8 +30,8 @@
           </div>
         </a>
 
-        <a href="{{ url_for('main.enroll_core') }}"  class="{% if g.active_step == 'core' %}active  {% endif %}step">
-          <i class="first aid icon"></i>
+        <a href="{{ url_for('main.enroll_core') }}"  class="{% if g.active_step == 'core' %}active ui {% endif %}step">
+          <i class="first aid icon{% if g.active_step == 'core' %} active{% endif %}"></i>
           <div class="content">
             <div class="title">
               Core Benefits
@@ -43,8 +43,8 @@
           </div>
         </a>
 
-        <a href="{{ url_for('main.enroll_group') }}" class="{% if g.active_step == 'group' %}active {% endif %}step">
-          <i class="unhide icon"></i>
+        <a href="{{ url_for('main.enroll_group') }}" class="{% if g.active_step == 'group' %}active ui {% endif %}step">
+          <i class="unhide icon{% if g.active_step == 'group' %} active{% endif %}"></i>
           <div class="content">
             <div class="title">
               Group Benefits
@@ -56,8 +56,8 @@
           </div>
         </a>
 
-        <a href="{{ url_for('main.enroll_supplemental') }}" class="{% if g.active_step == 'supplemental' %}active {% endif %}step">
-          <i class="plus icon"></i>
+        <a href="{{ url_for('main.enroll_supplemental') }}" class="{% if g.active_step == 'supplemental' %}active ui {% endif %}step">
+          <i class="plus icon{% if g.active_step == 'supplemental' %} active{% endif %}"></i>
           <div class="content">
             <div class="title">
               Supplemental
@@ -69,8 +69,8 @@
           </div>
         </a>
 
-        <a href="{{ url_for('main.enroll_finalize') }}" class="{% if g.active_step == 'finalize' %}active {% endif %}disabled step">
-          <i class="save icon"></i>
+        <a href="{{ url_for('main.enroll_finalize') }}" class="{% if g.active_step == 'finalize' %}active ui {% endif %}disabled step">
+          <i class="save icon{% if g.active_step == 'finalize' %} active{% endif %}"></i>
           <div class="content">
             <div class="title">
               Finalize
