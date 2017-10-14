@@ -44,6 +44,19 @@
           </div>
         </a>
 
+        <a href="{{ url_for('main.admin_enroll_dates')}}" class="{% if g.active_step == 'enroll_dates' %}active {% endif %}step">
+          <i class="calendar {% if g.active_step == 'enroll_dates' %}active{% endif %} icon"></i>
+          <div class="content">
+            <div class="title">
+              Enrollment Dates
+            </div>
+
+            <div class="description">
+              Manage open enrollment dates.
+            </div>
+          </div>
+        </a>
+
         <a href="{{ url_for('main.admin_core') }}"  class="{% if g.active_step == 'core' %}active {% endif %}step">
           <i class="first aid {% if g.active_step == 'core' %}active{% endif %} icon"></i>
           <div class="content">

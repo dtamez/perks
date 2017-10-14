@@ -168,6 +168,16 @@
           });
       $('#primaryTotal').html(primaryTotal);
       $('#contingentTotal').html(contingentTotal);
+      if (primaryTotal == 100) {
+        $('#primaryTotal').parent().attr('class', 'positive');
+      } else {
+        $('#primaryTotal').parent().attr('class', 'negative');
+      }
+      if (contingentTotal == 100) {
+        $('#contingentTotal').parent().attr('class', 'positive');
+      } else {
+        $('#contingentTotal').parent().attr('class', 'negative');
+      }
       if (primaryTotal == 100 && contingentTotal == 100) {
         $('#' + 'save_update_{{ plan }}' ).show();
       } else {
@@ -221,7 +231,9 @@
           method: 'DELETE'
             }).done(function(html) {
               $('#{{ model_name }}s_wrapper{{ suffix}}').replaceWith(html);
-              updateGlobalTotals();
+              if (typeof updateGlobalTotals === "function"){
+                updateGlobalTotals();
+              }
           });
       };
       var new_{{ model_name }}{{ suffix }} = function() {
@@ -233,7 +245,9 @@
             method: 'POST'
           }).done(function(html) {
             $('#{{ model_name }}s_wrapper{{ suffix }}').replaceWith(html);
-            updateGlobalTotals();
+            if (typeof updateGlobalTotals === "function"){
+              updateGlobalTotals();
+            }
         });
       };
       var update_{{ model_name }}{{ suffix }} = function(id) {
@@ -245,7 +259,9 @@
             method: 'PUT'
           }).done(function(html) {
             $('#{{ model_name }}s_wrapper{{ suffix }}').replaceWith(html);
-            updateGlobalTotals();
+            if (typeof updateGlobalTotals === "function"){
+              updateGlobalTotals();
+            }
         });
       };
       var edit_{{ model_name }}{{ suffix }} = function(id) {
@@ -255,7 +271,9 @@
           method: 'GET'
           }).done(function(html) {
             $('#{{ model_name }}s_wrapper{{ suffix }}').replaceWith(html);
-            displayOrHideBeneficiaries();
+            if (typeof displayOrHideBeneficiaries === "function") {
+              displayOrHideBeneficiaries();
+            }
         });
       };
       var cancel_edit_{{ model_name }}{{ suffix }} = function() {

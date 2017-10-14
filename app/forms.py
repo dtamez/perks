@@ -167,6 +167,17 @@ class CarrierForm(ModelForm):
     id = IntegerField(widget=HiddenInput())
 
 
+class EnrollmentPeriodForm(ModelForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.update({'prefix': 'enroll_period'})
+        super(EnrollmentPeriodForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = models.EnrollmentPeriod
+        include = ['id']
+    id = IntegerField(widget=HiddenInput())
+
+
 class DependentForm(ModelForm):
     def __init__(self, *args, **kwargs):
         kwargs.update({'prefix': 'dependent'})

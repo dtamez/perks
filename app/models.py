@@ -1456,7 +1456,9 @@ class DomesticPartnerEligibility(Base):
 
 class EnrollmentPeriod(Base):
     id = db.Column(db.Integer, primary_key=True, info={'widget': widgets.HiddenInput()})
-    year = db.Column(db.Integer)
+    year = db.Column(db.Integer, info={'label': 'Year'})
+    open_enroll_start = db.Column(db.Date, nullable=False, info={'label': 'Start'})
+    open_enroll_end = db.Column(db.Date, nullable=False, info={'label': 'End'})
 
 
 class Enrollment(Base):

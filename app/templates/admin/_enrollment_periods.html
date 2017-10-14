@@ -1,0 +1,14 @@
+{% from "_macros.html" import render_formatters, render_row, render_3row,  render_save_update, render_table, render_ajax_methods %}
+{{ render_ajax_methods('admin', 'enrollment_period') }}
+<div id='enrollment_periods_wrapper'>
+  <h4 class="ui dividing header">Enrollment Periods</h4>
+
+  <form class="ui form {% if enrollment_period_form.errors %}error{% endif %} {% if enrollment_period is not defined %}hidden{% endif %}" action="" method="post" id="form_enrollment_periods">
+    {{ render_3row(enrollment_period_form.year, enrollment_period_form.open_enroll_start, enrollment_period_form.open_enroll_end) }}
+    {{ render_save_update(enrollment_period_form.id, 'enrollment_period')}}
+  </form>
+
+  {% if not enrollment_period_form.id.data %}
+    {{ render_table('enrollment_period', [enrollment_period_form.year, enrollment_period_form.open_enroll_start, enrollment_period_form.open_enroll_end], enrollment_periods )}}
+  {% endif %}
+</div>

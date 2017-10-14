@@ -39,6 +39,7 @@ from ..forms import (
     Employee401KPlanForm,
     EmployeeForm,
     EmployeeInfoForm,
+    EnrollmentPeriodForm,
     EstateBeneficiaryForm,
     FSADependentCarePlanForm,
     FSAMedicalPlanForm,
@@ -90,6 +91,7 @@ from ..models import (
     Employee,
     Employee401KPlan,
     Enrollment,
+    EnrollmentPeriod,
     EstateBeneficiary,
     FAMILY_TIER_TYPES,
     FSADependentCarePlan,
@@ -906,6 +908,17 @@ def admin_carriers():
                            carrier_form=form)
 
 
+@main.route('/admin/enrollment_periods', methods=['GET'])
+@login_required
+def admin_enroll_dates():
+    g.active_tab = 'admin'
+    g.active_step = 'enroll_dates'
+    enrollment_periods = EnrollmentPeriod.query.all()
+    form = EnrollmentPeriodForm()
+    return render_template('admin/enrollment_periods.html', enrollment_periods=enrollment_periods,
+                           enrollment_period_form=form)
+
+
 @main.route('/admin/core', methods=['GET'])
 @login_required
 def admin_core():
@@ -1104,6 +1117,14 @@ class CarrierView(AJAXCrudView):
             'form_class': 'CarrierForm', 'single': 'carrier',
             'plural': 'carriers', 'form_name': 'carrier_form',
             'template': '/admin/_carriers.html'}
+    subs = []
+
+
+class EnrollmentPeriodView(AJAXCrudView):
+    main = {'model': EnrollmentPeriod, 'form': EnrollmentPeriodForm, 'class': 'EnrollmentPeriod',
+            'form_class': 'EnrollmentPeriodForm', 'single': 'enrollment_period',
+            'plural': 'enrollment_periods', 'form_name': 'enrollment_period_form',
+            'template': '/admin/_enrollment_periods.html'}
     subs = []
 
 
@@ -1841,6 +1862,7 @@ register_ajax_view(AccidentPlanView, 'accident_plan_ajax', '/admin/_accident_pla
 register_ajax_view(BasicLifePlanView, 'basic_life_plan_ajax', '/admin/_basic_life_plans/')
 register_ajax_view(CancerPlanView, 'cancer_plan_ajax', '/admin/_cancer_plans/')
 register_ajax_view(CarrierView, 'carrier_ajax', '/admin/_carriers/')
+register_ajax_view(EnrollmentPeriodView, 'enrollment_period_ajax', '/admin/_enrollment_periods/')
 register_ajax_view(CriticalPlanView, 'critical_plan_ajax', '/admin/_critical_illness_plans/')
 register_ajax_view(DentalPlanView, 'dental_plan_ajax', '/admin/_dental_plans/')
 register_ajax_view(EAPPlanView, 'eap_plan_ajax', '/admin/_eap_plans/')
