@@ -15,12 +15,13 @@
     <script src="/static/semantic/semantic.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/3.3.4/jquery.inputmask.bundle.min.js" type="text/javascript" charset="utf-8"></script>
     <script src="/static/js/main.js"></script>
-    {% block extra_js %}{% endblock %}
+
     <title>{% block title %}Welcome to Perks!{% endblock %}</title>
   </head>
 
-  <body>
-    <div class="ui container">
+  <body id='Body'>
+
+    <div class="ui container" id='content'>
       {% with successes = get_flashed_messages(category_filter=["success"]) %}
         {% if successes %}
           <div class="ui icon success message">
@@ -69,6 +70,7 @@
         {% endif %}
       {% endwith %}
       {% block base_content %}{% endblock base_content %}
+      <div class='push'></div>
     </div>  {# end ui container #}
     <script charset="utf-8">
       $('.close.icon')

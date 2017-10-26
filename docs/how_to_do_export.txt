@@ -1,0 +1,31 @@
+how_to_do_export.txt
+
+:Author: Danny Tamez
+:Email: zematynnad@gmail.com
+:Date: 2017-10-14 18:50
+
+Elections will be generated through a 'Life Event' - this includes Open Enrollment.
+
+* An election during open enrollment ends up in the Enrollment table for an enrollment that is tied to open enrollment.
+  So, elections made at other times can end up in the Enrollment table for an enrollment that is tied to a different life event.
+* Add an 'exported' column (boolean) indicating whether or not we have sent this info to the carriers.
+* Add an 'exported_date' column (datetime) indicating when the exporter picked up this enrollment to send it to the carriers.
+
+
+Exporter can be called by a celery task that runs nightly/daily/whatever and looks at the Enrollment table for entries where exported == False.  Elections tied to the Enrollment are then grouped by employee and sent to the carrier.
+
+MasterExporter:
+ def seek():
+     # look for elections that are not yet exported
+     # send the election to the appropriate carrier/exporter
+
+
+CarrierExporter:
+  - delivery method:  FTP, SFTP, HTTP, RCP, EMAIL, API, EDI, Whatevs
+    * actually each of the above could be its own class that not only has the method but the address, credentials etc needed.
+
+if open enrollment is going on (e.g. an open_start and open_end encompass today's date) then:
+  - when an election is made the enrollment will have open enrollment as the life event
+otherwise:
+  - the life events step will be the only one that is active, once selected the other steps become activated
+    elections will then have the life event appropriately set

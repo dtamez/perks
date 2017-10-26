@@ -1,6 +1,6 @@
-.container {
-  width: 1200px;
-}
+/* .container { */
+  /* width: 1200px; */
+/* } */
 .hidden {
   display: none;
 }
@@ -13,6 +13,7 @@
 .bannerName, .bannerNumber {
   text-align: right;
   padding-right: 15px;
+  float: right;
 }
 .beneficiaryPercentage {
   width: 75px !important;
@@ -41,4 +42,37 @@
 }
 .active {
   color: #2185D0;
+}
+#Body {
+  /* background-color: #9AACB8; */
+  background-color: #193446;
+  height: 100%;
+}
+#content {
+  width: 1366px;
+  background-color: #FFF;
+  padding: 10px 25px 50px 25px;
+  min-height: 100%;
+  margin: 0 auto -25px;
+}
+/* .footer, .push { */
+  /* height: 25px; */
+/* } */
+/* .footer { */
+  /* background-color: #60412B; */
+  /* background-color: #E9C77B; */
+  /* background-color: #9AABB9; */
+  /* text-align: center; */
+  /* padding: 5px; */
+  /* color: #C4D4E0; */
+/* } */
+.banner {
+  height: 110px;
+}
+.bannerText {
+  color: #2185D0;
+  font-size: 20px;
+  display: inline;
+  vertical-align: middle;
+  padding-bottom: 10px;
 }

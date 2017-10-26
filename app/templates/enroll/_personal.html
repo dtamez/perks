@@ -34,6 +34,7 @@
     {{ render_row(info_form.smoker_type, info_form.phone) }}
     {{ render_row(info_form.alternate_phone, info_form.emergency_contact_name) }}
     {{ render_row(info_form.emergency_contact_phone, info_form.emergency_contact_relationship) }}
+    {{ render_row(info_form.spouse_dob, info_form.spouse_smoker_type) }}
 
     <div>
       {{ render_save_update(info_form.id, 'info') }}
@@ -61,5 +62,3 @@
     </table>
   {% endif %}
 </div>
-
-

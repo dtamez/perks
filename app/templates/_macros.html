@@ -194,7 +194,7 @@
     {% if field[1] == 'phone' %}
           $('input[name={{ prefix ~ field[0] }}]').inputmask({mask: '(999) 999-9999', autoUnmask: true});
     {% elif field[1] == 'date' %}
-          $('input[name={{ prefix ~ field[0] }}]').inputmask({alias: 'mm/dd/yyyy'});
+          $('input[name={{ prefix ~ field[0] }}]').inputmask({alias: 'yyyy-mm-dd'});
     {% elif field[1] == 'integer' %}
           $('input[name={{ prefix ~ field[0] }}]').inputmask({alias: 'integer'});
     {% elif field[1] == 'percentage' %}

@@ -8,6 +8,8 @@
 from datetime import date
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager, Shell
+import logging
+import logzero
 import os
 
 COV = None
@@ -76,6 +78,7 @@ manager.add_command("shell", Shell(make_context=make_shell_context))
 @manager.command
 def test(coverage=False):
     """Run the unit tests."""
+    logzero.loglevel(level=logging.FATAL)
     if coverage and not os.environ.get('FLASK_COVERAGE'):
         import sys
         os.environ['FLASK_COVERAGE'] = '1'
