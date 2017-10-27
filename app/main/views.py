@@ -324,10 +324,10 @@ def create_plan_premiums(plan):  # NOQA
     # Gender, Age, Age bands, Smoker, Family Tier, rate%, $amount
     for line in matrix:
         premium = Premium(plan=plan)
-        print 'creating {} dimensional premium'.format(len(line))
+        logger.debug('creating {} dimensional premium'.format(len(line)))
         for dimension in line:
             age_bands = get_age_bands_from_matrix(dimension)
-            print 'age_bands: ', age_bands
+            logger.debug('age_bands: {}'.format(age_bands))
             if dimension in gender_keys:
                 premium.gender = unicode(dimension)
             elif dimension in smoker_keys:
@@ -843,13 +843,13 @@ def update_totals():
     employer_total = 0
     employee_total = 0
     for election in enrollment.elections:
-        print '{}: ER: {}'.format(election.plan.name, election.employer_cost)
-        print '{}: EE: {}'.format(election.plan.name, election.employee_cost)
+        logger.debug('{}: ER: {}'.format(election.plan.name, election.employer_cost))
+        logger.debug('{}: EE: {}'.format(election.plan.name, election.employee_cost))
         employer_total += election.employer_cost
         employee_total += election.employee_cost
 
-    print 'ER Total', employer_total
-    print 'EE Total', employee_total
+    logger.debug('ER Total: {}'.format(employer_total))
+    logger.debug('EE Total: {}'.format(employee_total))
     session['employer_total'] = locale.currency(employer_total, grouping=True)
     session['employee_total'] = locale.currency(employee_total, grouping=True)
     totals = json.dumps({'employerTotal': session['employer_total'], 'employeeTotal': session['employee_total']})
