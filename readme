@@ -14,7 +14,7 @@ grant all privileges on database perks to <your user>;
 
 workon perks
 ./db_tasks.py db upgrade head
-./db_tasks.py create_admin <your_email_address>
+./db_tasks.py create_admin <your_email_address> password
 ./db_tasks.py seed_data
 
 Start the server
@@ -24,8 +24,3 @@ Log in to the site as an admin
 
 point browser to http://localhost:5000
 log in with admin/password
-
-import plans so employees may enroll
-click on the admin tab
-click on the import tab
-browse to ./docs/data_import_example.xlsx

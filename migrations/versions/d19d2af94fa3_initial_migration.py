@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: c0fcbdc6e7a6
+Revision ID: d19d2af94fa3
 Revises:
-Create Date: 2017-10-04 15:35:17.493574
+Create Date: 2017-10-29 22:16:44.412214
 
 """
 from alembic import op
@@ -27,7 +27,7 @@ from app.models import (
 
 
 # revision identifiers, used by Alembic.
-revision = 'c0fcbdc6e7a6'
+revision = 'd19d2af94fa3'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -74,7 +74,9 @@ def upgrade():
     op.create_table(
         'enrollment_period',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('year', sa.Integer(), nullable=True),
+        sa.Column('description', sa.String(length=100), nullable=True),
+        sa.Column('open_enroll_start', sa.Date(), nullable=False),
+        sa.Column('open_enroll_end', sa.Date(), nullable=False),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
