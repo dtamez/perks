@@ -1,8 +1,7 @@
 Setup the virtualenv
-# install virtualenvwrapper
+# install virtualenvwrapper - https://virtualenvwrapper.readthedocs.io/en/latest/
 mkvirtualenv perks
-pip install -r requirements.txt
-
+pip install -r requirements/requirements.txt
 
 To setup the database
 
@@ -13,9 +12,9 @@ grant all privileges on database perks to <your user>;
 \q
 
 workon perks
-./db_tasks.py db upgrade head
-./db_tasks.py create_admin <your_email_address> password
-./db_tasks.py seed_data
+./tasks.py db upgrade head
+./tasks.py create_admin <your_email_address> <some password>
+./tasks.py seed_data
 
 Start the server
 ./run.py
@@ -23,4 +22,7 @@ Start the server
 Log in to the site as an admin
 
 point browser to http://localhost:5000
-log in with admin/password
+log in with <your_email_address>/<some password>
+
+clone perks_semantic_ui into the same parent directory as the perks project (git@bitbucket.org:zematynnad/perks_semantic_ui.git)
+follow the readme there
