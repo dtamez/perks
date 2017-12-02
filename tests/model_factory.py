@@ -568,7 +568,7 @@ class Employee401KPlanFactory(PlanFactory, AmountSuppliedElectionMixinFactory):
     class Meta:
         model = models.Employee401KPlan
 
-    employer_percent_matched = factory.fuzzy.FuzzyInteger(0, 100)
+    employer_percent_matched = factory.fuzzy.FuzzyChoice([.5, .6, .7, .8])
     employer_max_contribution = factory.fuzzy.FuzzyInteger(2000, 10000)
     min_contribution = factory.fuzzy.FuzzyChoice(range(250, 2000, 250))
 
