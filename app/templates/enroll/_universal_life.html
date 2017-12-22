@@ -1,0 +1,23 @@
+{% from "_macros.html" import render_beneficiary_javascript  %}
+{% extends "enroll/_boolean_base.html" %}
+{% block ajax_methods %}
+  {{ render_ajax_methods('enroll', 'universal_life') }}
+  {% if election_form %}
+    {{ render_beneficiary_javascript('universal_life', election_form.plan_id.data ) }}
+  {% endif %}
+{% endblock %}
+
+{% block plan_wrapper %}universal_life{% endblock %}
+{% block plan_header %}Universal Life{% endblock %}
+{% block form_id %}universal_life{% endblock %}
+{% block beneficiaries %}
+  {% include "enroll/_beneficiaries.html" %}
+{% endblock %}
+{% block save_update %}
+    {{ render_save_update(election_form.plan_id, 'universal_life', None, election_form.id) }}
+{% endblock %}
+{% block enroll_table %}
+  {% if universal_life_selections %}
+      {{ render_enroll_table(universal_life_selections, 'universal_life') }}
+  {% endif %}
+{% endblock %}
