@@ -879,6 +879,15 @@ class DentalVisionBundlePlan(Plan, CoreMixin, PreOrPostTaxMixin, TieredElectionM
     }
 
 
+class PlanDependents(Base):
+    __tablename__ = 'plan_dependents'
+    id = db.Column(db.Integer, primary_key=True, info={'widget': widgets.HiddenInput()})
+    plan_id = db.Column(db.Integer, db.ForeignKey('plan.id'))
+    plan = db.relationship('Plan')
+    dependent_id = db.Column(db.Integer, db.ForeignKey('dependent.id'))
+    dependent = db.relationship('Dependent')
+
+
 # Group Plans
 # Life
 class LifeMixin(object):
