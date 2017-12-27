@@ -22,7 +22,9 @@ Start the server
 Log in to the site as an admin
 
 point browser to http://localhost:5000
-log in with <your_email_address>/<some password>
+log in as an admin with <your_email_address>/<some password>
+
+log in as an employee with joe@doe.com/password or sue@blue.com/password
 
 clone perks_semantic_ui into the same parent directory as the perks project (git@bitbucket.org:zematynnad/perks_semantic_ui.git)
 follow the readme there

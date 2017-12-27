@@ -69,14 +69,16 @@ def seed_data():
     jane = mf.DependentFactory(first_name='Jane', last_name='Doe', dependent_type='wife', gender='F')
     jill = mf.DependentFactory(first_name='Jill', last_name='Doe', dependent_type='daughter', gender='F')
     bill = mf.DependentFactory(first_name='Bill', last_name='Doe', dependent_type='son', gender='M')
+    u_joe = mf.UserFactory(email='joe@doe.com', password='password')
     joe = mf.EmployeeFactory(location=hou, first_name='Joe', last_name='Doe', gender='M',
-                             dependents=[jane, jill, bill])
+                             dependents=[jane, jill, bill], user=u_joe)
 
     sam = mf.DependentFactory(first_name='Sam', last_name='Blue', dependent_type='husband', gender='M')
     mary = mf.DependentFactory(first_name='Mary', last_name='Blue', dependent_type='daughter', gender='F')
     harry = mf.DependentFactory(first_name='Harry', last_name='Blue', dependent_type='son', gender='M')
+    u_sue = mf.UserFactory(email='sue@blue.com', password='password')
     sue = mf.EmployeeFactory(location=dal, first_name='Sue', last_name='Blue', gender='F',
-                             dependents=[sam, mary, harry])
+                             dependents=[sam, mary, harry], user=u_sue)
     db.session.add_all([jane, jill, bill, joe, sam, mary, harry, sue])
     db.session.commit()
 
