@@ -283,6 +283,26 @@ class AgeBandedPremiumSmokingGenderTieredFactory:
         return premiums
 
 
+class AgeBandedSmokingPayoutPremiumFactory:
+
+    def __init__(self, plan, matrix):
+        self.plan = plan
+        self.matrix = matrix
+
+    def get_premiums(self):
+        premiums = []
+        for lo, hi, smoker_status, payout, amt in self.matrix:
+            premiums.append(PremiumFactory(
+                plan=self.plan,
+                age_band_low=lo,
+                age_band_high=hi,
+                smoker_status=unicode(smoker_status),
+                payout_amount=payout,
+                amount=amt,
+            ))
+        return premiums
+
+
 class AgeSmokingPayoutPremiumFactory:
 
     def __init__(self, plan, matrix):

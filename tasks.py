@@ -12,6 +12,8 @@ import logging
 import logzero
 import os
 
+from tests.test_models import get_date_of_birth
+
 COV = None
 if os.environ.get('FLASK_COVERAGE'):
     import coverage
@@ -70,15 +72,16 @@ def seed_data():
     jill = mf.DependentFactory(first_name='Jill', last_name='Doe', dependent_type='daughter', gender='F')
     bill = mf.DependentFactory(first_name='Bill', last_name='Doe', dependent_type='son', gender='M')
     u_joe = mf.UserFactory(email='joe@doe.com', password='password')
+    dob = get_date_of_birth(48)
     joe = mf.EmployeeFactory(location=hou, first_name='Joe', last_name='Doe', gender='M',
-                             dependents=[jane, jill, bill], user=u_joe)
+                             dependents=[jane, jill, bill], user=u_joe, dob=dob)
 
     sam = mf.DependentFactory(first_name='Sam', last_name='Blue', dependent_type='husband', gender='M')
     mary = mf.DependentFactory(first_name='Mary', last_name='Blue', dependent_type='daughter', gender='F')
     harry = mf.DependentFactory(first_name='Harry', last_name='Blue', dependent_type='son', gender='M')
     u_sue = mf.UserFactory(email='sue@blue.com', password='password')
     sue = mf.EmployeeFactory(location=dal, first_name='Sue', last_name='Blue', gender='F',
-                             dependents=[sam, mary, harry], user=u_sue)
+                             dependents=[sam, mary, harry], user=u_sue, dob=dob)
     db.session.add_all([jane, jill, bill, joe, sam, mary, harry, sue])
     db.session.commit()
 
@@ -206,27 +209,27 @@ def seed_data():
 
     # Whole Life & Universal Life
     matrix = [
-        [17, 'NS', 50000, 8.93],
-        [17, 'SM', 50000, 10.43],
-        [17, 'NS', 75000, 7.93],
-        [17, 'SM', 75000, 9.43],
-        [17, 'NS', 100000, 9.93],
-        [17, 'SM', 100000, 11.43],
-        [17, 'NS', 150000, 11.93],
-        [17, 'SM', 150000, 13.43],
-        [48, 'NS', 50000, 28.04],
-        [48, 'SM', 50000, 36.35],
-        [48, 'NS', 75000, 29.04],
-        [48, 'SM', 75000, 37.35],
-        [48, 'NS', 100000, 31.04],
-        [48, 'SM', 100000, 39.35],
-        [59, 'NS', 50000, 30.53],
-        [59, 'SM', 50000, 39.101],
+        [0, 17, 'NS', 50000, 8.93],
+        [0, 17, 'SM', 50000, 10.43],
+        [0, 17, 'NS', 75000, 7.93],
+        [0, 17, 'SM', 75000, 9.43],
+        [0, 17, 'NS', 100000, 9.93],
+        [0, 17, 'SM', 100000, 11.43],
+        [0, 17, 'NS', 150000, 11.93],
+        [0, 17, 'SM', 150000, 13.43],
+        [18, 48, 'NS', 50000, 28.04],
+        [18, 48, 'SM', 50000, 36.35],
+        [18, 48, 'NS', 75000, 29.04],
+        [18, 48, 'SM', 75000, 37.35],
+        [18, 48, 'NS', 100000, 31.04],
+        [18, 48, 'SM', 100000, 39.35],
+        [49, 59, 'NS', 50000, 30.53],
+        [49, 59, 'SM', 50000, 39.101],
     ]
     add_plan(mf.WholeLifePlanFactory, 'Whole Life Plan', met_life, matrix,
-             mf.AgeSmokingPayoutPremiumFactory)
+             mf.AgeBandedSmokingPayoutPremiumFactory)
     add_plan(mf.UniversalLifePlanFactory, 'Universal Life Plan', met_life, matrix,
-             mf.AgeSmokingPayoutPremiumFactory)
+             mf.AgeBandedSmokingPayoutPremiumFactory)
 
     # FSA Medical
     plan = mf.FSAMedicalPlanFactory()

@@ -519,6 +519,17 @@ class ChildWholeLifePlanForm(AdminPlanForm):
         include = ['id']
 
 
+class UniversalLifePlanForm(AdminPlanForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.update({'prefix': 'universal_life_plan'})
+        super(UniversalLifePlanForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = models.UniversalLifePlan
+        date_format = '%Y-%m-%d'
+        include = ['id']
+
+
 # Supplemental
 class ParkingTransitPlanForm(AdminPlanForm):
     def __init__(self, *args, **kwargs):

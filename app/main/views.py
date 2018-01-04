@@ -64,6 +64,7 @@ from ..forms import (
     SpouseWholeLifePlanForm,
     StandaloneADDPlanForm,
     SuccessionOfHeirsBeneficiaryForm,
+    UniversalLifePlanForm,
     UploadForm,
     UserForm,
     VisionPlanForm,
@@ -1254,6 +1255,15 @@ class ChildWholeLifePlanView(AJAXCrudView):
     subs = []
 
 
+class UniversalLifePlanView(AJAXCrudView):
+    main = {'model': UniversalLifePlan, 'form': UniversalLifePlanForm,
+            'class': 'UniversalLifePlan', 'form_class': 'UniversalLifePlanForm',
+            'single': 'universal_life_plan', 'plural': 'universal_life_plans',
+            'form_name': 'universal_life_plan_form',
+            'template': '/admin/_universal_life_plans.html'}
+    subs = []
+
+
 class VoluntaryLifePlanView(AJAXCrudView):
     main = {'model': VoluntaryLifePlan, 'form': VoluntaryLifePlanForm,
             'class': 'VoluntaryLifePlan', 'form_class': 'VoluntaryLifePlanForm',
@@ -1566,6 +1576,12 @@ class EnrollLifeEventAJAXView(MethodView):
 class EnrollInfoAJAXView(MethodView):
 
     def get(self, id):
+        template = env.get_template('/enroll/_personal.html')
+        if not id:
+            employee = Employee.query.join(User).filter(
+                User.id == g.user.id).first()
+            return template.render({'employee': employee})
+
         # displaying a form to choose a life event
         employee = Employee.query.get(id)
         info_form = EmployeeInfoForm(None, employee)
@@ -1719,6 +1735,16 @@ class EnrollWholeLifeView(EnrollPlanAJAXView):
     template_name = '/enroll/_whole_life.html'
     plan_class = WholeLifePlan
     prefix = 'whole_life'
+
+    def do_extra_persistence(self, employee, request, enrollment=None):
+        pass
+
+
+class EnrollUniversalLifeView(EnrollPlanAJAXView):
+
+    template_name = '/enroll/_universal_life.html'
+    plan_class = UniversalLifePlan
+    prefix = 'universal_life'
 
     def do_extra_persistence(self, employee, request, enrollment=None):
         pass
@@ -1898,6 +1924,7 @@ register_ajax_view(ChildVoluntaryLifePlanView, 'child_voluntary_life_plan_ajax',
 register_ajax_view(PremiumView, 'tiered_premium_ajax', '/admin/_tiered_premiums/')
 register_ajax_view(OtherPlanView, 'other_plan_ajax', '/admin/_other_plans/')
 register_ajax_view(WholeLifePlanView, 'whole_life_plan_ajax', '/admin/_whole_life_plans/')
+register_ajax_view(UniversalLifePlanView, 'universal_life_plan_ajax', '/admin/_universal_life_plans/')
 register_ajax_view(SpouseWholeLifePlanView, 'spouse_whole_life_plan_ajax', '/admin/_spouse_whole_life_plans/')
 register_ajax_view(ChildWholeLifePlanView, 'child_whole_life_plan_ajax', '/admin/_child_whole_life_plans/')
 
@@ -1912,6 +1939,7 @@ register_ajax_view(EnrollSTDView, 'enroll_std_ajax', '/enroll/_stds/')
 register_ajax_view(EnrollLifeADDView, 'enroll_life_add_ajax', '/enroll/_life_adds/')
 register_ajax_view(EnrollWholeLifeView, 'enroll_whole_life_ajax', '/enroll/_whole_lifes/')
 register_ajax_view(EnrollStandaloneADDView, 'enroll_standalone_add_ajax', '/enroll/_standalone_adds/')
+register_ajax_view(EnrollUniversalLifeView, 'enroll_universal_life_ajax', '/enroll/_universal_lifes/')
 register_ajax_view(EnrollVoluntaryLifeView, 'enroll_voluntary_life_ajax', '/enroll/_voluntary_lifes/')
 register_ajax_view(EnrollSpouseVoluntaryLifeView, 'enroll_spouse_voluntary_life_ajax',
                    '/enroll/_spouse_voluntary_lifes/')
