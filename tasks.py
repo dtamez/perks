@@ -232,22 +232,22 @@ def seed_data():
              mf.AgeBandedSmokingPayoutPremiumFactory)
 
     # FSA Medical
-    plan = mf.FSAMedicalPlanFactory()
+    plan = mf.FSAMedicalPlanFactory(name='FSA Medical Plan')
     db.session.add(plan)
     db.session.commit()
 
     # FSA Dependent Care
-    plan = mf.FSADependentCarePlanFactory()
+    plan = mf.FSADependentCarePlanFactory(name='FSA Dependent Care Plan')
     db.session.add(plan)
     db.session.commit()
 
     # HSA
-    plan = mf.HSAPlanFactory()
+    plan = mf.HSAPlanFactory(name='HSA Plan')
     db.session.add(plan)
     db.session.commit()
 
     # 401K
-    plan = mf.Employee401KPlanFactory()
+    plan = mf.Employee401KPlanFactory(name='Employee 401K Plan')
     db.session.add(plan)
     db.session.commit()
 
@@ -303,17 +303,17 @@ def seed_data():
     add_plan(mf.STDPlanFactory, 'Short Term Disability Plan', met_life, matrix,
              mf.AgeBandedPremiumFactory)
 
-    plan = mf.HRAPlanFactory()
+    plan = mf.HRAPlanFactory(name='Health Reimbursement Plan')
     plan.premiums = [mf.PremiumFactory(amount=250, plan=plan)]
     db.session.add(plan)
     db.session.commit()
 
-    plan = mf.EAPPlanFactory()
+    plan = mf.EAPPlanFactory(name='Employee Assistance Plan')
     plan.premiums = [mf.PremiumFactory(amount=250, plan=plan)]
     db.session.add(plan)
     db.session.commit()
 
-    plan = mf.ParkingTransitPlanFactory()
+    plan = mf.ParkingTransitPlanFactory(name='Parking Transit Plan')
     plan.premiums = [mf.PremiumFactory(amount=250, plan=plan)]
     db.session.add(plan)
     db.session.commit()
