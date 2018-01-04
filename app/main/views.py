@@ -1548,12 +1548,18 @@ class PremiumView(AJAXCrudView):
 class EnrollLifeEventAJAXView(MethodView):
 
     def get(self, id):
+        template = env.get_template('/enroll/_life_events.html')
+        if not id:
+            employee = Employee.query.join(User).filter(
+                User.id == g.user.id).first()
+            enrollment = Enrollment.query.filter(Enrollment.employee_id == employee.id).first()
+            return template.render({'life_event': enrollment})
+
         # displaying a form to choose a life event
         enrollment = Enrollment.query.get(id)
         life_event_form = LifeEventsForm(None, enrollment)
         ctx = {'life_event_form': life_event_form,
                'life_events': LIFE_EVENT_TYPES}
-        template = env.get_template('/enroll/_life_events.html')
 
         return template.render(ctx)
 
