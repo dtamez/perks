@@ -36,8 +36,10 @@ manager = Manager(app)
 manager.add_command('db', MigrateCommand)
 
 
-def add_plan(plan_factory, name, carrier, matrix, premium_factory):
-    plan = plan_factory(name=name, carrier=carrier)
+def add_plan(plan_factory, name, carrier, matrix, premium_factory, er_percentage_contributed=0,
+             er_flat_amount_contributed=0):
+    plan = plan_factory(name=name, carrier=carrier, er_percentage_contributed=er_percentage_contributed,
+                        er_flat_amount_contributed=er_flat_amount_contributed)
     pf = premium_factory(plan, matrix)
     plan.premiums = pf.get_premiums()
     db.session.add(plan)
@@ -100,14 +102,16 @@ def seed_data():
         ['EC', '225'],
         ['EF', '300'],
     ]
-    add_plan(mf.MedicalPlanFactory, 'Medical Base Plan', cigna, matrix, mf.TieredPremiumFactory)
+    add_plan(mf.MedicalPlanFactory, 'Medical Base Plan', cigna, matrix, mf.TieredPremiumFactory,
+             er_percentage_contributed=1)
     matrix = [
         ['EO', '150'],
         ['ES', '250'],
         ['EC', '275'],
         ['EF', '350'],
     ]
-    add_plan(mf.MedicalPlanFactory, 'Medical Buy Up Plan', aetna, matrix, mf.TieredPremiumFactory)
+    add_plan(mf.MedicalPlanFactory, 'Medical Buy Up Plan', aetna, matrix, mf.TieredPremiumFactory,
+             er_percentage_contributed=.8)
 
     # dental plans
     matrix = [
@@ -116,14 +120,16 @@ def seed_data():
         ['EC', '100'],
         ['EF', '125'],
     ]
-    add_plan(mf.DentalPlanFactory, 'Dental Base Plan', aetna, matrix, mf.TieredPremiumFactory)
+    add_plan(mf.DentalPlanFactory, 'Dental Base Plan', aetna, matrix, mf.TieredPremiumFactory,
+             er_percentage_contributed=1)
     matrix = [
         ['EO', '75'],
         ['ES', '125'],
         ['EC', '150'],
         ['EF', '175'],
     ]
-    add_plan(mf.DentalPlanFactory, 'Dental Buy Up Plan', aetna, matrix, mf.TieredPremiumFactory)
+    add_plan(mf.DentalPlanFactory, 'Dental Buy Up Plan', aetna, matrix, mf.TieredPremiumFactory,
+             er_percentage_contributed=.6)
 
     # vision plans
     matrix = [
@@ -132,7 +138,8 @@ def seed_data():
         ['EC', '60'],
         ['EF', '75'],
     ]
-    add_plan(mf.VisionPlanFactory, 'Vision Plan', aetna, matrix, mf.TieredPremiumFactory)
+    add_plan(mf.VisionPlanFactory, 'Vision Plan', aetna, matrix, mf.TieredPremiumFactory,
+             er_flat_amount_contributed=30)
 
     # Long Term Care Plan
     matrix = [
@@ -267,7 +274,7 @@ def seed_data():
         [70, 74, 1.3408],
         [75, 100, 1.3408]]
     add_plan(mf.BasicLifePlanFactory, 'Basic Life Plan', met_life, matrix,
-             mf.AgeBandedPremiumFactory)
+             mf.AgeBandedPremiumFactory, er_percentage_contributed=1)
 
     # Long Term Disability
     matrix = [
@@ -308,12 +315,12 @@ def seed_data():
     db.session.add(plan)
     db.session.commit()
 
-    plan = mf.EAPPlanFactory(name='Employee Assistance Plan')
+    plan = mf.EAPPlanFactory(name='Employee Assistance Plan', er_percentage_contributed=.8)
     plan.premiums = [mf.PremiumFactory(amount=250, plan=plan)]
     db.session.add(plan)
     db.session.commit()
 
-    plan = mf.ParkingTransitPlanFactory(name='Parking Transit Plan')
+    plan = mf.ParkingTransitPlanFactory(name='Parking Transit Plan', er_percentage_contributed=1)
     plan.premiums = [mf.PremiumFactory(amount=250, plan=plan)]
     db.session.add(plan)
     db.session.commit()
