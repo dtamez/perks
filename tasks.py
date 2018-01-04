@@ -193,7 +193,7 @@ def seed_data():
         ['EC', '40'],
         ['EF', '60'],
     ]
-    add_plan(mf.HospitalConfinementPlanFactory, 'Identity Theft Protection Plan', met_life, matrix,
+    add_plan(mf.IdentityTheftPlanFactory, 'Identity Theft Protection Plan', met_life, matrix,
              mf.TieredPremiumFactory)
 
     # AMOUNT CHOSEN ELECTION
