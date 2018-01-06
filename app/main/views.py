@@ -419,7 +419,7 @@ def get_selections(plans, enrollment):
         selection = {'plan_name': plan.name,
                      'plan_id': plan.id,
                      'available': True,
-                     'election_label': 'Declined'}
+                     'election_label': 'No Coverage'}
         # if this plan has a required plan that is not chosen disable this plan
         available = True
         if plan.required_plan:
@@ -436,10 +436,11 @@ def get_selections(plans, enrollment):
         election = Election.query.filter(
             Election.enrollment_id == enrollment_id,
             Election.plan_id == plan.id).first()
+        if election:
+            selection['amount'] = election.employee_cost
         if election and election.elected:
             selection['election_label'] = 'Enrolled'
         elif election and election.amount:
-            selection['amount'] = election.amount
             selection['election_label'] = election.amount
         elif election and election.premium:
             selection['election_label'] = (election.premium.family_tier.value)
@@ -788,13 +789,15 @@ class EnrollPlanAJAXView(MethodView):
             # boolean
             if election and election.elected:
                 selection['election_label'] = 'Enrolled'
+                selection['amount'] = election.employee_cost
             # amount chosen/supplied
             elif election and election.amount:
-                selection['amount'] = (election.amount)
+                selection['amount'] = election.employee_cost
                 selection['election_label'] = election.amount
             # tiered
             elif election and election.premium:
                 selection['election_label'] = (election.premium.family_tier.value)
+                selection['amount'] = election.employee_cost
             else:
                 election = Election()
                 election.plan = plan

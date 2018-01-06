@@ -115,6 +115,7 @@
       <tr>
           <th class="enrollTableCol1">Plan</th>
           <th class="enrollTableCol2">Election</th>
+          <th class="enrollTableCol3">Cost</th>
           <th class="planEditTools"></th>
       </tr>
     </thead>
@@ -122,7 +123,8 @@
       {% for selection in selections %}
         <tr>
             <td>{{ selection.plan_name }} </td>
-            <td class="planElection">{{ selection.amount or selection.election_label }} </td>
+            <td class="planElection">{{ selection.election_label }} </td>
+            <td class="planElection">{{ selection.amount }} </td>
           <td>
             {% if selection.available %}
               <i class='write icon link blue' onclick="javascript: edit_{{ plan_type }}({{ selection.plan_id }})"></i>
