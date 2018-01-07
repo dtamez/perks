@@ -65,6 +65,13 @@ class EmployeeInfoForm(ModelForm):
     id = IntegerField(widget=HiddenInput())
 
 
+# Enrollment steps
+class ConfigurationForm(ModelForm):
+    class Meta:
+        model = models.Configuration
+        exclude = ['id']
+
+
 class BooleanElectionForm(FlaskForm):
     id = IntegerField(widget=HiddenInput())
     plan_id = IntegerField(widget=HiddenInput())

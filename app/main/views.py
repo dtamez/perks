@@ -32,6 +32,7 @@ from ..forms import (
     ChildVoluntaryLifePlanForm,
     ChildWholeLifePlanForm,
     CriticalIllnessPlanForm,
+    ConfigurationForm,
     DentalPlanForm,
     DentalVisionPlanForm,
     DependentForm,
@@ -83,6 +84,7 @@ from ..models import (
     ChildVoluntaryLifePlan,
     ChildWholeLifePlan,
     CriticalIllnessPlan,
+    Configuration,
     DentalPlan,
     DentalVisionBundlePlan,
     Dependent,
@@ -141,6 +143,7 @@ family_tier_keys = [k for k, v in FAMILY_TIER_TYPES]
 @main.before_request
 def before_request():
     g.user = current_user
+    # TODO: EG - We can booststrap here after we have the values saved in db
 
 
 @main.route('/')
@@ -884,6 +887,7 @@ def benefits():
 @login_required
 def admin():
     g.active_tab = 'admin'
+    # TODO: EG - Page redirection when loading admin page
     return redirect(url_for('main.admin_people'), )
 
 
@@ -1089,6 +1093,15 @@ def admin_supplemental():
         other_plans=other_plans,
         other_plan_form=other_plan_form,
     )
+
+
+@main.route('/admin/configuration', methods=['GET', 'POST'])
+@login_required
+def admin_configurator():
+    g.active_tab = 'configuration'
+    configuration = Configuration.query.all()
+    return render_template(
+        'admin/configuration.html', configuration=configuration, configuration_form=ConfigurationForm)
 
 
 def get_remaining_tier_choices(plan_id):

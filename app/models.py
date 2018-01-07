@@ -271,6 +271,12 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
+class Configuration(Base):
+    id = db.Column(db.Integer, primary_key=True)
+    logo = db.Column(db.String(155), nullable=True)
+    company_text = db.Column(db.String(155), nullable=False)
+
+
 class Dependent(PersonMixin, Base):
     id = db.Column(db.Integer, primary_key=True, info={'widget': widgets.HiddenInput()})
     dependent_type = db.Column(ChoiceType(DEPENDENT_TYPES), info={'label': 'Dependent Type'})
