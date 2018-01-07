@@ -32,6 +32,10 @@
   width: 150px;
   text-align: right;
 }
+.enrollTableCol3 {
+  width: 150px;
+  text-align: right;
+}
 #Body {
   background-color: #193446;
   height: 100%;

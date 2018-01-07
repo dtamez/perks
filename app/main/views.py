@@ -437,7 +437,7 @@ def get_selections(plans, enrollment):
             Election.enrollment_id == enrollment_id,
             Election.plan_id == plan.id).first()
         if election:
-            selection['amount'] = election.employee_cost
+            selection['amount'] = locale.currency(election.employee_cost, grouping=True)
         if election and election.elected:
             selection['election_label'] = 'Enrolled'
         elif election and election.amount:
@@ -789,15 +789,15 @@ class EnrollPlanAJAXView(MethodView):
             # boolean
             if election and election.elected:
                 selection['election_label'] = 'Enrolled'
-                selection['amount'] = election.employee_cost
+                selection['amount'] = locale.currency(election.employee_cost, grouping=True)
             # amount chosen/supplied
             elif election and election.amount:
-                selection['amount'] = election.employee_cost
+                selection['amount'] = locale.currency(election.employee_cost, grouping=True)
                 selection['election_label'] = election.amount
             # tiered
             elif election and election.premium:
                 selection['election_label'] = (election.premium.family_tier.value)
-                selection['amount'] = election.employee_cost
+                selection['amount'] = locale.currency(election.employee_cost, grouping=True)
             else:
                 election = Election()
                 election.plan = plan

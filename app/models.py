@@ -503,8 +503,6 @@ class AmountSuppliedElectionMixin(object):
         # TODO: This is a hack, need a better way
         if chosen_value == '|':
             chosen_value = None
-        else:
-            chosen_value = int(chosen_value)
 
         min_election, max_election = self.get_min_max_elections(employee)
         if chosen_value:
@@ -553,6 +551,8 @@ class AmountChosenElectionMixin(PremiumsMixin):
 
     def get_premium_choices(self, chosen_value, employee):
         #  TODO: Do we stil need to call this method when we already have the premium id?
+        if chosen_value == 'None':
+            chosen_value = None
         amt, premium_id = chosen_value.split('|') if chosen_value and chosen_value != 'DE' else ('', '')
         if amt:
             amt = int(amt)
