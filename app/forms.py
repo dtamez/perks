@@ -69,7 +69,7 @@ class EmployeeInfoForm(ModelForm):
 class ConfigurationForm(ModelForm):
     class Meta:
         model = models.Configuration
-        exclude = ['id']
+        include = ['id']
 
 
 class BooleanElectionForm(FlaskForm):
