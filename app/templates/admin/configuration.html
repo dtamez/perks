@@ -1,8 +1,10 @@
+{% from "_macros.html" import render_row, render_submit_field %}
 {% extends 'admin.html' %}
 {% block step_content %}
 
-<form class="ui form {% if configuration_form.errors %}error{% endif %} {% if employee is not defined %}hidden{% endif %}" action="" method="post" id="configuration_form">
-    
+<form class="ui form {% if configuration_form.errors %}error{% endif %} " action="" method="post" id="configuration_form" enctype="multipart/form-data">
+    {{render_row(configuration_form.logo, configuration_form.company_text)}}
+    <input type="submit" name="submit" value="Submit" class="ui button primary" id="configuration-submit" />
 </form>
 
 {% endblock %}
