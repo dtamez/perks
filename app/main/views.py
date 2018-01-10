@@ -146,7 +146,18 @@ family_tier_keys = [k for k, v in FAMILY_TIER_TYPES]
 @main.before_request
 def before_request():
     g.user = current_user
-    # TODO: EG - We can booststrap here after we have the values saved in db
+
+
+@main.context_processor
+def inject_user():
+    g.configuration = Configuration.query.get(1) or\
+        type(
+            'config',
+            (object,),
+            {
+                'logo': 'static/images/logo.png',
+                'company_text': 'Please update in admin configuration'})
+    return dict(configuration=g.configuration)
 
 
 @main.route('/')
@@ -1102,12 +1113,13 @@ def admin_supplemental():
 @login_required
 def admin_configurator():
     g.active_tab = 'configuration'
-    configuration = Configuration.query.all()
-    configuration_form = ConfigurationForm(request.form)
-    # TODO: Discover how to update, and move most of this logic to helper method.
-    if request.method == 'POST' and configuration_form.validate():
-        config_id = configuration[0].id if len(configuration) == 1 else None
-        configuration = Configuration()
+    configuration_item = Configuration.query.get(1)
+    form = ConfigurationForm(request.form)
+    if request.method == 'GET':
+        if configuration_item:
+            form.company_text.data = configuration_item.company_text
+    elif request.method == 'POST' and form.validate():
+        configuration = configuration_item or Configuration()
         ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
         image_dir = os.path.join(ROOT_DIR, '..', 'static', 'images')
         _file = request.files['logo'] if request.files else None
@@ -1118,20 +1130,17 @@ def admin_configurator():
             image_path = '{}/{}'.format(
                 image_dir, image_name)
             static_path = '{}/{}'.format('static/images', image_name)
-            configuration.id = config_id
             configuration.logo = static_path
-            configuration.company_text = configuration_form.company_text.data
+            configuration.company_text = form.company_text.data
             try:
-                if config_id:
-                    configuration_form.populate_obj(configuration)
-                db.session.add(configuration)
+                if not configuration_item:
+                    db.session.add(configuration)
                 db.session.commit()
             except Exception as e:
                 print(str(e))
             _file.save(image_path)
-        print(_file)
     return render_template(
-        'admin/configuration.html', configuration=configuration, configuration_form=configuration_form)
+        'admin/configuration.html', configuration_form=form)
 
 
 def get_remaining_tier_choices(plan_id):
