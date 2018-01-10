@@ -16,6 +16,7 @@ from flask.views import MethodView
 from flask_login import current_user, login_required
 from jinja2 import Environment, PackageLoader
 from logzero import logger
+from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.datastructures import CombinedMultiDict
 from werkzeug.datastructures import MultiDict
 
@@ -148,8 +149,10 @@ def before_request():
 
 @main.context_processor
 def inject_user():
-    g.configuration = Configuration.query.get(1) or\
-        type(
+    try:
+        g.configuration = Configuration.query.first()
+    except NoResultFound:
+        g.configuration = type(
             'config',
             (object,),
             {
@@ -1112,7 +1115,10 @@ def admin_supplemental():
 def admin_configurator():
     image_path = static_path = _file = None
     g.active_tab = 'configuration'
-    configuration_item = Configuration.query.get(1)
+    try:
+        configuration_item = Configuration.query.first()
+    except NoResultFound:
+        configuration_item = None
     form = ConfigurationForm(request.form)
     if request.method == 'GET':
         if configuration_item:
@@ -1121,8 +1127,7 @@ def admin_configurator():
         configuration = configuration_item or Configuration()
         if request.files.get('logo').filename != '':
             image_path, static_path, _file = save_image_and_return_static_path(request)
-        if static_path:
-            configuration.logo = static_path
+        configuration.logo = static_path if static_path else 'static/images/logo.png'
         configuration.company_text = form.company_text.data
         try:
             if not configuration_item:
