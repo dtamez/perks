@@ -4,9 +4,6 @@
 # Copyright © 2017 Danny Tamez <zematynnad@gmail.com>
 #
 # Distributed under terms of the MIT license.
-import os
-import time
-
 from datetime import date
 from decimal import Decimal
 from operator import methodcaller
@@ -24,6 +21,7 @@ from werkzeug.datastructures import MultiDict
 
 from . import main
 from .. import db
+from ..util import save_image_and_return_static_path
 from ..forms import (
     AccidentPlanForm,
     AddressForm,
@@ -1112,6 +1110,7 @@ def admin_supplemental():
 @main.route('/admin/configuration', methods=['GET', 'POST'])
 @login_required
 def admin_configurator():
+    image_path = static_path = _file = None
     g.active_tab = 'configuration'
     configuration_item = Configuration.query.get(1)
     form = ConfigurationForm(request.form)
@@ -1120,24 +1119,18 @@ def admin_configurator():
             form.company_text.data = configuration_item.company_text
     elif request.method == 'POST' and form.validate():
         configuration = configuration_item or Configuration()
-        ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-        image_dir = os.path.join(ROOT_DIR, '..', 'static', 'images')
-        _file = request.files['logo'] if request.files else None
-        file_info_list = _file.filename.split('.')
-        ts = int(round(time.time() * 1000))
-        image_name = '{}_{}.{}'.format('logo', ts, file_info_list[-1])
-        if file_info_list[-1] in ['png', 'jpeg']:
-            image_path = '{}/{}'.format(
-                image_dir, image_name)
-            static_path = '{}/{}'.format('static/images', image_name)
+        if request.files.get('logo').filename != '':
+            image_path, static_path, _file = save_image_and_return_static_path(request)
+        if static_path:
             configuration.logo = static_path
-            configuration.company_text = form.company_text.data
-            try:
-                if not configuration_item:
-                    db.session.add(configuration)
-                db.session.commit()
-            except Exception as e:
-                print(str(e))
+        configuration.company_text = form.company_text.data
+        try:
+            if not configuration_item:
+                db.session.add(configuration)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+        if image_path and _file:
             _file.save(image_path)
     return render_template(
         'admin/configuration.html', configuration_form=form)
