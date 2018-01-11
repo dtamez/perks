@@ -96,6 +96,19 @@
           </div>
         </a>
 
+        <a href="{{ url_for('main.admin_configurator') }}"  class="{% if g.active_step == 'configuration' %}active {% endif %}step">
+          <i class="lab icon"></i>
+          <div class="content">
+            <div class="title">
+              Configuration
+            </div>
+
+            <div class="description">
+              Configure Logos and more
+            </div>
+          </div>
+        </a>
+
       </div> {# end steps #}
     </div>  {# end four wide column #}
     <div class="eleven wide column">

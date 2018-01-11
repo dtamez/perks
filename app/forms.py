@@ -65,6 +65,15 @@ class EmployeeInfoForm(ModelForm):
     id = IntegerField(widget=HiddenInput())
 
 
+class ConfigurationForm(ModelForm):
+    class Meta:
+        model = models.Configuration
+        include = ['id']
+    id = IntegerField([validators.optional()], widget=HiddenInput())
+    logo = FileField('Company Logo', [validators.optional()])
+    company_text = StringField('Company Text')
+
+
 class BooleanElectionForm(FlaskForm):
     id = IntegerField(widget=HiddenInput())
     plan_id = IntegerField(widget=HiddenInput())

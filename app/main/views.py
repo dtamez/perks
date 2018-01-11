@@ -16,11 +16,13 @@ from flask.views import MethodView
 from flask_login import current_user, login_required
 from jinja2 import Environment, PackageLoader
 from logzero import logger
+from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.datastructures import CombinedMultiDict
 from werkzeug.datastructures import MultiDict
 
 from . import main
 from .. import db
+from ..util import save_image_and_return_static_path
 from ..forms import (
     AccidentPlanForm,
     AddressForm,
@@ -32,6 +34,7 @@ from ..forms import (
     ChildVoluntaryLifePlanForm,
     ChildWholeLifePlanForm,
     CriticalIllnessPlanForm,
+    ConfigurationForm,
     DentalPlanForm,
     DentalVisionPlanForm,
     DependentForm,
@@ -83,6 +86,7 @@ from ..models import (
     ChildVoluntaryLifePlan,
     ChildWholeLifePlan,
     CriticalIllnessPlan,
+    Configuration,
     DentalPlan,
     DentalVisionBundlePlan,
     Dependent,
@@ -141,6 +145,20 @@ family_tier_keys = [k for k, v in FAMILY_TIER_TYPES]
 @main.before_request
 def before_request():
     g.user = current_user
+
+
+@main.context_processor
+def inject_user():
+    try:
+        g.configuration = Configuration.query.first()
+    except NoResultFound:
+        g.configuration = type(
+            'config',
+            (object,),
+            {
+                'logo': 'static/images/logo.png',
+                'company_text': 'Please update in admin configuration'})
+    return dict(configuration=g.configuration)
 
 
 @main.route('/')
@@ -1089,6 +1107,37 @@ def admin_supplemental():
         other_plans=other_plans,
         other_plan_form=other_plan_form,
     )
+
+
+@main.route('/admin/configuration', methods=['GET', 'POST'])
+@login_required
+def admin_configurator():
+    image_path = static_path = _file = None
+    g.active_tab = 'configuration'
+    try:
+        configuration_item = Configuration.query.first()
+    except NoResultFound:
+        configuration_item = None
+    form = ConfigurationForm(request.form)
+    if request.method == 'GET':
+        if configuration_item:
+            form.company_text.data = configuration_item.company_text
+    elif request.method == 'POST' and form.validate():
+        configuration = configuration_item or Configuration()
+        if len(request.files) > 0 and request.files.get('logo').filename != '':
+            image_path, static_path, _file = save_image_and_return_static_path(request)
+        configuration.logo = static_path if static_path else 'static/images/logo.png'
+        configuration.company_text = form.company_text.data
+        try:
+            if not configuration_item:
+                db.session.add(configuration)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+        if image_path and _file:
+            _file.save(image_path)
+    return render_template(
+        'admin/configuration.html', configuration_form=form)
 
 
 def get_remaining_tier_choices(plan_id):
