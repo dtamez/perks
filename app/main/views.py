@@ -1125,7 +1125,7 @@ def admin_configurator():
             form.company_text.data = configuration_item.company_text
     elif request.method == 'POST' and form.validate():
         configuration = configuration_item or Configuration()
-        if request.files.get('logo').filename != '':
+        if len(request.files) > 0 and request.files.get('logo').filename != '':
             image_path, static_path, _file = save_image_and_return_static_path(request)
         configuration.logo = static_path if static_path else 'static/images/logo.png'
         configuration.company_text = form.company_text.data

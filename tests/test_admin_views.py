@@ -19,6 +19,7 @@ from flask import url_for
 
 from app import create_app, db
 from app.models import (
+    Configuration,
     Employee,
     Location,
     User,
@@ -127,6 +128,66 @@ class LocationTestCase(unittest.TestCase):
         self.assertIsNotNone(loc)
 
 
+class TestRequestObject(object):
+
+    def __init__(self, _file=None, form=None):
+        if not form:
+            form = {}
+        if not _file:
+            _file = {}
+        self.files = _file
+        self.form = form
+
+
+class ConfigurationTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.app = create_app('testing')
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        db.create_all()
+        self.admin = User(email=u'admin@admin.com', is_admin=True, password='password')
+        db.session.add(self.admin)
+        self.client = self.app.test_client(use_cookies=True)
+        db.session.commit()
+        self.login()
+
+    def login(self):
+        data = {'email': self.admin.email, 'password': 'password'}
+        self.client.post(url_for('auth.login'), data=data, follow_redirects=True)
+
+    def tearDown(self):
+        db.session.remove()
+        db.drop_all()
+        self.app_context.pop()
+
+    def test_add_configuration(self):
+        data = {'company_text': 'Company Text 1'}
+        config = Configuration.query.first()
+
+        self.assertFalse(config)
+
+        r = self.client.post(url_for('main.admin_configurator'), data=data)
+        config = Configuration.query.first()
+
+        self.assertEqual(200, r.status_code)
+        self.assertEqual(data.get('company_text'), config.company_text)
+
+    def test_update_configuration(self):
+        data_v1 = {'company_text': 'Company Text 1'}
+        data_v2 = {'company_text': 'Company Text 2'}
+
+        self.client.post(url_for('main.admin_configurator'), data=data_v1)
+        config_v1 = Configuration.query.first()
+
+        self.assertEqual(data_v1.get('company_text'), config_v1.company_text)
+
+        self.client.post(url_for('main.admin_configurator'), data=data_v2)
+        config_v2 = Configuration.query.first()
+
+        self.assertEqual(data_v2.get('company_text'), config_v2.company_text)
+
+
 class EmployeeTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -229,3 +290,4 @@ class EmployeeTestCase(unittest.TestCase):
         self.assertEqual(200, response.status_code)
         emp = Employee.query.filter_by(employee_number=u'created num').one()
         self.assertIsNotNone(emp)
+
