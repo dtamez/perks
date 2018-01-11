@@ -37,13 +37,17 @@ manager.add_command('db', MigrateCommand)
 
 
 def add_plan(plan_factory, name, carrier, matrix, premium_factory, er_percentage_contributed=0,
-             er_flat_amount_contributed=0):
+             er_flat_amount_contributed=0, required_plan=None):
     plan = plan_factory(name=name, carrier=carrier, er_percentage_contributed=er_percentage_contributed,
                         er_flat_amount_contributed=er_flat_amount_contributed)
     pf = premium_factory(plan, matrix)
     plan.premiums = pf.get_premiums()
+    if required_plan:
+        plan.required_plan = required_plan
+
     db.session.add(plan)
     db.session.commit()
+    return plan
 
 
 @manager.command
@@ -110,8 +114,8 @@ def seed_data():
         ['EC', '275'],
         ['EF', '350'],
     ]
-    add_plan(mf.MedicalPlanFactory, 'Medical Buy Up Plan', aetna, matrix, mf.TieredPremiumFactory,
-             er_percentage_contributed=.8)
+    med_buy_up = add_plan(mf.MedicalPlanFactory, 'Medical Buy Up Plan', aetna, matrix, mf.TieredPremiumFactory,
+                          er_percentage_contributed=.8)
 
     # dental plans
     matrix = [
@@ -211,8 +215,34 @@ def seed_data():
         [65, 69, 82.29],
         [70, 74, 134.08],
         [75, 100, 134.08]]
-    add_plan(mf.VoluntaryLifePlanFactory, 'Voluntary Life Plan', met_life, matrix,
-             mf.AgeBandedPremiumFactory)
+    ee_voluntary_life = add_plan(mf.VoluntaryLifePlanFactory, 'Employee Voluntary Life Plan', met_life, matrix,
+                                 mf.AgeBandedPremiumFactory)
+    ee_standalone_add = add_plan(mf.StandaloneADDPlanFactory, 'Employee Standalone AD&D Plan', met_life, matrix,
+                                 mf.AgeBandedPremiumFactory)
+
+    matrix = [
+        [0, 24, 1.81],
+        [25, 29, 2.69],
+        [30, 34, 3.98],
+        [35, 39, 4.63],
+        [40, 44, 7.91],
+        [45, 49, 13.17],
+        [50, 54, 26.23],
+        [55, 59, 41.32],
+        [60, 64, 81.29],
+        [65, 69, 81.29],
+        [70, 74, 133.08],
+        [75, 100, 133.08]]
+    add_plan(mf.SpouseVoluntaryLifePlanFactory, 'Spouse Voluntary Life Plan', met_life, matrix,
+             mf.AgeBandedPremiumFactory, required_plan=ee_voluntary_life)
+    add_plan(mf.SpouseStandaloneADDPlanFactory, 'Spouse Standalone AD&D Plan', met_life, matrix,
+             mf.AgeBandedPremiumFactory, required_plan=ee_standalone_add)
+
+    matrix = [[0, 24, 0.81]]
+    add_plan(mf.ChildVoluntaryLifePlanFactory, 'Child Voluntary Life Plan', met_life, matrix,
+             mf.AgeBandedPremiumFactory, required_plan=ee_voluntary_life)
+    add_plan(mf.ChildStandaloneADDPlanFactory, 'Child Standalone AD&D Plan', met_life, matrix,
+             mf.AgeBandedPremiumFactory, required_plan=ee_standalone_add)
 
     # Whole Life & Universal Life
     matrix = [
@@ -250,6 +280,7 @@ def seed_data():
 
     # HSA
     plan = mf.HSAPlanFactory(name='HSA Plan')
+    plan.required_plan = med_buy_up
     db.session.add(plan)
     db.session.commit()
 

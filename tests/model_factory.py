@@ -357,7 +357,8 @@ class PreOrPostTaxMixinFactory(factory.Factory):
 class PlanFactory(EmployerContributionMixinFactory, PlanPremiumMetaValuesMixinFactory):
     class Meta:
         abstract = True
-    code = fake.pystr(max_chars=10)
+    #  code = fake.pystr(max_chars=10)
+    code = factory.Faker('pystr', max_chars=10)
     name = factory.Sequence(lambda n: u'plan%s' % n)
     description = fake.words(8)
     special_instructions = fake.words(8)
@@ -494,7 +495,7 @@ class SpouseVoluntaryLifePlanFactory(VoluntaryLifePlanFactory):
     use_employee_age_for_spouse = True
 
 
-class ChildVoluntaryLifePanFactory(VoluntaryLifePlanFactory):
+class ChildVoluntaryLifePlanFactory(VoluntaryLifePlanFactory):
     class Meta:
         model = models.ChildVoluntaryLifePlan
 

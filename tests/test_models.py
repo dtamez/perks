@@ -6,6 +6,7 @@
 #
 # Distributed under terms of the MIT license.
 
+
 """
 Tests for application models that have any logic/methods.
 """
