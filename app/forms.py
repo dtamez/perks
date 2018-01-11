@@ -65,7 +65,6 @@ class EmployeeInfoForm(ModelForm):
     id = IntegerField(widget=HiddenInput())
 
 
-# Enrollment steps
 class ConfigurationForm(ModelForm):
     class Meta:
         model = models.Configuration

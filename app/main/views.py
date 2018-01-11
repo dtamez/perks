@@ -902,7 +902,6 @@ def benefits():
 @login_required
 def admin():
     g.active_tab = 'admin'
-    # TODO: EG - Page redirection when loading admin page
     return redirect(url_for('main.admin_people'), )
 
 
