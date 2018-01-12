@@ -3,7 +3,4 @@ notes.txt
 TODO.txt
 instance/local.py
 tags
-
-*.png
-*.jgp
-*.jpeg
+app/static/images/logo*

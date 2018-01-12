@@ -1113,7 +1113,8 @@ def admin_supplemental():
 @login_required
 def admin_configurator():
     image_path = static_path = _file = None
-    g.active_tab = 'configuration'
+    g.active_tab = 'admin'
+    g.active_step = 'configuration'
     try:
         configuration_item = Configuration.query.first()
     except NoResultFound:
