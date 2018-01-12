@@ -269,23 +269,23 @@ def seed_data():
              mf.AgeBandedSmokingPayoutPremiumFactory)
 
     # FSA Medical
-    plan = mf.FSAMedicalPlanFactory(name='FSA Medical Plan')
+    plan = mf.FSAMedicalPlanFactory(name='FSA Medical Plan', carrier=aetna)
     db.session.add(plan)
     db.session.commit()
 
     # FSA Dependent Care
-    plan = mf.FSADependentCarePlanFactory(name='FSA Dependent Care Plan')
+    plan = mf.FSADependentCarePlanFactory(name='FSA Dependent Care Plan', carrier=aetna)
     db.session.add(plan)
     db.session.commit()
 
     # HSA
-    plan = mf.HSAPlanFactory(name='HSA Plan')
+    plan = mf.HSAPlanFactory(name='HSA Plan', carrier=aetna)
     plan.required_plan = med_buy_up
     db.session.add(plan)
     db.session.commit()
 
     # 401K
-    plan = mf.Employee401KPlanFactory(name='Employee 401K Plan')
+    plan = mf.Employee401KPlanFactory(name='Employee 401K Plan', carrier=met_life)
     db.session.add(plan)
     db.session.commit()
 
@@ -341,17 +341,17 @@ def seed_data():
     add_plan(mf.STDPlanFactory, 'Short Term Disability Plan', met_life, matrix,
              mf.AgeBandedPremiumFactory)
 
-    plan = mf.HRAPlanFactory(name='Health Reimbursement Plan')
+    plan = mf.HRAPlanFactory(name='Health Reimbursement Plan', carrier=aetna)
     plan.premiums = [mf.PremiumFactory(amount=250, plan=plan)]
     db.session.add(plan)
     db.session.commit()
 
-    plan = mf.EAPPlanFactory(name='Employee Assistance Plan', er_percentage_contributed=.8)
+    plan = mf.EAPPlanFactory(name='Employee Assistance Plan', er_percentage_contributed=.8, carrier=met_life)
     plan.premiums = [mf.PremiumFactory(amount=250, plan=plan)]
     db.session.add(plan)
     db.session.commit()
 
-    plan = mf.ParkingTransitPlanFactory(name='Parking Transit Plan', er_percentage_contributed=1)
+    plan = mf.ParkingTransitPlanFactory(name='Parking Transit Plan', er_percentage_contributed=1, carrier=met_life)
     plan.premiums = [mf.PremiumFactory(amount=250, plan=plan)]
     db.session.add(plan)
     db.session.commit()
