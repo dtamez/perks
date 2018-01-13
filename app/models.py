@@ -541,6 +541,19 @@ class AmountSuppliedElectionMixin(object):
         ee = total - er
         return total, er, ee
 
+    def decline_election(self):
+        election = Election.query.filter(Election.plan_id == self.id).first()
+        if election:
+            election.elected = False
+            election.premium_id = None
+            election.premium = None
+            election.amount = 0
+            election.total_cost = 0
+            election.employee_cost = 0
+            election.employer_cost = 0
+            db.session.add(election)
+            db.session.commit()
+
 
 class PremiumsMixin(object):
     @declared_attr
@@ -633,6 +646,19 @@ class AmountChosenElectionMixin(PremiumsMixin):
             election.employer_cost = er
             election.employee_cost = ee
 
+    def decline_election(self):
+        election = Election.query.filter(Election.plan_id == self.id).first()
+        if election:
+            election.elected = False
+            election.premium_id = None
+            election.premium = None
+            election.amount = 0
+            election.total_cost = 0
+            election.employee_cost = 0
+            election.employer_cost = 0
+            db.session.add(election)
+            db.session.commit()
+
 
 class TieredElectionMixin(PremiumsMixin):
 
@@ -705,6 +731,19 @@ class TieredElectionMixin(PremiumsMixin):
         ee = total - er
         return total, er, ee
 
+    def decline_election(self):
+        election = Election.query.filter(Election.plan_id == self.id).first()
+        if election:
+            election.elected = False
+            election.premium_id = None
+            election.premium = None
+            election.amount = 0
+            election.total_cost = 0
+            election.employee_cost = 0
+            election.employer_cost = 0
+            db.session.add(election)
+            db.session.commit()
+
 
 class BooleanElectionMixin(PremiumsMixin):
 
@@ -761,6 +800,19 @@ class BooleanElectionMixin(PremiumsMixin):
     def get_election_form(self):
         from .forms import BooleanElectionForm
         return BooleanElectionForm
+
+    def decline_election(self):
+        election = Election.query.filter(Election.plan_id == self.id).first()
+        if election:
+            election.elected = False
+            election.premium_id = None
+            election.premium = None
+            election.amount = 0
+            election.total_cost = 0
+            election.employee_cost = 0
+            election.employer_cost = 0
+            db.session.add(election)
+            db.session.commit()
 
 
 class IRSLimits(Base):

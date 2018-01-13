@@ -662,6 +662,7 @@ class EnrollPlanAJAXView(MethodView):
         plan.populate_election(form.selection.data, election, employee)
         db.session.add(election)
         db.session.commit()
+        self.decline_others(plan)
         if isinstance(plan, LifeMixin):
             beneficiaries_form = BeneficiariesForm(request.form)
             estate_beneficiary = EstateBeneficiary(plan_id=plan_id)
@@ -713,6 +714,7 @@ class EnrollPlanAJAXView(MethodView):
                                 db.session.add(elc)
 
         db.session.commit()
+        self.decline_others(plan)
 
         if isinstance(plan, LifeMixin):
             beneficiaries_form = BeneficiariesForm(request.form)
@@ -829,6 +831,11 @@ class EnrollPlanAJAXView(MethodView):
                'summary': True,
                '{}_selections'.format(self.prefix): selections}
         return render_template(self.template_name, **ctx)
+
+    def decline_others(self, plan):
+        plans = Plan.query.filter(Plan.plantype == plan.plantype, Plan.id != plan.id)
+        for p in plans:
+            p.decline_election()
 
 
 def get_beneficiary_options(plan, employee):
@@ -1109,7 +1116,7 @@ def admin_supplemental():
     )
 
 
-@main.route('/admin/configuration', methods=['GET', 'POST'])
+@main.route('/admin/configuration', methods=['GET', 'POST'])  # NOQA
 @login_required
 def admin_configurator():
     image_path = static_path = _file = None
