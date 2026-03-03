@@ -2,7 +2,7 @@
 
 A benefits enrollment platform built with Flask and PostgreSQL.
 
-This project models relational business workflows and demonstrates clean RESTful backend architecture.
+> Backend-focused application modeling relational business workflows and clean service architecture.
 
 ---
 
@@ -19,14 +19,16 @@ The goal was to build a realistic backend service emphasizing maintainable struc
 
 ---
 
-## Architecture Notes
+## Architecture
 
-- Flask application using SQLAlchemy ORM
-- PostgreSQL relational schema
-- Migration-based schema management
-- REST-style route design
-- Separation of service logic and persistence
-- Test coverage for core workflows
+**Application Structure**
+
+- Flask application using SQLAlchemy ORM  
+- PostgreSQL relational schema  
+- Migration-based schema management  
+- REST-style route design  
+- Separation of service logic and persistence  
+- Test coverage for core workflows  
 
 This project focuses on backend correctness and clarity over UI complexity.
 
@@ -34,22 +36,22 @@ This project focuses on backend correctness and clarity over UI complexity.
 
 ## Tech Stack
 
-- Python
-- Flask
-- SQLAlchemy
-- PostgreSQL
+Python · Flask · SQLAlchemy · PostgreSQL
 
 ---
 
 ## Running Locally
 
+```bash
 git clone https://github.com/dtamez/perks
 cd perks
+
 python -m venv venv
 source venv/bin/activate
+
 pip install -r requirements.txt
 
-# If you use Flask-Migrate / Alembic migrations:
+# If using Flask-Migrate / Alembic:
 flask db upgrade
 
 flask run
