@@ -1,8 +1,3 @@
-
----
-
-# 📘 `perks` README.md
-
 ```markdown
 # Perks
 
@@ -19,9 +14,9 @@ Perks simulates a benefits enrollment system with:
 - Relational data modeling
 - User enrollment workflows
 - Administrative configuration
-- Clean separation of application layers
+- Clear separation of application layers
 
-The goal was to build a realistic backend service emphasizing maintainable structure and clear domain modeling.
+The goal was to build a realistic backend service emphasizing maintainable structure and domain modeling.
 
 ---
 
@@ -30,7 +25,7 @@ The goal was to build a realistic backend service emphasizing maintainable struc
 - Flask application using SQLAlchemy ORM
 - PostgreSQL relational schema
 - Migration-based schema management
-- RESTful route design
+- REST-style route design
 - Separation of service logic and persistence
 - Test coverage for core workflows
 
@@ -55,5 +50,8 @@ cd perks
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+
+# If you use Flask-Migrate / Alembic migrations:
 flask db upgrade
+
 flask run
