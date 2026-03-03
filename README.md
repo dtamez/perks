@@ -1,4 +1,3 @@
-```markdown
 # Perks
 
 A benefits enrollment platform built with Flask and PostgreSQL.
@@ -44,7 +43,6 @@ This project focuses on backend correctness and clarity over UI complexity.
 
 ## Running Locally
 
-```bash
 git clone https://github.com/dtamez/perks
 cd perks
 python -m venv venv
