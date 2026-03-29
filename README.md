@@ -2,8 +2,6 @@
 
 A benefits enrollment platform built with Flask and PostgreSQL.
 
-> Backend-focused application modeling relational business workflows and clean service architecture.
-
 ---
 
 ## Overview
@@ -14,8 +12,6 @@ Perks simulates a benefits enrollment system with:
 - User enrollment workflows
 - Administrative configuration
 - Clear separation of application layers
-
-The goal was to build a realistic backend service emphasizing maintainable structure and domain modeling.
 
 ---
 
@@ -29,8 +25,6 @@ The goal was to build a realistic backend service emphasizing maintainable struc
 - REST-style route design  
 - Separation of service logic and persistence  
 - Test coverage for core workflows  
-
-This project focuses on backend correctness and clarity over UI complexity.
 
 ---
 
